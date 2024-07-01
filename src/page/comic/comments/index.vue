@@ -2,7 +2,7 @@
 import { useRoute } from 'vue-router';
 import { computed, shallowRef } from 'vue';
 import CommentSender from './commentSender.vue';
-import Comments from '../comment.vue';
+import Comments from '@/components/comment.vue';
 import { useTitle } from '@vueuse/core';
 import { useComicStore } from '@/stores/comic';
 
