@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body,
+html,
+#app {
+  width: 100vw;
+  height: 100vh;
+  background: var(--van-background) !important;
+  overflow-x: hidden;
+}
+
+:root:root {
+  $pColor: #db547c;
+  --primary-color: #{$pColor};
+  $lightPColor: lighten($pColor, 8);
+  --primary-color-hover: #{$lightPColor};
+  $pressedPColor: darken($pColor, 8);
+  --primary-color-pressed: #{$pressedPColor};
+  --van-primary-color: var(--primary-color) !important;
+  --van-blue: var(--primary-color) !important;
+  --p-color: var(--primary-color);
+}
+
+.van-floating-panel__header-bar {
+  pointer-events: none;
+}
+
+.v-binder-follower-container {
+  z-index: 1000000 !important;
+}
+
+#messages{
+  position: fixed;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+  top: 0px;
+  left: 0px;
+  z-index: 2147483647;
+}
