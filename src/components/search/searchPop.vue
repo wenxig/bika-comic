@@ -7,6 +7,7 @@ import { computed, shallowRef, watch } from 'vue'
 import { SmartAbortController } from '@/utils/requset'
 import { getSearchHitory } from '@/api/plusPlan'
 import { modeMap } from '@/utils/translater'
+import { useZIndex } from '@/utils/layout'
 const inputText = defineModel<string>({ required: true })
 const searchMode = computed<SearchMode>(() => {
   if (inputText.value.startsWith(modeMap.uploader)) return 'uploader'
@@ -28,7 +29,6 @@ const app = useAppStore()
 const thinkList = shallowRef<SearchRes | null>(null)
 watch(inputText, () => thinkList.value = null)
 const keyOfStopRequest = new AbortController()
-let isRequesting = false
 
 const sac = new SmartAbortController()
 async function request(inputText: string) {
@@ -75,9 +75,7 @@ watchDebounced(inputText, async (inputText, ov) => {
   if (ov == inputText) return
   keyOfStopRequest.abort()
   try {
-    isRequesting = true
     const req = await request(inputText!)
-    isRequesting = false
     thinkList.value = req.slice(0, 7)
   } catch { }
 }, { debounce: 500, maxWait: 100000 })
@@ -90,11 +88,14 @@ watch(() => props.show, show => {
   searchHistorySac.abort()
   getSearchHitory({ signal: searchHistorySac.signal }).then(v => !isBoolean(v) && (app.searchHistory = v))
 }, { immediate: true })
+
+
+const [zIndex] = useZIndex(() => props.show)
 </script>
 
 <template>
-  <div :class="{ '!max-h-[60vh] h-auto !pt-1 !pb-4': show }"
-    class="w-full flex flex-wrap justify-evenly transition-all overflow-y-auto z-10 h-0 overflow-hidden bg-[--van-background-2] rounded-b-3xl pb-0 pt-0 fixed top-[54px]">
+  <div :class="{ '!max-h-[60vh] h-auto !pt-1 !pb-4': show }" :style="{ zIndex }"
+    class="w-full flex flex-wrap justify-evenly transition-all overflow-y-auto h-0 overflow-hidden bg-[--van-background-2] rounded-b-3xl pb-0 pt-0 fixed top-[54px]">
     <template v-if="isEmpty(inputText)">
       <template v-if="!isEmpty(app.searchHistory)">
         <span class="text-xl text-[--van-primary-color] font-bold w-full pl-3 van-hairline--top">历史搜索</span>

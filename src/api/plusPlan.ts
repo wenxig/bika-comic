@@ -2,7 +2,7 @@ import config, { isOnline } from '@/config'
 import { useAppStore } from '@/stores'
 import axios, { isCancel, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
-import { fromPairs, isEmpty, isFunction, isObject,  toPairs } from 'lodash-es'
+import { fromPairs, isEmpty, isFunction, isObject, toPairs } from 'lodash-es'
 import { ProPlusComic, ProPlusMaxComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
 import { until } from '@vueuse/core'
@@ -29,7 +29,7 @@ export const api = (() => {
     return v
   })
   a.interceptors.response.use(v => {
-    if (config.value.devMode) {
+    if (config.value['bika.devMode']) {
       const app = useAppStore()
       const base = app.devData.get('plusApi') ?? {
         name: '华夏复兴计划api',
@@ -206,7 +206,7 @@ export const removeSubscribe = async (data: string[], config: AxiosRequestConfig
 
 const newUpdates = axios.create()
 newUpdates.interceptors.request.use(async con => {
-  con.baseURL = config.value.proxy.db
+  con.baseURL = config.value['bika.proxy.db']
   await until(isOnline).toBe(true)
   return con
 })
@@ -221,7 +221,7 @@ newUpdates.interceptors.response.use(data => {
   config.__retryCount = config?.__retryCount ?? 0
   config.__retryCount++
   if (err?.response?.status == 404) {
-    config.url = `/${dayjs().add(-config.__retryCount,'day').format(`YYYY-MM-DD`)}.data`
+    config.url = `/${dayjs().add(-config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`
   }
   await delay(1000)
   return newUpdates(config)

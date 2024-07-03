@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ComicCard: typeof import('./src/components/comic/comicCard.vue')['default']
+    ComicCover: typeof import('./src/components/comic/comicCover.vue')['default']
     ComicView: typeof import('./src/components/comic/comicView.vue')['default']
     Comment: typeof import('./src/components/comment.vue')['default']
     FloatPopup: typeof import('./src/components/floatPopup.vue')['default']

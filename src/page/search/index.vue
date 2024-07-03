@@ -51,12 +51,12 @@ function createStream(keyword: string, sort: SortType) {
   return s
 }
 const comicStream = computedWithControl(() => $route, () => {
-  const st = createStream(searchText.value, config.value.searchSort)
+  const st = createStream(searchText.value, config.value['bika.search.sort'])
   if (isEmpty(st.docs.value)) st.next().catch(noop)
   return st
 })
 const reload = (text?: string) => {
-  comicStream.value.reload(text ?? searchText.value, config.value.searchSort)
+  comicStream.value.reload(text ?? searchText.value, config.value['bika.search.sort'])
   return comicStream.value.next()
 }
 
@@ -71,17 +71,17 @@ const stop = $router.beforeEach(() => {
 
 const app = useAppStore()
 const tags = () => app.categories.slice(13)
-const _fiflerTags = ref<FillerTag[]>(cloneDeep(config.value.fillerTags))
+const _fiflerTags = ref<FillerTag[]>(cloneDeep(config.value['bika.search.fillerTags']))
 watchOnce(() => app.categories, categories => _fiflerTags.value = uniqBy([..._fiflerTags.value, ...categories.map(v => ({ name: v.title, mode: 'auto' as const }))], v => v.name))
 const showfifler = shallowRef(false)
-const syncFiflerTags = () => config.value.fillerTags = cloneDeep(_fiflerTags.value)
-const cancelWrite_fiflerTags = () => _fiflerTags.value = cloneDeep(config.value.fillerTags)
+const syncFiflerTags = () => config.value['bika.search.fillerTags'] = cloneDeep(_fiflerTags.value)
+const cancelWrite_fiflerTags = () => _fiflerTags.value = cloneDeep(config.value['bika.search.fillerTags'])
 const listData = computed(() => comicStream.value.docs.value.filter(comic => {
   const tags = (comic instanceof ProPlusComic ? comic.categories.concat(comic.tags) : comic.categories) ?? []
-  for (const unshows of config.value.fillerTags.filter(v => v.mode == 'unshow')) if (tags.find(v => v == unshows.name)) return false
-  for (const mustshows of config.value.fillerTags.filter(v => v.mode == 'show')) if (!tags.find(v => v == mustshows.name)) return false
+  for (const unshows of config.value['bika.search.fillerTags'].filter(v => v.mode == 'unshow')) if (tags.find(v => v == unshows.name)) return false
+  for (const mustshows of config.value['bika.search.fillerTags'].filter(v => v.mode == 'show')) if (!tags.find(v => v == mustshows.name)) return false
   const reg = /(^|[\(（\[\s【])ai[】\)）\]\s]?/ig
-  if (!config.value.showAIProject && (tags.includes('AI作畫') || reg.test(comic.title) || reg.test(comic.author))) return false
+  if (!config.value['bika.search.showAIProject'] && (tags.includes('AI作畫') || reg.test(comic.title) || reg.test(comic.author))) return false
   return true
 }))
 
@@ -115,11 +115,12 @@ const nextSearch = async (then: (() => void) = () => { }) => {
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center" @click="sorter?.show()">
         <van-icon name="sort" size="1.5rem" class="sort-icon" />排序
-        <span class="text-[--p-color] text-xs">-{{ sorterValue.find(v => v.value == config.value.searchSort)?.text
+        <span class="text-[--p-color] text-xs">-{{ sorterValue.find(v => v.value ==
+          config.value['bika.search.sort'])?.text
           }}</span>
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center">
-        <VanSwitch v-model="config.value.showAIProject" size="1rem" />展示AI作品
+        <VanSwitch v-model="config.value['bika.search.showAIProject']" size="1rem" />展示AI作品
       </div>
     </div>
   </header>

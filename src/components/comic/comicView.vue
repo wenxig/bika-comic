@@ -1,11 +1,15 @@
-<script setup lang='ts'>
+<script setup lang='tsx'>
 import config, { fullscreen } from '@/config'
 import { computedWithControl } from '@vueuse/core'
 import { ImagePreviewInstance } from 'vant'
 import Image from '@/components/image.vue'
-import { shallowReactive, readonly, watch, shallowRef } from 'vue'
+import { watch, shallowRef, FunctionalComponent } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores'
+import FloatPopup from '@/components/floatPopup.vue'
+import { remove } from 'lodash-es'
+import { FavourtImage } from '@/api/plusPlan'
+const showMenu = shallowRef(false)
 const app = useAppStore()
 const $route = useRoute()
 const $props = defineProps<{
@@ -20,11 +24,19 @@ defineEmits<{
   nextEp: [],
   back: []
 }>()
-const imagePreview = shallowRef<ImagePreviewInstance>()
-const showMenu = shallowRef(false)
-const page = shallowRef($props.startPosition ?? 0)
-const loadedImagesList = shallowReactive<string[]>([])
 
+
+const isInSpace = (value: number, min: number, max: number) => value >= min && value < max
+
+
+const page = shallowRef($props.startPosition ?? 0)
+const selectPage = shallowRef(Number($route.hash.substring(1)) - 1)
+watch(page, page => selectPage.value = page)
+const showSliderButtonNumber = shallowRef(false)
+const LoaingMask: FunctionalComponent<{ index: number }> = ({ index }) => (<div class="w-[100vw] h-[100vh] text-center flex justify-center items-center"><span class="text-3xl text-white">{index}</span></div>)
+
+
+const imagePreview = shallowRef<ImagePreviewInstance>()
 const setPage = (iv: number) => page.value = iv + page.value
 const getValue = (iv: number = 0) => $props.images[page.value + iv]
 const showImages = computedWithControl(() => [page.value, $props.images], () => {
@@ -38,58 +50,47 @@ const showImages = computedWithControl(() => [page.value, $props.images], () => 
   return newValue
 })
 
-const isInSpace = (value: number, min: number, max: number) => value >= min && value < max
 
-defineExpose({
-  index: readonly(page),
-  toIndex(index: number) {
-    page.value = index
-  }
-})
+const full = () => config.value['bika.read.watchFullscreen'] ? fullscreen.enter() : fullscreen.exit()
+watch(() => $props.show, show => fullscreen.isSupported.value && config.value['bika.read.watchFullscreen'] && show && full(), { immediate: true })
+onBeforeRouteLeave(() => fullscreen.isSupported.value && fullscreen.exit())
 
-const selectPage = shallowRef(Number($route.hash.substring(1)) - 1)
-watch(page, page => selectPage.value = page)
-const showSliderButtonNumber = shallowRef(false)
-
-const full = () => {
-  if (config.value.watchFullscreen) {
-    fullscreen.enter()
-  } else {
-    fullscreen.exit()
-  }
-}
-watch(() => $props.show, show => {
-  if (fullscreen.isSupported.value && config.value.watchFullscreen && show) full()
-}, { immediate: true })
-onBeforeRouteLeave(() => {
-  if (fullscreen.isSupported.value) fullscreen.exit()
-})
 
 defineSlots<{
   menu(): any
   left(arg: { width: string }): any
   right(arg: { width: string }): any
 }>()
+defineExpose({
+  index: page,
+  toIndex(index: number) {
+    page.value = index
+  }
+})
+const imageStore = {
+  loaded: new Set<string>(),
+  error: new Set<string>()
+}
+// 设置
+const setting = shallowRef<InstanceType<typeof FloatPopup>>()
 </script>
 
 <template>
   <Teleport to="#comic-views">
-    <VanImagePreview :max-zoom="Infinity" :show v-if="show" :images="showImages" :close-on-click-image="false"
+    <VanImagePreview :max-zoom="Infinity" :vertical="config.value['bika.read.vertical']" :show
+      v-if="show && !config.value['bika.read.vertical']" :images="showImages" :close-on-click-image="false"
       :close-on-click-overlay="false" :close-on-popstate="false" :loop="false" :show-index="false" ref="imagePreview"
-      @change="i => setPage(i - (!!getValue(-1) ? 1 : 0))" style="--aside-width:15vw;" class="!z-[1]" overlay-class="!z-[1]">
+      @change="i => setPage(i - (!!getValue(-1) ? 1 : 0))" style="--aside-width:15vw;" class="!z-[1]"
+      overlay-class="!z-[1]">
       <template #cover>
-        <div class="fixed top-0 left-0 w-[--aside-width] h-[100vh] flex items-center" @click="() => {
-          if (isInSpace(page - 1, 0, images.length)) page--
-          else $emit('lastEp')
-        }">
+        <div class="fixed top-0 left-0 w-[--aside-width] h-[100vh] flex items-center"
+          @click="isInSpace(page - 1, 0, images.length) ? page-- : $emit('lastEp')">
           <div class="use-bg w-full flex-col flex *:text-white" v-if="showMenu" @click.stop>
             <slot name="left" width="var(--aside-width)" />
           </div>
         </div>
-        <div class="fixed top-0 right-0 w-[--aside-width] h-[100vh] flex items-center" @click="() => {
-          if (isInSpace(page + 1, 0, images.length)) page++
-          else $emit('nextEp')
-        }">
+        <div class="fixed top-0 right-0 w-[--aside-width] h-[100vh] flex items-center"
+          @click="isInSpace(page + 1, 0, images.length) ? page++ : $emit('nextEp')">
           <div class="use-bg w-full flex-col flex *:text-white" v-if="showMenu" @click.stop>
             <slot name="right" width="var(--aside-width)" />
           </div>
@@ -122,6 +123,10 @@ defineSlots<{
           <div
             class="h-[3rem] *:text-white justify-evenly flex items-center *:flex *:w-[3rem] *:justify-center *:items-center *:flex-col *:h-[3rem]">
             <slot name="menu" />
+            <div @click="setting?.show(1)">
+              <van-icon name="more-o" size="2rem" class="-mb-1" />
+              更多
+            </div>
             <div @click="showMenu = false">
               <van-icon name="arrow-down" size="2rem" class="-mb-1" />
               收起
@@ -129,10 +134,11 @@ defineSlots<{
           </div>
         </div>
         <div v-if="!showMenu" @click="showMenu = true" class="!fixed bottom-0 left-0 w-[100vw] h-[3rem]">
-          <div class="h-4 w-auto items-center flex flex-nowrap use-bg text-white absolute bottom-0 pb-1 pl-1 left-0 text-xs"
+          <div
+            class="h-4 w-auto items-center flex flex-nowrap use-bg text-white absolute bottom-0 pb-1 pl-1 left-0 text-xs"
             @click.stop="app.showDevPupop = true">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"
-              class="w-3 block text-white" v-if="config.value.devMode">
+              class="w-3 block text-white" v-if="config.value['bika.devMode']">
               <path d="M31 16l-7 7l-1.41-1.41L28.17 16l-5.58-5.59L24 9l7 7z" fill="currentColor"></path>
               <path d="M1 16l7-7l1.41 1.41L3.83 16l5.58 5.59L8 23l-7-7z" fill="currentColor"></path>
               <path d="M12.419 25.484L17.639 6l1.932.518L14.35 26z" fill="currentColor"></path>
@@ -144,22 +150,52 @@ defineSlots<{
       </template>
       <template #image="{ src, style, onLoad }">
         <div :style>
-          <Image forever-loop fit="contain" :src v-if="src" class="w-full h-full" hide-loading hide-error @load="e => {
-            onLoad(e)
-            loadedImagesList.push(src)
-          }" />
-          <div v-if="!loadedImagesList.includes(src)"
-            class="w-[100vw] h-[100vh] text-center text-3xl text-white absolute">
-            {{ page + 1 }}
-          </div>
+          <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full" @load="onLoad">
+            <template #loading>
+              <LoaingMask :index="page + 1" />
+            </template>
+            <template #fail>
+              <LoaingMask :index="page + 1" />
+            </template>
+          </Image>
         </div>
       </template>
     </VanImagePreview>
-    <template v-for="index in config.value.preloadIamgeNumbers">
-      <Image :src="images[page - index]" v-if="images[page - index]" class="hidden"
-        @load="loadedImagesList.push(images[page - index])" />
-      <Image :src="images[page + index]" v-if="images[page + index]" class="hidden"
-        @load="loadedImagesList.push(images[page + index])" />
+    <div v-else class="w-full h-full overflow-y-auto">
+      <Image infiniteRetry fit="contain" :use-list="imageStore" v-for="(src,index) of images" :src class="w-full">
+        <template #loading>
+          <LoaingMask :index="index + 1" />
+        </template>
+        <template #fail>
+          <LoaingMask :index="index + 1" />
+        </template>
+      </Image>
+    </div>
+
+    <!-- 设置 -->
+    <FloatPopup ref="setting">
+      <van-cell-group>
+        <div class="van-cell van-haptics-feedback" @click="() => {
+          app.favourtImages.value.find(v => v.src == images[page])
+            ? remove(app.favourtImages.value, v => v.src == images[page])
+            : app.favourtImages.value.push(new FavourtImage({ src: images[page], time: Date.now() }))
+        }">
+          <van-icon :name="app.favourtImages.value.find(v => v.src == images[page]) ? 'minus' : 'plus'"
+            class="van-cell__left-icon" />
+          {{ app.favourtImages.value.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
+        </div>
+        <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
+        <van-cell center title="垂直阅读">
+          <template #right-icon>
+            <van-switch v-model="config.value['bika.read.vertical']" disabled/>
+          </template>
+        </van-cell>
+      </van-cell-group>
+    </FloatPopup>
+
+    <template v-for="index in config.value['bika.read.preloadIamgeNumbers']">
+      <Image :use-list="imageStore" :src="images[page - index]" v-if="images[page - index]" class="hidden" />
+      <Image :use-list="imageStore" :src="images[page + index]" v-if="images[page + index]" class="hidden" />
     </template>
   </Teleport>
 </template>

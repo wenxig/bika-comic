@@ -10,11 +10,9 @@ const $props = defineProps<{
   ellipsis?: number | undefined
 } & Partial<RowProps>>()
 defineEmits<{
-  like: [c: Comment]
   comment: [c: Comment]
   click: []
   showUser: [user: User]
-  report: [c: Comment]
 }>()
 defineSlots<{
   default(): void
@@ -46,10 +44,10 @@ defineSlots<{
       </template>
     </VanCol>
     <div class="absolute bottom-1 right-1 flex">
-      <span class="flex items-center mr-2 " @click.stop="$emit('report', comment)">
+      <span class="flex items-center mr-2 " @click.stop="comment.report()">
         <VanIcon name="fail" size="16px" />
       </span>
-      <span class="flex items-center mr-2 " @click.stop="$emit('like', comment)">
+      <span class="flex items-center mr-2 " @click.stop="comment.like()">
         <VanIcon name="like-o" color="var(--van-primary-color)" size="16px" v-if="comment.isLiked" />
         <VanIcon name="like-o" size="16px" v-else />
         <span class="ml-1 text-[13px]">{{ comment.likesCount }}</span>

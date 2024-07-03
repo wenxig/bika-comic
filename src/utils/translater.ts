@@ -1,6 +1,6 @@
-import { isFunction } from 'lodash-es';
-import { Converter } from 'opencc-js';
-import { computed, isRef, toRef, type MaybeRefOrGetter } from 'vue';
+import { isFunction } from 'lodash-es'
+import { Converter } from 'opencc-js'
+import { computed, isRef, toRef, type MaybeRefOrGetter } from 'vue'
 export const toCn = Converter({ from: 'tw', to: 'cn' })
 export const toTw = Converter({ from: 'cn', to: 'tw' })
 export const sorterValue: {
@@ -18,7 +18,7 @@ export const modeMap = {
 } as Record<SearchMode, string>
 
 export const useSearchMode = (val: MaybeRefOrGetter<string>) => {
-  const data = computed(() => isRef(val) ? val.value : isFunction(val) ? val() : val)
+  const data = toRef(val)
   return computed<SearchMode>(() => {
     if (data.value.startsWith(modeMap.uploader)) return 'uploader'
     if (data.value.startsWith(modeMap.translater)) return 'translater'

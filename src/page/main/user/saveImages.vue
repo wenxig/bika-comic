@@ -1,19 +1,19 @@
 <script setup lang='ts'>
-import  { FavourtImage } from '@/api/plusPlan';
-import { remove } from 'lodash-es';
-import { shallowRef } from 'vue';
-import ComicView from '@/components/comic/comicView.vue';
-import { SmartAbortController } from '@/utils/requset';
-import { onBeforeRouteLeave } from 'vue-router';
-import { useAppStore } from '@/stores';
-import config from '@/config';
+import { FavourtImage } from '@/api/plusPlan'
+import { remove } from 'lodash-es'
+import { shallowRef } from 'vue'
+import ComicView from '@/components/comic/comicView.vue'
+import { SmartAbortController } from '@/utils/requset'
+import { onBeforeRouteLeave } from 'vue-router'
+import { useAppStore } from '@/stores'
+import config from '@/config'
 const comicView = shallowRef<InstanceType<typeof ComicView>>()
 const show = shallowRef(false)
 const app = useAppStore()
 const sac = new SmartAbortController()
 const isRefreshing = shallowRef(false)
 const resyncSaveImages = () => new Promise<FavourtImage[]>((ok, fail) => {
-  if (config.value.plusPlan) {
+  if (config.value['bika.plusPlan']) {
     isRefreshing.value = true
     sac.abort()
     app.$reload.favourtImages({ signal: sac.signal })

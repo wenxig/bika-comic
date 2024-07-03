@@ -14,10 +14,8 @@ const $emit = defineEmits<{
   comment: [c: Comment]
   close: []
   showUser: [user: User],
-  report: [c: Comment]
 }>()
 defineProps<{
-  handleLike: (comment: Comment) => Promise<"like" | "unlike">
   _father?: Comment
   closeRouter?: string
   anchors?: 'high' | 'low'
@@ -73,23 +71,22 @@ const showComment = shallowRef(false)
   <FloatPopup class="overflow-hidden" ref="floatPopup" :anchors>
     <div ref="topCommentEl">
       <CommentRow v-if="_father" :comment="_father" :height="ITEM_HEIGHT" show-children-comment
-        @like="handleLike(_father!)" @comment="$emit('comment', _father!)" class="!border-none"
-        @show-user="$emit('showUser', _father?._user!)" :ellipsis="undefined" @report="c => $emit('report', c)" />
+        @comment="$emit('comment', _father!)" class="!border-none" @show-user="$emit('showUser', _father?._user!)"
+        :ellipsis="undefined" />
     </div>
     <List :is-requesting="commitStream.isRequesting.value" :end="commitStream.done.value"
       :data="commitStream.docs.value" :item-height="ITEM_HEIGHT" @next="nextLoad" v-slot="{ data, height }"
       item-resizable reloadable @reload="then => reload().then(then)"
       :style="`height:calc(100% - ${topCommentElHeight}px);background-color:var(--van-background);`">
       <CommentRow :comment="data.item" @show-user="$emit('showUser', data.item?._user!)" class="!border-none" :height
-        @like="handleLike(data.item)" :ellipsis="3" @report="c => $emit('report', c)"
-        @click="showComment = !!(fullComment = data.item)" />
+        :ellipsis="3" @click="showComment = !!(fullComment = data.item)" />
     </List>
   </FloatPopup>
   <Popup class="overflow-hidden" v-model:show="showComment" position="bottom" round closeable
     @closed="fullComment = undefined">
-    <CommentRow v-if="fullComment" :comment="fullComment" :height="ITEM_HEIGHT" @like="handleLike(fullComment!)"
+    <CommentRow v-if="fullComment" :comment="fullComment" :height="ITEM_HEIGHT"
       @comment="$emit('comment', fullComment!)" @show-user="$emit('showUser', fullComment?._user!)"
-      :ellipsis="undefined" @report="c => $emit('report', c)" />
+      :ellipsis="undefined" />
   </Popup>
 </template>
 

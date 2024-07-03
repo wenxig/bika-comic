@@ -1,13 +1,13 @@
 <script setup lang='ts'>
-import { SignUp, signUp, login } from '@/api';
-import { shallowReactive, shallowRef } from 'vue';
-import loginImage from '@/assets/images/login-bg.png';
-import { createLoadingMessage } from '@/utils/message';
+import { SignUp, signUp, login } from '@/api'
+import { shallowReactive, shallowRef } from 'vue'
+import loginImage from '@/assets/images/login-bg.png'
+import { createLoadingMessage } from '@/utils/message'
 import { joinInPlusPlan } from '@/api/plusPlan'
 import config from '@/config'
-import { padStart } from 'lodash-es';
-import { useMessage } from 'naive-ui';
-import Popup from '@/components/popup.vue';
+import { padStart } from 'lodash-es'
+import { useMessage } from 'naive-ui'
+import Popup from '@/components/popup.vue'
 const toDay = new Date()
 const formValue = shallowReactive<SignUp & Record<string, string>>({
   email: '',
@@ -39,7 +39,7 @@ async function submit() {
     })
     localStorage.setItem('token', token)
     await joinInPlusPlan()
-    config.value.plusPlan = true
+    config.value['bika.plusPlan'] = true
     loading.success()
     location.pathname = '/'
   } catch (err: any) {
@@ -101,7 +101,6 @@ const showPicker = shallowRef(false)
   </div>
   <Popup v-model:show="showPicker" round closeable position="center" class="flex justify-center">
     <NDatePicker v-model:formatted-value="formValue.birthday" type="date" value-format="yyyy-MM-dd"
-      @update:value="showPicker = false" panel size="large"/>
+      @update:value="showPicker = false" panel size="large" />
   </Popup>
 </template>
-

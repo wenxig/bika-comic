@@ -25,7 +25,7 @@ export class Image {
 function getUrl(thumb?: Image) {
   if (thumb instanceof Image) {
     if (thumb!.fileServer == 'local') return new URL(`../assets/images/${thumb!.path}`, import.meta.url).href
-    return new URL(`${config.value.proxy.image}/${thumb!.path}`).href
+    return new URL(`${config.value['bika.proxy.image']}/${thumb!.path}`).href
   }
   return ''
 }

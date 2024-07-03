@@ -40,9 +40,9 @@ const newDateString = `${newDate.getFullYear()}-${newDate.getMonth()}-${newDate.
   </div>
   <VanTabbar class="fixed bottom-0 w-full" :model-value="name" @change="v => $router.force.replace(`/main/${v}`)">
     <van-tabbar-item name="home" icon="home-o">主页</van-tabbar-item>
-    <van-tabbar-item name="subscribe" icon="eye-o" v-if="config.value.plusPlan"
-      :dot="!isEmpty(getComics()) && (config.value.updateSub != newDateString)"
-      @click="config.value.updateSub = newDateString">关注</van-tabbar-item>
+    <van-tabbar-item name="subscribe" icon="eye-o" v-if="config.value['bika.plusPlan']"
+      :dot="!isEmpty(getComics()) && (config.value['bika.subscribe.updateTime'] != newDateString)"
+      @click="config.value['bika.subscribe.updateTime'] = newDateString">关注</van-tabbar-item>
     <van-tabbar-item name="user" icon="user-o">用户</van-tabbar-item>
     <van-tabbar-item name="setting" icon="setting-o">设置</van-tabbar-item>
   </VanTabbar>

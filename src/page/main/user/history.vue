@@ -11,7 +11,7 @@ const app = useAppStore()
 const isRefreshing = shallowRef(false)
 const sca = new SmartAbortController()
 const resyncHistory = () => new Promise<Record<string, WatchHistory>>((ok, fail) => {
-  if (config.value.plusPlan) {
+  if (config.value['bika.plusPlan']) {
     isRefreshing.value = true
     sca.abort()
     app.$reload.readHistory({ signal: sca.signal })

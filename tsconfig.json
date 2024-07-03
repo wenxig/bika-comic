@@ -22,13 +22,14 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "experimentalDecorators":true,
+    "experimentalDecorators": true,
     "baseUrl": "./",
     "paths": {
       "@/*": [
         "./src/*"
       ]
     },
+    "jsxImportSource": "vue",
     "types": [
       "./components.d.ts",
       "./env.d.ts",

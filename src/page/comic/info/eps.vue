@@ -11,7 +11,7 @@ const $props = withDefaults(defineProps<{
 }>(), {
   mode: 'push'
 })
-const eps = computed(() => config.value.unsortComic ? $props.eps.toReversed() : $props.eps)
+const eps = computed(() => config.value['bika.info.unsortComic'] ? $props.eps.toReversed() : $props.eps)
 
 </script>
 
@@ -19,8 +19,9 @@ const eps = computed(() => config.value.unsortComic ? $props.eps.toReversed() : 
   <div class="w-full flex flex-wrap">
     <template v-if="!isEmpty(eps)">
       <div class="w-full text-sm text-[--van-text-color-2] pl-2">
-        <div class="h-5 flex items-center" @click="config.value.unsortComic = !config.value.unsortComic">反向排序<van-icon
-            name="exchange" /></div>
+        <div class="h-5 flex items-center"
+          @click="config.value['bika.info.unsortComic'] = !config.value['bika.info.unsortComic']">
+          反向排序<van-icon name="exchange" /></div>
       </div>
       <VanButton type="primary" plain class="!h-auto !min-h-[--van-button-default-height] w-[calc(25vw-8px)] !m-1"
         v-for="ep of eps" @click="$router.force[mode](`/comic/${id}/read/${ep.order}`)" :disabled="ep.order == now">

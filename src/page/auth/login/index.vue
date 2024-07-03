@@ -18,7 +18,7 @@ async function submit() {
     const { data: { data: { token } } } = await login(formValue)
     localStorage.setItem('token', token)
     await joinInPlusPlan()
-    config.value.plusPlan = true
+    config.value['bika.plusPlan'] = true
     loading.success()
     location.pathname = '/'
   } catch (err: any) {

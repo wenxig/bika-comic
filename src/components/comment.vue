@@ -42,23 +42,7 @@ onMounted(() => {
   if (commentsScroll.has($props.id)) list.value?.listInstanse?.scrollTo({ top: commentsScroll.get($props.id) })
 })
 const { isRequesting, done: searchDone, docs: data, top } = commitStream
-const handleCommentLike = async (comment: Comment) => {
-  const loading = createLoadingMessage('点赞中')
-  const ret = await likeComment(comment._id)
-  comment.isLiked = !comment.isLiked
-  if (ret == 'like') comment.likesCount++
-  else comment.likesCount--
-  loading.success()
-  return ret
-}
-const handleReportComment = (c: Comment) => void showConfirmDialog({
-  message: '举报后会进行对该评论的审核',
-  title: '确定举报？',
-  teleport: 'body',
-  className: `!z-[7000]`,
-  overlayClass: `!z-[7000]`
-})
-  .then(() => reportComment(c._id))
+
 const handleReloadCommit = () => {
   commitStream.reload()
   return commitStream.next()
@@ -101,17 +85,17 @@ const nextLoad = async () => {
       :class="['h-[calc(var(--father-height)-var(--van-floating-panel-header-height))]', $props.listClass]"
       :is-requesting :end="searchDone" v-slot="{ data: { item }, height }" @next="nextLoad"
       @reload="then => handleReloadCommit().then(then)">
-      <CommentRow :comment="item" :height @like="handleCommentLike(item)" show-children-comment @click="() => {
+      <CommentRow :comment="item" :height show-children-comment @click="() => {
         console.log('click comment')
         _father = item
         childrenComments?.show(item._id)
-      }" @show-user="previewUser?.show" @report="handleReportComment" :ellipsis="3"
+      }" @show-user="previewUser?.show" :ellipsis="3"
         @comment="c => $emit('comment', c)">
         <slot />
       </CommentRow>
     </List>
   </div>
-  <ChildrenComments ref="childrenComments" anchors="low" :handleLike="handleCommentLike" :_father
-    @show-user="previewUser?.show" @report="handleReportComment" @comment="c => $emit('comment', c)" />
+  <ChildrenComments ref="childrenComments" anchors="low" :_father
+    @show-user="previewUser?.show" @comment="c => $emit('comment', c)" />
   <PreviewUser ref="previewUser" />
 </template>

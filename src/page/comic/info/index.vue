@@ -16,28 +16,10 @@ const comicStore = useComicStore()
 const comic = computed(() => comicStore.comic.comic)
 const preload = computed(() => !!comicStore.comic.preload ? comicStore.comic.preload : undefined)
 const history = reactiveComputed(() => preload.value?._id ? (app.readHistory[preload.value?._id] ?? []) : [])
-const readButtonText = computed(() => isEmpty(history) ? '开始阅读' : `继续阅读: ${(comicStore.comic.eps[config.value.unsortComic ? toNumber(history[0]) - 1 : comicStore.comic.eps.length - toNumber(history[0])]?.title) ?? ''}(P${history[2] + 1})`)
+const readButtonText = computed(() => isEmpty(history) ? '开始阅读' : `继续阅读: ${(comicStore.comic.eps[config.value['bika.info.unsortComic'] ? toNumber(history[0]) - 1 : comicStore.comic.eps.length - toNumber(history[0])]?.title) ?? ''}(P${history[2] + 1})`)
 
 const title = computed(() => ` ${preload.value?.title ?? '漫画'} | bika`)
 useTitle(title)
-
-const handleLike = async () => {
-  if (!preload.value) return
-  const loading = createLoadingMessage()
-  if (!comicStore.comic.comic || !comic.value) return loading.fail('失败')
-  await preload.value.like()
-  comicStore.comic.comic.isLiked = !comic.value?.isLiked
-  loading.success()
-}
-const handleFavourite = async () => {
-  if (!preload.value) return
-  const loading = createLoadingMessage()
-  if (!comicStore.comic.comic || !comic.value) return loading.fail('失败')
-  await preload.value.favourt()
-  comicStore.comic.comic.isFavourite = !comic.value?.isFavourite
-  app.$reload.me()
-  loading.success()
-}
 
 </script>
 
@@ -52,16 +34,16 @@ const handleFavourite = async () => {
         </VanButton>
       </VanCol>
       <VanCol span="4" class="justify-center !flex items-center">
-        <van-icon name="star" size="30px" color="var(--van-primary-color)" v-if="comic && comic.isFavourite"
-          @click="handleFavourite" />
-        <van-icon name="star-o" size="30px" v-else color="var(--van-text-color)" @click="handleFavourite" />
-      </VanCol>
-      <VanCol span="4" class="justify-center !flex items-center">
         <van-badge :content="preload?.likesCount">
           <van-icon name="like" size="30px" color="var(--van-primary-color)" v-if="comic && comic.isLiked"
-            @click="handleLike" />
-          <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="handleLike" />
+            @click="preload?.like()" />
+          <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="preload?.like()" />
         </van-badge>
+      </VanCol>
+      <VanCol span="4" class="justify-center !flex items-center">
+        <van-icon name="star" size="30px" color="var(--van-primary-color)" v-if="comic && comic.isFavourite"
+          @click="preload?.favourt()" />
+        <van-icon name="star-o" size="30px" v-else color="var(--van-text-color)" @click="preload?.favourt()" />
       </VanCol>
       <VanCol span="4" class="justify-center !flex items-center"
         @click="$router.force.push(`/comic/${preload?._id}/comments`)">

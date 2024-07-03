@@ -8,7 +8,7 @@ import { SmartAbortController } from '@/utils/requset'
 import type { AxiosRequestConfig } from 'axios'
 import { getNewUpdatesComic } from '@/api/plusPlan'
 import { searchResult } from './temp'
-import  { type FavourtImage } from '@/api/plusPlan'
+import { type FavourtImage } from '@/api/plusPlan'
 import config from '@/config'
 
 export type DevData = {
@@ -110,7 +110,7 @@ export const useAppStore = defineStore('app', () => {
 const sac = new SmartAbortController()
 export async function init() {
   const app = useAppStore()
-  config.value.plusPlan = await isInPlusPlan()
+  config.value['bika.plusPlan'] = await isInPlusPlan()
   const datas = await Promise.all([
     getCategories({ signal: sac.signal }),
     getHotTags({ signal: sac.signal }),

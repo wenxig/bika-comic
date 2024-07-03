@@ -1,14 +1,14 @@
 <script setup lang='ts'>
-import { favouriteComic, getComicPages, likeComic, Image as RawImageData } from '@/api'
+import {  getComicPages, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { toNumber, clone, remove, isBoolean, noop } from 'lodash-es'
+import { toNumber, clone, isBoolean, noop } from 'lodash-es'
 import { useAppStore } from '@/stores'
 import { useTitle, reactiveComputed, until } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
-import config, { fullscreen } from '@/config'
+import config from '@/config'
 import ComicView from '@/components/comic/comicView.vue'
-import { patchWatchHitory, WatchHistory, FavourtImage } from '@/api/plusPlan'
+import { patchWatchHitory, WatchHistory } from '@/api/plusPlan'
 import { useComicStore } from '@/stores/comic'
 import CommentVue from '@/components/comment.vue'
 import Eps from '../info/eps.vue'
@@ -70,31 +70,15 @@ const lastPagesLength = shallowRef<number>();
   .then(loading => loading.success())
   .catch(loading => loading.fail())
 
-// 控制面板
-const handleLike = async () => {
-  const loading = createLoadingMessage()
-  await likeComic(comicId)
-  if (comicStore.comic.comic) comicStore.comic.comic!.isLiked = !comicStore.comic.comic!.isLiked
-  loading.success()
-}
-const handleFavourite = async () => {
-  const loading = createLoadingMessage()
-  await favouriteComic(comicId)
-  if (comicStore.comic.comic) comicStore.comic.comic!.isFavourite = !comicStore.comic.comic!.isFavourite
-  app.user = undefined
-  loading.success()
-}
 //选集
 const epSelect = shallowRef<InstanceType<typeof FloatPopup>>()
-const _eps = reactiveComputed(() => config.value.unsortComic ? clone(comicStore.comic.eps).reverse() : comicStore.comic.eps)
+const _eps = reactiveComputed(() => config.value['bika.info.unsortComic'] ? clone(comicStore.comic.eps).reverse() : comicStore.comic.eps)
 
 
 // 评论
 const commentHeight = shallowRef(0)
 const comment = shallowRef<InstanceType<typeof FloatPopup>>()
 
-// 设置
-const setting = shallowRef<InstanceType<typeof FloatPopup>>()
 
 // 关于
 const showComicInfo = shallowRef(false)
@@ -113,13 +97,13 @@ const showComicLike = shallowRef(false)
         <van-icon name="list-switch" size="2rem" class="-mb-1" />
         章节
       </div>
-      <div @click="handleLike">
+      <div @click="comicStore.comic.preload?.like()">
         <van-icon name="like" size="2rem" class="-mb-1" color="var(--van-primary-color)"
           v-if="comicStore.comic.comic && comicStore.comic.comic.isLiked" />
         <van-icon name="like-o" size="2rem" class="-mb-1" v-else />
         点赞
       </div>
-      <div @click="handleFavourite">
+      <div @click="comicStore.comic.preload?.favourt()">
         <van-icon name="star" size="2rem" class="-mb-1" color="var(--van-primary-color)"
           v-if="comicStore.comic.comic && comicStore.comic.comic.isFavourite" />
         <van-icon name="star-o" size="2rem" class="-mb-1" v-else />
@@ -128,10 +112,6 @@ const showComicLike = shallowRef(false)
       <div>
         <van-icon name="chat-o" size="2rem" class="-mb-1" @click="comment?.show()" />
         评论
-      </div>
-      <div @click="setting?.show(1)">
-        <van-icon name="more-o" size="2rem" class="-mb-1" />
-        更多
       </div>
     </template>
     <template #left="{ width }">
@@ -159,22 +139,6 @@ const showComicLike = shallowRef(false)
   <!-- 评论 -->
   <FloatPopup ref="comment" v-model:height="commentHeight">
     <CommentVue :id="comicId" v-if="comment?.isShowing" v-model:height="commentHeight" />
-  </FloatPopup>
-
-  <!-- 设置 -->
-  <FloatPopup ref="setting">
-    <van-cell-group>
-      <div class="van-cell van-haptics-feedback" @click="() => {
-        app.favourtImages.value.find(v => v.src == images[comicView?.index ?? 0])
-          ? remove(app.favourtImages.value, v => v.src == images[comicView?.index ?? 0])
-          : app.favourtImages.value.push(new FavourtImage({ src: images[comicView?.index ?? 0], time: Date.now() }))
-      }">
-        <van-icon :name="app.favourtImages.value.find(v => v.src == images[comicView?.index ?? 0]) ? 'minus' : 'plus'"
-          class="van-cell__left-icon" />
-        {{ app.favourtImages.value.find(v => v.src == images[comicView?.index ?? 0]) ? '从图片收藏移除' : '添加至图片收藏' }}
-      </div>
-      <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
-    </van-cell-group>
   </FloatPopup>
 
   <!-- 关于 -->

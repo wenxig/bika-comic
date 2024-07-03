@@ -44,7 +44,7 @@ const devPreviewData = shallowRef<DevData['data'][number]>('')
 const devShowPreview = shallowRef(false)
 
 const baseLogFunction = window.console.log
-if (!import.meta.env.DEV) watch(() => config.value.devMode, devMode => {
+if (!import.meta.env.DEV) watch(() => config.value['bika.devMode'], devMode => {
   if (devMode) {
     window.console.log = (...v) => {
       const app = useAppStore()
@@ -84,7 +84,7 @@ watch(isOnline, isOnline => {
   </Popup>
 
   <!-- dev -->
-  <template v-if="config.value.devMode">
+  <template v-if="config.value['bika.devMode']">
     <VanFloatingBubble axis="xy" v-if="!$route.path.includes('/read')" id="dev-button" @click="app.showDevPupop = true"
       style="z-index: 114514;color: #fff;">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"

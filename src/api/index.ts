@@ -10,6 +10,9 @@ import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
 import { until } from '@vueuse/core'
+import { createLoadingMessage } from '@/utils/message'
+import { showConfirmDialog } from 'vant'
+import { useZIndex } from '@/utils/layout'
 export { type RawImage, Image } from '@/utils/image'
 const createClass = <T extends { docs: any[] }, C>(v: T, Class: new (data: T['docs'][number]) => C): T & { docs: C[] } => {
   v.docs = v.docs.map(v => new Class(v))
@@ -41,7 +44,7 @@ export const api = (() => {
   })
   a.interceptors.request.use(async requestConfig => {
     if (values(requestConfig.data).includes(undefined)) throw Promise.reject('some values is undefined')
-    requestConfig.baseURL = config.value.proxy.interface
+    requestConfig.baseURL = config.value['bika.proxy.interface']
     for (const value of postHeader((new Date().getTime() / 1000).toFixed(0), `${requestConfig.url?.substring(1)}`, requestConfig.method!.toUpperCase())) requestConfig.headers.set(value.name, value.value)
     await until(isOnline).toBe(true)
     return requestConfig
@@ -53,7 +56,7 @@ export const api = (() => {
     return Promise.reject(err)
   }
   a.interceptors.response.use(v => {
-    if (config.value.devMode) {
+    if (config.value['bika.devMode']) {
       const app = useAppStore()
       const base = app.devData.get('defaultApi') ?? {
         name: '哔咔api',
@@ -94,11 +97,29 @@ export const punch = (config: AxiosRequestConfig = {}) => api.post('/users/punch
 punch()
 export abstract class Comic {
   public abstract _id: string
-  public like(config: AxiosRequestConfig = {}) {
-    return likeComic(this._id, config)
+  public isLiked!: boolean
+  public isFavourite!: boolean
+  public async like(config: AxiosRequestConfig = {}) {
+    const loading = createLoadingMessage('点赞中')
+    try {
+      await likeComic(this._id, config)
+      if (this) this.isLiked = !this.isLiked
+      loading.success()
+    } catch {
+      loading.fail()
+    }
   }
-  public favourt(config: AxiosRequestConfig = {}) {
-    return favouriteComic(this._id, config)
+  public async favourt(config: AxiosRequestConfig = {}) {
+    const loading = createLoadingMessage('收藏中')
+    try {
+      await favouriteComic(this._id, config)
+      if (this) this.isFavourite = !this.isFavourite
+      const app = useAppStore()
+      await app.$reload.me()
+      loading.success()
+    } catch {
+      loading.fail()
+    }
   }
   private __info?: ProPlusMaxComic
   public async getInfo(config: AxiosRequestConfig = {}) {
@@ -261,8 +282,6 @@ export class ProPlusMaxComic extends Comic {
   public viewsCount!: number
   public likesCount!: number
   public commentsCount!: number
-  public isFavourite!: boolean
-  public isLiked!: boolean
   constructor(v: RawProPlusMaxComic) {
     super()
     setValue(this, v)
@@ -688,6 +707,32 @@ export class Comment {
   public isLiked!: boolean
   constructor(v: RawComment) {
     setValue(this, v)
+  }
+  public async like() {
+    const loading = createLoadingMessage('点赞中')
+    try {
+      const ret = await likeComment(this._id)
+      this.isLiked = !this.isLiked
+      if (ret == 'like') this.likesCount++
+      else this.likesCount--
+      loading.success()
+      return ret
+    } catch (error) {
+      loading.fail()
+      throw error
+    }
+  }
+  public async report(askUser = true) {
+    if (askUser) await showConfirmDialog({
+      message: '举报后会进行对该评论的审核',
+      title: '确定举报？',
+      teleport: 'body',
+      className: `!z-[7000]`,
+      overlayClass: `!z-[7000]`,
+    })
+      .then(() => reportComment(this._id))
+      .catch(() => { })
+    else await reportComment(this._id)
   }
 }
 export class CommentsStream implements Stream<RawComment> {
