@@ -34,10 +34,10 @@ useTitle(title)
         </VanButton>
       </VanCol>
       <VanCol span="4" class="justify-center !flex items-center">
-        <van-badge :content="preload?.likesCount">
+        <van-badge :content="comic?.likesCount">
           <van-icon name="like" size="30px" color="var(--van-primary-color)" v-if="comic && comic.isLiked"
-            @click="preload?.like()" />
-          <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="preload?.like()" />
+            @click="comic?.like()" />
+          <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="comic?.like()" />
         </van-badge>
       </VanCol>
       <VanCol span="4" class="justify-center !flex items-center">

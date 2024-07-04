@@ -95,13 +95,18 @@ export const punch = (config: AxiosRequestConfig = {}) => api.post('/users/punch
 punch()
 export abstract class Comic {
   public abstract _id: string
-  public isLiked!: boolean
-  public isFavourite!: boolean
+  public isLiked?: boolean
+  public isFavourite?: boolean
+  public likesCount?: number
   public async like(config: AxiosRequestConfig = {}) {
+    console.log('change comic like', this.likesCount, this)
+
     const loading = createLoadingMessage('点赞中')
     try {
-      await likeComic(this._id, config)
-      if (this) this.isLiked = !this.isLiked
+      const ret = await likeComic(this._id, config)
+      if ('isLiked' in this) this.isLiked = !this.isLiked
+      if ('likesCount' in this) if (ret == 'like') this.likesCount!++
+      else this.likesCount!--
       loading.success()
     } catch {
       loading.fail()
@@ -111,7 +116,7 @@ export abstract class Comic {
     const loading = createLoadingMessage('收藏中')
     try {
       await favouriteComic(this._id, config)
-      if (this) this.isFavourite = !this.isFavourite
+      if ('isFavourite' in this) this.isFavourite = !this.isFavourite
       const app = useAppStore()
       await app.$reload.me()
       loading.success()
@@ -157,7 +162,7 @@ export class ProComic extends Comic {
   public set thumb(v) {
     this._thumb = new Image(v)
   }
-  public likesCount!: number
+  declare public likesCount: number
   constructor(v: RawProComic) {
     super()
     setValue(this, v)
@@ -206,7 +211,7 @@ export class ProPlusComic extends Comic {
   public title!: string
   public tags!: string[]
   public _id!: string
-  public likesCount!: number
+  declare public likesCount: number
   constructor(v: RawProPlusComic) {
     super()
     setValue(this, v)
@@ -278,11 +283,13 @@ export class ProPlusMaxComic extends Comic {
   public totalViews!: number
   public totalComments!: number
   public viewsCount!: number
-  public likesCount!: number
+  declare public likesCount: number
   public commentsCount!: number
+  declare public isFavourite: boolean
+  declare public isLiked: boolean
   constructor(v: RawProPlusMaxComic) {
     super()
-    setValue(this, v)
+    setValue(this, <any>v)
   }
 }
 export const getComicsIn = async (type: string, searchTag = '', config: AxiosRequestConfig = {}) => (await api.get<RawData<{ comics: RawProComic[] }>>(`/comics/${type}${searchTag}`, config)).data.data.comics.map(v => new ProComic(v))

@@ -2,7 +2,7 @@
 import { getComicPages, ProPlusMaxComic, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { toNumber, clone, isBoolean, noop } from 'lodash-es'
+import { toNumber, clone } from 'lodash-es'
 import { useAppStore } from '@/stores'
 import { useTitle, reactiveComputed, until } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
@@ -28,7 +28,10 @@ const comic = computed(() => comicStore.comic.comic)
 const comicView = shallowRef<InstanceType<typeof ComicView>>()
 
 // 历史记录
-const createHistory = () => new WatchHistory([epId.toString(), <ProPlusMaxComic>comicStore.comic.comic, Number($route.hash.substring(1)) - 1, new Date().getTime()])
+const createHistory = () => {
+  if (comicStore.comic.comic) return new WatchHistory([epId.toString(), comicStore.comic.comic, Number($route.hash.substring(1)) - 1, new Date().getTime()])
+  throw new Error('comic is not have value!!!')
+}
 const saveHistory = () => comicStore.comic.comic && patchWatchHitory({ [comicId]: createHistory() }).catch(() => window.$message.error('历史记录同步失败'))
 watch(() => comicView.value?.index, page => {
   if (page || page == 0) {
@@ -95,18 +98,20 @@ const showComicLike = shallowRef(false)
         <van-icon name="list-switch" size="2rem" class="-mb-1" />
         章节
       </div>
-      <div @click="comicStore.comic.preload?.like()">
-        <van-icon name="like" size="2rem" class="-mb-1" color="var(--van-primary-color)"
-          v-if="comicStore.comic.comic && comicStore.comic.comic.isLiked" />
-        <van-icon name="like-o" size="2rem" class="-mb-1" v-else />
-        点赞
-      </div>
-      <div @click="comicStore.comic.preload?.favourt()">
-        <van-icon name="star" size="2rem" class="-mb-1" color="var(--van-primary-color)"
-          v-if="comicStore.comic.comic && comicStore.comic.comic.isFavourite" />
-        <van-icon name="star-o" size="2rem" class="-mb-1" v-else />
-        收藏
-      </div>
+      <template v-if="comicStore.comic.comic">
+        <div @click="comicStore.comic.comic?.like()">
+          <van-icon name="like" size="2rem" class="-mb-1" color="var(--van-primary-color)"
+            v-if="comicStore.comic.comic && comicStore.comic.comic.isLiked" />
+          <van-icon name="like-o" size="2rem" class="-mb-1" v-else />
+          点赞
+        </div>
+        <div @click="comicStore.comic.comic?.favourt()">
+          <van-icon name="star" size="2rem" class="-mb-1" color="var(--van-primary-color)"
+            v-if="comicStore.comic.comic && comicStore.comic.comic.isFavourite" />
+          <van-icon name="star-o" size="2rem" class="-mb-1" v-else />
+          收藏
+        </div>
+      </template>
       <div>
         <van-icon name="chat-o" size="2rem" class="-mb-1" @click="comment?.show()" />
         评论
