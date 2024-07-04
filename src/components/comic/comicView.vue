@@ -2,11 +2,10 @@
 import config, { fullscreen } from '@/config'
 import { computedWithControl } from '@vueuse/core'
 import { ImagePreviewInstance } from 'vant'
-import Image from '@/components/image.vue'
-import { watch, shallowRef, FunctionalComponent } from 'vue'
+// import Image from '@/components/image.vue'
+import { watch, shallowRef, FunctionalComponent,reactive } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores'
-import FloatPopup from '@/components/floatPopup.vue'
 import { remove } from 'lodash-es'
 import { FavourtImage } from '@/api/plusPlan'
 const showMenu = shallowRef(false)
@@ -67,12 +66,12 @@ defineExpose({
     page.value = index
   }
 })
-const imageStore = {
+const imageStore = reactive({
   loaded: new Set<string>(),
   error: new Set<string>()
-}
+})
 // 设置
-const setting = shallowRef<InstanceType<typeof FloatPopup>>()
+const settingShow = shallowRef(false)
 </script>
 
 <template>
@@ -123,7 +122,7 @@ const setting = shallowRef<InstanceType<typeof FloatPopup>>()
           <div
             class="h-[3rem] *:text-white justify-evenly flex items-center *:flex *:w-[3rem] *:justify-center *:items-center *:flex-col *:h-[3rem]">
             <slot name="menu" />
-            <div @click="setting?.show(1)">
+            <div @click="settingShow = true">
               <van-icon name="more-o" size="2rem" class="-mb-1" />
               更多
             </div>
@@ -162,7 +161,7 @@ const setting = shallowRef<InstanceType<typeof FloatPopup>>()
       </template>
     </VanImagePreview>
     <div v-else class="w-full h-full overflow-y-auto">
-      <Image infiniteRetry fit="contain" :use-list="imageStore" v-for="(src,index) of images" :src class="w-full">
+      <Image infiniteRetry fit="contain" :use-list="imageStore" v-for="(src, index) of images" :src class="w-full">
         <template #loading>
           <LoaingMask :index="index + 1" />
         </template>
@@ -173,7 +172,7 @@ const setting = shallowRef<InstanceType<typeof FloatPopup>>()
     </div>
 
     <!-- 设置 -->
-    <FloatPopup ref="setting">
+    <Popup v-model:show="settingShow" class="h-1/2" position="bottom" round >
       <van-cell-group>
         <div class="van-cell van-haptics-feedback" @click="() => {
           app.favourtImages.value.find(v => v.src == images[page])
@@ -187,12 +186,11 @@ const setting = shallowRef<InstanceType<typeof FloatPopup>>()
         <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
         <van-cell center title="垂直阅读">
           <template #right-icon>
-            <van-switch v-model="config.value['bika.read.vertical']" disabled/>
+            <van-switch v-model="config.value['bika.read.vertical']" disabled />
           </template>
         </van-cell>
       </van-cell-group>
-    </FloatPopup>
-
+    </Popup>
     <template v-for="index in config.value['bika.read.preloadIamgeNumbers']">
       <Image :use-list="imageStore" :src="images[page - index]" v-if="images[page - index]" class="hidden" />
       <Image :use-list="imageStore" :src="images[page + index]" v-if="images[page + index]" class="hidden" />

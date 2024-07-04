@@ -53,6 +53,21 @@ const router = createRouter({
         component: () => import('@/page/main/subscribe/index.vue'),
       }]
     }, {
+      path: '/user/history',
+      component: () => import('@/page/main/user/history/index.vue'),
+    }, {
+      path: '/user/favourt',
+      component: () => import('@/page/main/user/favourt/index.vue'),
+    }, {
+      path: '/user/image',
+      component: () => import('@/page/main/user/image/index.vue'),
+    }, {
+      path: '/user/comment',
+      component: () => import('@/page/main/user/comment/index.vue'),
+    }, {
+      path: '/user/edit',
+      component: () => import('@/page/main/user/edit/index.vue'),
+    }, {
       path: '/search',
       component: () => import('@/page/search/index.vue'),
     }, {

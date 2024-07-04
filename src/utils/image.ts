@@ -33,9 +33,10 @@ import router from '@/router'
 import { showImagePreview as _showImagePreview, ImagePreviewOptions, ImagePreviewInstance } from 'vant'
 import { computed, shallowRef } from 'vue'
 import { useZIndex } from "./layout"
+import { watchOnce } from "@vueuse/core"
 export const showImagePreview = (images: string[], config: Omit<ImagePreviewOptions, "images" | "teleport">) => {
   const isShowing = shallowRef(true)
-  useZIndex(isShowing)
+  const [, , stopUse] = useZIndex(isShowing)
   const ins = _showImagePreview({
     images,
     ...config,
@@ -43,20 +44,20 @@ export const showImagePreview = (images: string[], config: Omit<ImagePreviewOpti
     className: '!z-[2147483646]',
     onClose() {
       isShowing.value = false
-      stop()
     },
     showIndex: images.length > 1,
     teleport: '#popups'
   }) as ImagePreviewInstance
-  const stop = router.beforeEach(() => {
-    if (!ins.show) stop()
-    return isShowing.value = ins.show = false
+  const stopRouterBreak = router.beforeEach(() => isShowing.value = false)
+  watchOnce(isShowing, () => {
+    stopRouterBreak()
+    stopUse()
+    ins.show = false
   })
   return {
     isShowing: computed(() => ins.show),
     close: () => {
-      isShowing.value = ins.show = false
-      stop()
+      isShowing.value = false
     }
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import {  getComicPages, Image as RawImageData } from '@/api'
+import { getComicPages, ProPlusMaxComic, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { toNumber, clone, isBoolean, noop } from 'lodash-es'
@@ -24,33 +24,31 @@ const comicId = $route.params.id as string
 const app = useAppStore()
 const comicStore = useComicStore()
 const page = (toNumber($route.hash.substring(1)) || 1) - 1
-const eps = reactiveComputed(() => comicStore.comic.eps)
-const epInfo = computed(() => eps[eps.length - epId])
 const comic = computed(() => comicStore.comic.comic)
 const comicView = shallowRef<InstanceType<typeof ComicView>>()
+
+// 历史记录
+const createHistory = () => new WatchHistory([epId.toString(), <ProPlusMaxComic>comicStore.comic.comic, Number($route.hash.substring(1)) - 1, new Date().getTime()])
+const saveHistory = () => comicStore.comic.comic && patchWatchHitory({ [comicId]: createHistory() }).catch(() => window.$message.error('历史记录同步失败'))
 watch(() => comicView.value?.index, page => {
   if (page || page == 0) {
-    if (comicStore.comic.comic) app.readHistory[comicId] = new WatchHistory([epId.toString(), comicStore.comic.comic, page, new Date().getTime()])
+    if (comicStore.comic.comic) app.readHistory[comicId] = createHistory()
     $router.force.replace($route.fullPath.includes('#') ? $route.fullPath.replace(/#.+/g, `#${page + 1}`) : `${$route.fullPath}#${page + 1}`)
   }
 }, { immediate: true })
-const saveHistory = () => comicStore.comic.comic && patchWatchHitory({ [comicId]: new WatchHistory([epId.toString(), comicStore.comic.comic, page, new Date().getTime()]) }).then(newData => {
-  if (isBoolean(newData)) {
-    window.$message.error('历史记录同步失败')
-    return
-  }
-  console.log('new history:', newData)
-  app.$patch({
-    readHistory: newData
-  })
-}).catch(noop)
 onBeforeRouteLeave((t, f) => { if (t.fullPath != f.fullPath) saveHistory() })
 onMounted(async () => {
   await until(() => app.readHistory).not.toBeNull()
   saveHistory()
 })
-const title = computed(() => `p${comicView.value?.index} | ${epInfo.value?.title ?? '阅读'} | ${(comic.value && comic.value?.title) || '漫画'} | bika`)
+
+//标题
+const eps = reactiveComputed(() => comicStore.comic.eps)
+const epInfo = computed(() => eps[eps.length - epId])
+const title = computed(() => `p${(comicView.value?.index ?? 0) + 1} | ${epInfo.value?.title ?? '阅读'} | ${(comic.value && comic.value?.title) || '漫画'} | bika`)
 useTitle(title)
+
+// 图源
 const rawImages = shallowRef<RawImageData[]>([])
 const images = shallowRef<string[]>([])
 const lastPagesLength = shallowRef<number>();
@@ -70,13 +68,13 @@ const lastPagesLength = shallowRef<number>();
   .then(loading => loading.success())
   .catch(loading => loading.fail())
 
+
 //选集
-const epSelect = shallowRef<InstanceType<typeof FloatPopup>>()
+const epSelectShow = shallowRef(false)
 const _eps = reactiveComputed(() => config.value['bika.info.unsortComic'] ? clone(comicStore.comic.eps).reverse() : comicStore.comic.eps)
 
 
 // 评论
-const commentHeight = shallowRef(0)
 const comment = shallowRef<InstanceType<typeof FloatPopup>>()
 
 
@@ -93,7 +91,7 @@ const showComicLike = shallowRef(false)
     @last-ep="(epId - 1 > 0 && lastPagesLength) && $router.force.replace(`/comic/${comicId}/read/${epId - 1}#${lastPagesLength}`)"
     @next-ep="(epId + 1 <= _eps.length) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)">
     <template #menu>
-      <div @click="epSelect?.show()">
+      <div @click="epSelectShow = true">
         <van-icon name="list-switch" size="2rem" class="-mb-1" />
         章节
       </div>
@@ -131,14 +129,14 @@ const showComicLike = shallowRef(false)
   </ComicView>
 
   <!-- 章节选择 -->
-  <FloatPopup ref="epSelect">
+  <Popup v-model:show="epSelectShow" class="h-[70%]" round position="bottom">
     <Eps :eps="comicStore.comic.eps" :id="comicStore.comic.preload._id" :now="epId" v-if="!!comicStore.comic.preload"
       mode="replace" />
-  </FloatPopup>
+  </Popup>
 
   <!-- 评论 -->
-  <FloatPopup ref="comment" v-model:height="commentHeight">
-    <CommentVue :id="comicId" v-if="comment?.isShowing" v-model:height="commentHeight" />
+  <FloatPopup ref="comment" v-slot="{ height }">
+    <CommentVue :id="comicId" :height />
   </FloatPopup>
 
   <!-- 关于 -->

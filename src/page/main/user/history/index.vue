@@ -31,11 +31,10 @@ onBeforeRouteLeave(() => sca.abort())
 </script>
 
 <template>
-  <List :item-height="160" reloadable @reload="then => resyncHistory().then(then)"
-    class="h-[calc(100vh-var(--van-tabs-line-height)-240px-var(--van-tabbar-height))]"
+  <VanNavBar title="历史记录" left-text="返回" left-arrow @click-left="$router.back()" />
+  <List :item-height="160" reloadable @reload="then => resyncHistory().then(then)" class="h-[calc(100%-46px)]"
     :data="isRefreshing ? [] : sortBy(values(app.readHistory), i => i[3]).toReversed().filter(Boolean)"
     :is-requesting="isRefreshing" v-slot="{ height, data: { item } }">
     <ComicCard :comic="item[1]" :height />
-    <!-- {{ item[1] }} -->
   </List>
 </template>

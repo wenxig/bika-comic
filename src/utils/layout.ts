@@ -4,7 +4,7 @@ import { computed, onUnmounted, shallowReactive, shallowRef, watch, type MaybeRe
 
 export const allPopups = shallowRef(0)
 const allLayers = shallowReactive<symbol[]>([])
-export const useZIndex = (show: MaybeRefOrGetter<boolean>): [index: ComputedRef<number>, isLast: ComputedRef<boolean>] => {
+export const useZIndex = (show: MaybeRefOrGetter<boolean>): [index: ComputedRef<number>, isLast: ComputedRef<boolean>, stopUse: () => void] => {
   const th = Symbol('popup')
   const isShow = toRef(show)
   const stop = watch(isShow, isShow => {
@@ -17,5 +17,5 @@ export const useZIndex = (show: MaybeRefOrGetter<boolean>): [index: ComputedRef<
     }
   }, { immediate: true })
   onUnmounted(stop)
-  return [computed(() => (allLayers.indexOf(th) + 1) * 10), computed(() => last(allLayers) == th)]
+  return [computed(() => (allLayers.indexOf(th) + 1) * 10), computed(() => last(allLayers) == th), stop]
 }

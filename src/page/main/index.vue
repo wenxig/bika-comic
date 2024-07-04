@@ -5,7 +5,7 @@ import { isEmpty } from 'lodash-es'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 const route = useRoute()
-const name = computed(() => route.path.match(/(?<=\/main\/)\w+(?=\/)?/g)![0])
+const name = computed(() => route.path.match(/(?<=\/main\/)\w+(?=\/)?/g)?.[0])
 const app = useAppStore()
 const getComics = () => app.newUpdateComics?.map(v => {
   for (const user of app.subscribes) {
@@ -30,7 +30,7 @@ const newDateString = `${newDate.getFullYear()}-${newDate.getMonth()}-${newDate.
 
 <template>
   <div
-    class="h-[calc(100vh-var(--van-tabbar-height))] w-full pb-[calc(var(--van-tabbar-height)+6rem)] overflow-y-auto overflow-x-hidden"
+    class="h-[calc(100vh-var(--van-tabbar-height))] w-full pb-[calc(var(--van-tabbar-height)+6rem)] overflow-hidden"
     id="homeRoot">
     <Suspense>
       <router-view v-slot="{ Component }">

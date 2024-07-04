@@ -18,16 +18,7 @@ if (game.game.docs.value.length == 0) {
 
 <template>
   <van-nav-bar title="游戏区" left-text="返回" left-arrow @click-left="$router.back()" />
-  <header class="w-full h-auto text-[--van-text-color]">
-    <div class="van-hairline--top-bottom h-8 w-full items-center bg-[--van-background-2] flex">
-      <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center">
-        <del><van-icon name="filter-o" size="1.5rem" />过滤</del>
-      </div>
-      <van-loading class="ml-2" size="24px"
-        v-if="!isNaN(game.game.pages.value) && game.game.isRequesting.value">加载中...</van-loading>
-    </div>
-  </header>
-  <div class="w-full h-[calc(100%-32px-46px)]">
+  <div class="w-full h-[calc(100%-46px)]">
     <List :data="game.game.docs.value" :item-height="160" :end="game.game.done.value"
       v-slot="{ height, data: { item: game } }" :is-requesting="game.game.isRequesting.value" class="h-full"
       @next="game.game.next()" @reload="async then => {

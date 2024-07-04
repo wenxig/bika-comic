@@ -26,11 +26,10 @@ const handleScroll: VirtualListProps['onScroll'] = debounce(() => {
   const list = vList.value?.virtualListInstRef?.itemsElRef?.querySelector(' .v-vl-visible-items')
   if (!list) return
   // 能用
-  console.log('list is mounted')
+  console.log('list has mounted')
   console.log('list next condition:', $props.itemHeight * ($props.data.length - 2), list?.children?.length, listScrollTop.value + (list?.children?.length ?? window.innerHeight) * $props.itemHeight, ($props.itemHeight * ($props.data.length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight) * $props.itemHeight), $props.isRequesting, (!$props.end && !$props.isRequesting))
   if (($props.itemHeight * ($props.data.length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight) * $props.itemHeight) && (!$props.end && !$props.isRequesting)) {
-    console.log('next')
-
+    console.log('list load next')
     $emit('next')
   }
 }, 100)

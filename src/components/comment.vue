@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { CommentsStream, likeComment, reportComment, Comment } from '@/api'
+import { CommentsStream, Comment } from '@/api'
 import { createLoadingMessage } from '@/utils/message'
 import { onMounted, shallowRef, watch } from 'vue'
 import ChildrenComments from '@/page/comic/comments/children.vue'
@@ -8,7 +8,6 @@ import { onBeforeRouteLeave } from 'vue-router'
 import CommentRow from '@/page/comic/comments/commentRow.vue'
 import emiter from '@/page/comic/comments/emiter'
 import { comments, commentsScroll } from '@/stores/temp'
-import { showConfirmDialog } from 'vant'
 import { isEmpty } from 'lodash-es'
 import List from '@/components/list.vue'
 const list = shallowRef<GenericComponentExports<typeof List>>()
@@ -20,12 +19,6 @@ const $props = withDefaults(defineProps<{
   streamMode: 'comics'
 })
 const commentHeight = defineModel<number>('height')
-const anchors2 = [
-  0,
-  Math.round(0.3 * window.innerHeight),
-  Math.round(0.6 * window.innerHeight),
-  Math.round(0.9 * window.innerHeight),
-]
 const commitStream = comments.has($props.id) ? comments.get($props.id)! : (() => {
   const c = new CommentsStream($props.id)
   comments.set($props.id, c)

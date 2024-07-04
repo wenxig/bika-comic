@@ -89,7 +89,7 @@ const getMode = (name: string) => _fiflerTags.value.find(v => v.name == name)?.m
 const isInUnshows = (name: string) => getMode(name) == 'unshow'
 const isInMustshows = (name: string) => getMode(name) == 'show'
 
-const nextSearch = async (then: (() => void) = () => { }) => {
+const nextSearch = async (then?: VoidFunction) => {
   if (comicStream.value.isRequesting.value) return
   if (isEmpty(comicStream.value.docs.value)) {
     await comicStream.value.next()
@@ -102,7 +102,7 @@ const nextSearch = async (then: (() => void) = () => { }) => {
   } catch {
     await loading.fail()
   }
-  // then()
+  if (then) then()
 }
 </script>
 

@@ -21,6 +21,7 @@ html,
   --van-primary-color: var(--primary-color) !important;
   --van-blue: var(--primary-color) !important;
   --p-color: var(--primary-color);
+  --n-bezier: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .van-floating-panel__header-bar {
@@ -31,7 +32,7 @@ html,
   z-index: 1000000 !important;
 }
 
-#messages{
+#messages {
   position: fixed;
   pointer-events: none;
   width: 100vw;
@@ -39,4 +40,7 @@ html,
   top: 0px;
   left: 0px;
   z-index: 2147483647;
+  * {
+    pointer-events: all;
+  }
 }

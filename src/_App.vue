@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { MessageReactive, useLoadingBar, useMessage } from 'naive-ui'
+import { MessageReactive, useDialog, useLoadingBar, useMessage } from 'naive-ui'
 import Text from '@/components/text.vue'
 import { shallowRef, watch } from 'vue'
 import { createLoadingMessage } from './utils/message'
@@ -12,6 +12,7 @@ import { getVer } from './api/plusPlan'
 import Popup from '@/components/popup.vue'
 window.$message = useMessage()
 window.$loading = useLoadingBar()
+window.$dialog = useDialog()
 const app = useAppStore()
 const ver = shallowRef('')
 getVer().then(v => {

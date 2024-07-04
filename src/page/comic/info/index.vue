@@ -46,7 +46,7 @@ useTitle(title)
         <van-icon name="star-o" size="30px" v-else color="var(--van-text-color)" @click="preload?.favourt()" />
       </VanCol>
       <VanCol span="4" class="justify-center !flex items-center"
-        @click="$router.force.push(`/comic/${preload?._id}/comments`)">
+        @click="comic?.allowComment && $router.force.push(`/comic/${preload?._id}/comments`)">
         <van-badge v-if="comic && comic.allowComment" :content="comic.commentsCount">
           <van-icon name="chat-o" size="30px" color="var(--van-text-color)" />
         </van-badge>

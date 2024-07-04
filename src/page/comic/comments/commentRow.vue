@@ -11,7 +11,7 @@ const $props = defineProps<{
 } & Partial<RowProps>>()
 defineEmits<{
   comment: [c: Comment]
-  click: []
+  click: [c: Comment]
   showUser: [user: User]
 }>()
 defineSlots<{
@@ -22,7 +22,7 @@ defineSlots<{
 <template>
   <VanRow v-bind="$props"
     class="van-hairline--bottom relative pb-[24px] bg-[--van-background-2] text-[--van-text-color]"
-    :style="`min-height:${height - 24}px;`" @click="$emit('click')"
+    :style="`min-height:${height - 24}px;`" @click="$emit('click', comment)"
     :class="{ 'border-x border-b border-t-0 first:!border-t-[1px] border-[--van-primary-color] border-solid': comment.isTop }">
     <VanCol span="4" class="!flex justify-center items-start">
       <div @click.stop="$emit('showUser', comment._user)">
@@ -50,7 +50,7 @@ defineSlots<{
       <span class="flex items-center mr-2 " @click.stop="comment.like()">
         <VanIcon name="like-o" color="var(--van-primary-color)" size="16px" v-if="comment.isLiked" />
         <VanIcon name="like-o" size="16px" v-else />
-        <span class="ml-1 text-[13px]">{{ comment.likesCount }}</span>
+        <span class="ml-1 text-[13px]" v-if="comment.likesCount">{{ comment.likesCount }}</span>
       </span>
       <button v-if="showChildrenComment" class="flex items-center bg-transparent border-none"
         @click.stop="$emit('comment', comment)">

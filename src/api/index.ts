@@ -10,9 +10,7 @@ import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
 import { until } from '@vueuse/core'
-import { createLoadingMessage } from '@/utils/message'
-import { showConfirmDialog } from 'vant'
-import { useZIndex } from '@/utils/layout'
+import { createLoadingMessage, createDialog } from '@/utils/message'
 export { type RawImage, Image } from '@/utils/image'
 const createClass = <T extends { docs: any[] }, C>(v: T, Class: new (data: T['docs'][number]) => C): T & { docs: C[] } => {
   v.docs = v.docs.map(v => new Class(v))
@@ -709,6 +707,7 @@ export class Comment {
     setValue(this, v)
   }
   public async like() {
+    this.likesCount ??= 0
     const loading = createLoadingMessage('点赞中')
     try {
       const ret = await likeComment(this._id)
@@ -723,12 +722,9 @@ export class Comment {
     }
   }
   public async report(askUser = true) {
-    if (askUser) await showConfirmDialog({
-      message: '举报后会进行对该评论的审核',
-      title: '确定举报？',
-      teleport: 'body',
-      className: `!z-[7000]`,
-      overlayClass: `!z-[7000]`,
+    if (askUser) await createDialog({
+      content: '举报后会进行对该评论的审核',
+      title: '确定举报？'
     })
       .then(() => reportComment(this._id))
       .catch(() => { })

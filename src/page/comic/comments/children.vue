@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { computed, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { Comment, ChildrenCommentsStream, User } from '@/api'
 import CommentRow from './commentRow.vue'
 import emiter from './emiter'
@@ -50,7 +50,7 @@ defineExpose({
   },
   isShowing: computed(() => floatPopup.value?.isShowing ?? false)
 })
-const topCommentEl = shallowRef<HTMLDivElement>()
+const topCommentEl = ref<HTMLDivElement>()
 const { height: topCommentElHeight } = useElementSize(topCommentEl)
 
 const nextLoad = async () => {
@@ -63,7 +63,7 @@ const nextLoad = async () => {
     loading.fail()
   }
 }
-const fullComment = shallowRef<Comment>()
+const fullComment = ref<Comment>()
 const showComment = shallowRef(false)
 </script>
 

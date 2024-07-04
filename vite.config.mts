@@ -122,5 +122,10 @@ export default defineConfig(({ command }) => ({
     },
 
   },
-  base: "/"
+  base: "/",
+  server: {
+    hmr: {
+      overlay: false
+    }
+  }
 }))

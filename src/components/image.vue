@@ -4,7 +4,7 @@ import { ImageProps } from 'naive-ui'
 import { useImagesStore } from '@/stores/images'
 import { Image, showImagePreview } from '@/utils/image'
 import { isString } from 'lodash-es'
-const $props = withDefaults(defineProps<{
+const $props = defineProps<{
   src?: string | Image,
   previewable?: boolean
   infiniteRetry?: boolean
@@ -20,9 +20,7 @@ const $props = withDefaults(defineProps<{
     loaded: Set<string>
     error: Set<string>
   }
-}>(), {
-
-})
+}>()
 const src = computed(() => isString($props.src) ? $props.src : $props.src ? $props.src.getUrl ? $props.src.getUrl() : new Image($props.src).getUrl() : '')
 
 const $emit = defineEmits<{

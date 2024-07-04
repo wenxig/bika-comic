@@ -1,6 +1,6 @@
 <script setup lang='ts'>
-import { isNumber } from 'lodash-es';
-import { computed } from 'vue';
+import { isNumber } from 'lodash-es'
+import { computed } from 'vue'
 
 const $props = withDefaults(defineProps<{
   text?: string
@@ -14,20 +14,18 @@ const texts = computed(() => $props.text.replace(/(http(s?):\/\/)?([\w-]+\.)+(\.
 } as const : {
   value: v,
   mode: 'text'
-} as const));
+} as const))
 </script>
 
 <template>
-  <div class="inline-flex flex-col text-wrap text-[--van-text-color]">
-    <span :class="[isNumber(ellipsis) && 'overflow-ellipsis overflow-hidden']"
-      :style="[isNumber(ellipsis) && `line-break: anywhere;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: ${ellipsis};`]"
-      class="whitespace-pre-wrap">
-      <template v-for="token of texts">
-        <a class="text-[--p-color] van-haptics-feedback underline" @click.stop
-          :href="/http(s?):\/\/.+/.test(token.value) ? token.value : `https://${token.value}`"
-          v-if="token.mode == 'link'" target="_blank">{{ token.value }}</a>
-        <template v-else-if="token.mode == 'text'">{{ token.value }}</template>
-      </template>
-    </span>
+  <div :class="[isNumber(ellipsis) && 'overflow-ellipsis overflow-hidden']"
+    :style="[isNumber(ellipsis) && `line-break: anywhere;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: ${ellipsis};`]"
+    class="whitespace-pre-wrap  text-[--van-text-color]">
+    <template v-for="token of texts">
+      <a class="text-[--p-color] van-haptics-feedback underline" @click.stop
+        :href="/http(s?):\/\/.+/.test(token.value) ? token.value : `https://${token.value}`" v-if="token.mode == 'link'"
+        target="_blank">{{ token.value }}</a>
+      <template v-else-if="token.mode == 'text'">{{ token.value }}</template>
+    </template>
   </div>
 </template>
