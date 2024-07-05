@@ -5,22 +5,17 @@ import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { toCn, toTw } from '@/utils/translater'
 import router from '@/router'
 import config, { isOnline } from '@/config'
-import { SmartAbortController, errorReturn } from '@/utils/requset'
+import { SmartAbortController, errorReturn, setValue } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
 import { until } from '@vueuse/core'
 import { createLoadingMessage, createDialog } from '@/utils/message'
+import symbol from '@/symbol'
 export { type RawImage, Image } from '@/utils/image'
 const createClass = <T extends { docs: any[] }, C>(v: T, Class: new (data: T['docs'][number]) => C): T & { docs: C[] } => {
   v.docs = v.docs.map(v => new Class(v))
   return v
-}
-const setValue = <T extends object>(v: T, v2: T) => {
-  for (const key in v2) {
-    const element = v2[key]
-    if (element) v[key] = element
-  }
 }
 export interface Result<T> {
   docs: T[]
@@ -37,18 +32,18 @@ export interface RawData<T> {
 }
 
 export const api = (() => {
-  const a = axios.create({
+  const api = axios.create({
     baseURL: '',
     timeout: 5000
   })
-  a.interceptors.request.use(async requestConfig => {
+  api.interceptors.request.use(async requestConfig => {
     if (values(requestConfig.data).includes(undefined)) throw Promise.reject('some values is undefined')
     requestConfig.baseURL = config.value['bika.proxy.interface']
     await until(isOnline).toBe(true)
     for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
     return requestConfig
   })
-  a.interceptors.response.use(v => {
+  api.interceptors.response.use(v => {
     if (config.value['bika.devMode']) {
       const app = useAppStore()
       const base = app.devData.get('defaultApi') ?? {
@@ -60,31 +55,29 @@ export const api = (() => {
     }
     return v
   }, async err => {
-    
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
-    if (err?.request?.status == 401 && localStorage.getItem('userLoginData')) {
-      localStorage.setItem('token', (await login(JSON.parse(localStorage.getItem('userLoginData')!))).data.data.token)
-      return a(err.config ?? {})
+    if (err?.request?.status == 401 && localStorage.getItem(symbol.loginData)) {
+      localStorage.setItem(symbol.loginToken, (await login(JSON.parse(localStorage.getItem(symbol.loginData)!))).data.data.token)
+      return api(err.config ?? {})
     }
     else if (err?.request?.status == 401 && !location.pathname.includes('auth')) {
-      localStorage.removeItem('token')
+      localStorage.removeItem(symbol.loginToken)
       await router.force.replace('/auth/login')
       return Promise.reject(err)
     }
     if (location.pathname.startsWith('/auth')) return Promise.reject(err)
-    if (!err?.response) return errorReturn(err, err.cause?.message)
-    if (err.response.data.error == '1014') return Promise.resolve({ data: false })
-    if (/^[45]/g.test(<string>err?.request?.status?.toString())) return errorReturn(err, err.response.data.message)
-    if (!err.config) return errorReturn(err, err.cause?.message)
-    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err.response.data.message)
+    if (!err?.response) return errorReturn(err, err.message)
+    if (err.response.data.error == '1014') return Promise.resolve({ data: false }) // only /comic/:id
+    if (!err.config) return errorReturn(err, err.message)
+    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
     err.config.__retryCount = err.config?.__retryCount ?? 0
     err.config.__retryCount++
     await delay(1000)
-    return a(err.config)
+    return api(err.config)
   })
-  a.defaults.retry = 10 //重试次数
-  return a
+  api.defaults.retry = 10 //重试次数
+  return api
 })()
 window.$api.api = api
 
@@ -95,30 +88,30 @@ export abstract class Comic {
   public isLiked?: boolean
   public isFavourite?: boolean
   public likesCount?: number
-  public async like(config: AxiosRequestConfig = {}) {
-    console.log('change comic like', this.likesCount, this)
-
-    const loading = createLoadingMessage('点赞中')
+  public async like(config: AxiosRequestConfig = {}, message = true) {
+    console.log('change comic like', this.isLiked, this.likesCount, this)
+    if (message) var loading = createLoadingMessage('点赞中')
     try {
       const ret = await likeComic(this._id, config)
       if ('isLiked' in this) this.isLiked = !this.isLiked
       if ('likesCount' in this) if (ret == 'like') this.likesCount!++
       else this.likesCount!--
-      loading.success()
+      if (loading!) loading.success()
     } catch {
-      loading.fail()
+      if (loading!) loading.fail()
     }
   }
-  public async favourt(config: AxiosRequestConfig = {}) {
-    const loading = createLoadingMessage('收藏中')
+  public async favourt(config: AxiosRequestConfig = {}, message = true) {
+    console.log('change comic favourt', this.isFavourite, this)
+    if (message) var loading = createLoadingMessage('收藏中')
     try {
       await favouriteComic(this._id, config)
       if ('isFavourite' in this) this.isFavourite = !this.isFavourite
       const app = useAppStore()
-      await app.$reload.me()
-      loading.success()
+      if (message) await app.$reload.me()
+      if (loading!) loading.success()
     } catch {
-      loading.fail()
+      if (loading!) loading.fail()
     }
   }
   private __info?: ProPlusMaxComic

@@ -10,6 +10,7 @@ import { getConfig, putConfig } from "./api/plusPlan"
 import { defaultsDeep } from "lodash-es"
 import { nextTick, watch } from "vue"
 import { SmartAbortController } from "./utils/requset"
+import symbol from "./symbol"
 
 // theme setup
 const themeColor = useCssVar('--primary-color')
@@ -32,7 +33,7 @@ const themeOverrides = reactiveComputed(() => ({
 let isSetup = true
 if (isSetup) getConfig().then(async v => {
   if (!v) return
-  localStorage.setItem('config', JSON.stringify(v))
+  localStorage.setItem(symbol.config, JSON.stringify(v))
   config.value = defaultsDeep(v, baseConfig)
   await nextTick()
   isSetup = false
@@ -53,9 +54,8 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
     putConfig(config, { signal: stop.signal })
   }
   if (config['bika.darkMode'] != oldConfig['bika.darkMode']) loadTheme()
-  localStorage.setItem('config', JSON.stringify(config))
+  localStorage.setItem(symbol.config, JSON.stringify(config))
 })
-
 </script>
 
 <template>

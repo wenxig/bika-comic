@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, getAnnouncements, getLevelboard } from '@/api'
 import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Announcement, Levelboard, ProComic } from '@/api'
 import { reactive, shallowRef, watch } from 'vue'
-import { uniq } from 'lodash-es'
 import { getSearchHitory, getWatchHitory, getSubscribe, type Subscribe, isInPlusPlan, getFavourtImages, putFavourtImages, WatchHistory } from '@/api/plusPlan'
 import { SmartAbortController } from '@/utils/requset'
 import type { AxiosRequestConfig } from 'axios'
@@ -10,11 +9,19 @@ import { getNewUpdatesComic } from '@/api/plusPlan'
 import { searchResult } from './temp'
 import { type FavourtImage } from '@/api/plusPlan'
 import config from '@/config'
+import localforage from 'localforage'
+import symbol from '@/symbol'
 
 export type DevData = {
   name: string,
   data: (Record<string, any> | string | number | (any[]))[]
 }
+
+const _searchHistory = await localforage.getItem<string[]>(symbol.searchHistory) ?? []
+
+type ReadHistory = Record<string, WatchHistory>
+const _readHistory = await localforage.getItem<ReadHistory>(symbol.searchHistory) ?? {}
+
 export const useAppStore = defineStore('app', () => {
   const categories = shallowRef<Categories[]>([])
 
@@ -22,14 +29,12 @@ export const useAppStore = defineStore('app', () => {
 
   const collections_list = shallowRef<Collection[]>([])
 
-  const searchHistory = shallowRef<string[]>(JSON.parse(localStorage.getItem('searchHistory') || '[]'))
-  watch(searchHistory, v => {
-    localStorage.setItem('searchHistory', JSON.stringify(v))
-    v = uniq(v)
-  })
+  const searchHistory = shallowRef<string[]>(_searchHistory)
+  watch(searchHistory, v => localforage.setItem(symbol.searchHistory, v))
 
-  const readHistory = shallowRef<Record<string, WatchHistory>>(JSON.parse(localStorage.getItem('readHistory') || '{}'))
-  watch(readHistory, v => localStorage.setItem('readHistory', JSON.stringify(v)))
+  const readHistory = shallowRef<ReadHistory>(_readHistory)
+  localforage.getItem<ReadHistory>(symbol.searchHistory).then(v => readHistory.value = v ?? {})
+  watch(readHistory, v => localforage.setItem(symbol.readHistory, v))
   const $reloadReadHistory = async (config: AxiosRequestConfig = {}) => {
     const data = await getWatchHitory(config)
     if (!data) return

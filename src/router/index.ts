@@ -9,12 +9,13 @@ import { AxiosError, isCancel } from "axios"
 import { useGameStore } from "@/stores/game"
 import { getGameInfo } from "@/api/game"
 import { useAppStore } from "@/stores"
+import symbol from "@/symbol"
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: "/",
-      redirect: () => localStorage.getItem('token') ? '/main/home' : '/auth/login',
+      redirect: () => localStorage.getItem(symbol.loginToken) ? '/main/home' : '/auth/login',
     }, {
       path: '/auth/login',
       component: login,

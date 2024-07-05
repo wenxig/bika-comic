@@ -6,6 +6,7 @@ import { createLoadingMessage } from '@/utils/message'
 import { useMessage } from 'naive-ui'
 import { joinInPlusPlan } from '@/api/plusPlan'
 import config from '@/config'
+import symbol from '@/symbol'
 const formValue = shallowReactive<Login>({
   email: '',
   password: ''
@@ -14,9 +15,9 @@ document.title = '登陆 | bika'
 async function submit() {
   const loading = createLoadingMessage('登陆中')
   try {
-    localStorage.setItem('userLoginData', JSON.stringify(formValue))
+    localStorage.setItem(symbol.loginData, JSON.stringify(formValue))
     const { data: { data: { token } } } = await login(formValue)
-    localStorage.setItem('token', token)
+    localStorage.setItem(symbol.loginToken, token)
     await joinInPlusPlan()
     config.value['bika.plusPlan'] = true
     loading.success()

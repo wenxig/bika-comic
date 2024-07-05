@@ -1,12 +1,13 @@
 <script setup lang='ts'>
 import { isEmpty, values } from 'lodash-es'
-import { likeComment, Comment, reportComment } from '@/api'
+import { likeComment, Comment } from '@/api'
 import { createLoadingMessage } from '@/utils/message'
 import { computed, onMounted, ref, shallowRef } from 'vue'
 import Children from '@/page/comic/comments/children.vue'
 import { useAppStore } from '@/stores'
 import PreviewUser from '@/components/user/previewUser.vue'
 import CommentRow from '@/page/comic/comments/commentRow.vue'
+document.title = '评论 | bika'
 const app = useAppStore()
 const _father = ref<Comment>()
 const handleLike = async (comment: Comment) => {

@@ -1,34 +1,24 @@
 import config, { isOnline } from '@/config'
 import { useAppStore } from '@/stores'
-import axios, { isCancel, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
+import axios, { isAxiosError, isCancel, type AxiosRequestConfig} from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
 import { fromPairs, isEmpty, isFunction, isObject, toPairs } from 'lodash-es'
 import { ProPlusComic, ProPlusMaxComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
 import { until } from '@vueuse/core'
 import dayjs from 'dayjs'
-const setValue = <T extends object>(v: T, v2: T) => {
-  for (const key in v2) {
-    const element = v2[key]
-    v[key] = element
-  }
-}
-const errorReturn = (err: any) => {
-  try {
-    window.$message.error('网络错误')
-  } catch { }
-  return Promise.reject(err)
-}
+import { errorReturn, setValue } from '@/utils/requset'
+import symbol from '@/symbol'
 export const api = (() => {
-  const a = axios.create({
+  const api = axios.create({
     baseURL: import.meta.env.DEV ? 'http://localhost:8787' : 'https://bika.wenxig.workers.dev',
     timeout: 10000,
   })
-  a.interceptors.request.use(async v => {
+  api.interceptors.request.use(async v => {
     await until(isOnline).toBe(true)
     return v
   })
-  a.interceptors.response.use(v => {
+  api.interceptors.response.use(v => {
     if (config.value['bika.devMode']) {
       const app = useAppStore()
       const base = app.devData.get('plusApi') ?? {
@@ -40,19 +30,23 @@ export const api = (() => {
     }
     return v
   }, async err => {
-    if (isObject(err?.request?.data)) return Promise.reject(err)
     if (isCancel(err)) return Promise.reject(err)
-    if (/^[45]/g.test(<string>err?.request?.status?.toString())) return errorReturn(err)
-    const config = err.config as InternalAxiosRequestConfig & { __retryCount: number, retry: number }
-    if (config?.__retryCount && config.__retryCount >= config.retry) return errorReturn(err)
-    config.__retryCount = config?.__retryCount ?? 0
-    config.__retryCount++
+    if (!isAxiosError<{
+      message: any,
+      code: number
+    }>(err)) return Promise.reject(err)
+    if (isObject(err?.request?.data)) return Promise.reject(err)
+    if (!err.config) return Promise.reject(err)
+    if (/^[45]/g.test(err.status?.toString() ?? '')) return errorReturn(err, err.response?.data.message ?? err.message)
+    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err.response?.data.message ?? err.message)
+    err.config.__retryCount = err.config?.__retryCount ?? 0
+    err.config.__retryCount++
     // 重新发起请求
     await delay(1000)
-    return a(config)
-  });
-  (<any>a.defaults).retry = 10 //重试次数
-  return a
+    return api(err.config)
+  })
+  api.defaults.retry = 10 //重试次数
+  return api
 })()
 window.$api.plus = api
 interface Res<T> {
@@ -60,7 +54,7 @@ interface Res<T> {
   data: T
 }
 try {
-  const userLogin = JSON.parse(localStorage.getItem('userLoginData')!)
+  const userLogin = JSON.parse(localStorage.getItem(symbol.loginData)!)
   var id: string | null = HmacMD5(userLogin.email, userLogin.password).toString()
 } catch {
   var id: string | null = null
@@ -204,29 +198,31 @@ export const removeSubscribe = async (data: string[], config: AxiosRequestConfig
 }
 
 
-const newUpdates = axios.create()
-newUpdates.interceptors.request.use(async con => {
-  con.baseURL = config.value['bika.proxy.db']
-  await until(isOnline).toBe(true)
-  return con
-})
-newUpdates.interceptors.response.use(data => {
-  data.data
-  return data
-}, async err => {
-  if (isObject(err?.request?.data)) return Promise.reject(err)
-  if (isCancel(err)) return Promise.reject(err)
-  const config = err.config as InternalAxiosRequestConfig & { __retryCount: number, retry: number }
-  if (config?.__retryCount && config.__retryCount >= config.retry) return errorReturn(err)
-  config.__retryCount = config?.__retryCount ?? 0
-  config.__retryCount++
-  if (err?.response?.status == 404) {
-    config.url = `/${dayjs().add(-config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`
-  }
-  await delay(1000)
-  return newUpdates(config)
-});
-(<any>newUpdates.defaults).retry = 10 //重试次数
+const newUpdates = (() => {
+  const newUpdates = axios.create()
+  newUpdates.interceptors.request.use(async con => {
+    con.baseURL = config.value['bika.proxy.db']
+    await until(isOnline).toBe(true)
+    return con
+  })
+  newUpdates.interceptors.response.use(data => {
+    data.data
+    return data
+  }, async err => {
+    if (isCancel(err)) return Promise.reject(err)
+    if (isObject(err?.request?.data)) return Promise.reject(err)
+    if (!isAxiosError(err)) return Promise.reject(err)
+    if (!err.config) return Promise.reject(err)
+    if (err.config.retry && err.config.__retryCount && err.config.__retryCount >= err.config.retry) return errorReturn(err)
+    err.config.__retryCount = err.config.__retryCount ?? 0
+    err.config.__retryCount++
+    if (err?.status == 404) err.config.url = `/${dayjs().add(-err.config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`
+    await delay(1000)
+    return newUpdates(err.config)
+  })
+  newUpdates.defaults.retry = 10 //重试次数
+  return newUpdates
+})()
 
 interface RawNews {
   author: string

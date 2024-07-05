@@ -1,13 +1,7 @@
-import { SmartAbortController } from '@/utils/requset'
+import { setValue, SmartAbortController } from '@/utils/requset'
 import { api, Image, type RawData, type Result, type ResultActionData, type Stream } from '.'
 import { computed, shallowRef, triggerRef } from 'vue'
 import type { AxiosRequestConfig } from 'axios'
-const setValue = <T extends object>(v: T, v2: T) => {
-  for (const key in v2) {
-    const element = v2[key]
-    v[key] = element
-  }
-}
 export abstract class BaseGame {
   public abstract _id: string
   public like(config: AxiosRequestConfig = {}) {

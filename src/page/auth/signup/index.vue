@@ -8,6 +8,7 @@ import config from '@/config'
 import { padStart } from 'lodash-es'
 import { useMessage } from 'naive-ui'
 import Popup from '@/components/popup.vue'
+import symbol from '@/symbol'
 const toDay = new Date()
 const formValue = shallowReactive<SignUp & Record<string, string>>({
   email: '',
@@ -28,7 +29,7 @@ document.title = '注册 | bika'
 async function submit() {
   const loading = createLoadingMessage('注册中')
   try {
-    localStorage.setItem('userLoginData', JSON.stringify({
+    localStorage.setItem(symbol.loginData, JSON.stringify({
       email: formValue.email,
       password: formValue.password
     }))
@@ -37,7 +38,7 @@ async function submit() {
       email: formValue.email,
       password: formValue.password
     })
-    localStorage.setItem('token', token)
+    localStorage.setItem(symbol.loginToken, token)
     await joinInPlusPlan()
     config.value['bika.plusPlan'] = true
     loading.success()
