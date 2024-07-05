@@ -15,4 +15,10 @@ declare module 'vue-router' {
     }
   }
 }
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    __retryCount?: number
+    retry?: number
+  }
+}
 export { }

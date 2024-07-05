@@ -9,12 +9,13 @@ export interface FillerTag {
   name: string
   mode: "unshow" | "show" | "auto"
 }
-
+type ImageQuality = 'original' | 'low' | 'medium' | 'high'
 const newDate = new Date()
 export const baseConfig = {
   'bika.read.preloadIamgeNumbers': 2,
   'bika.read.watchFullscreen': true,
   'bika.read.vertical': false,
+  'bika.read.imageQuality': <ImageQuality>'original',
   'bika.search.sort': 'dd' as SortType,
   'bika.search.fillerTags': new Array<FillerTag>(),
   'bika.search.showAIProject': true,
@@ -26,9 +27,7 @@ export const baseConfig = {
   'bika.plusPlan': true,
   'bika.devMode': false,
   'bika.darkMode': false,
-  'bika.game.search.fillerTags': new Array<FillerTag>(),
-  // deprecates
-  'bika.deprecated.fullscreen': false,
+  'bika.game.search.fillerTags': new Array<FillerTag>()
 }
 const config = reactive({ value: defaultsDeep(JSON.parse(localStorage.getItem('config') ?? '{}'), baseConfig) as typeof baseConfig })
 

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { FavourtImage } from '@/api/plusPlan'
 import { remove } from 'lodash-es'
-import { shallowRef } from 'vue'
+import { onMounted, shallowRef } from 'vue'
 import ComicView from '@/components/comic/comicView.vue'
 import { SmartAbortController } from '@/utils/requset'
 import { onBeforeRouteLeave } from 'vue-router'
@@ -30,6 +30,16 @@ const resyncSaveImages = () => new Promise<FavourtImage[]>((ok, fail) => {
   }
 })
 onBeforeRouteLeave(() => sac.abort())
+
+import List from '@/components/list.vue'
+import { userPageScroll } from '@/stores/temp'
+const list = shallowRef<GenericComponentExports<typeof List>>()
+onMounted(() => {
+  list.value?.listInstanse?.scrollTo({ top: userPageScroll.image })
+})
+onBeforeRouteLeave(() => {
+  if (list.value?.scrollTop) userPageScroll.image = list.value?.scrollTop
+})
 </script>
 
 <template>
@@ -43,7 +53,7 @@ onBeforeRouteLeave(() => sac.abort())
   </div>
   <List :is-requesting="isRefreshing" reloadable @reload="then => resyncSaveImages().then(then)"
     class="h-[calc(100%-2.5rem-46px)]" :data="isRefreshing ? [] : app.favourtImages.value" :item-height="100"
-    v-slot="{ height, data: { item, index } }">
+    v-slot="{ height, data: { item, index } }" ref="list">
     <button class="w-full van-hairline--bottom bg-[--van-background-2] flex items-center border-none relative"
       :style="{ height: `${height}px` }">
       <Image :src="item.src" class="ml-[2%] w-[30%]" fit="contain" />

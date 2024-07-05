@@ -17,3 +17,10 @@ export const random = {
   stream: <undefined | RandomComicStream>undefined,
   scroll: 0
 }
+
+export const userPageScroll = {
+  history: 0,
+  favourt: 0,
+  image: 0,
+  comment: 0
+}

@@ -1,11 +1,11 @@
-import axios, { type AxiosRequestConfig, type InternalAxiosRequestConfig, isCancel, type AxiosResponse } from 'axios'
-import { postHeader } from './bk_until'
+import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
+import { getBikaApiHeaders } from './bk_until'
 import { max, times, uniqBy, flatten, sortBy, values } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { toCn, toTw } from '@/utils/translater'
 import router from '@/router'
 import config, { isOnline } from '@/config'
-import { SmartAbortController } from '@/utils/requset'
+import { SmartAbortController, errorReturn } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
@@ -32,7 +32,8 @@ export interface Result<T> {
 export interface RawData<T> {
   message: string,
   code: number,
-  data: T
+  data: T,
+  error?: string
 }
 
 export const api = (() => {
@@ -43,16 +44,10 @@ export const api = (() => {
   a.interceptors.request.use(async requestConfig => {
     if (values(requestConfig.data).includes(undefined)) throw Promise.reject('some values is undefined')
     requestConfig.baseURL = config.value['bika.proxy.interface']
-    for (const value of postHeader((new Date().getTime() / 1000).toFixed(0), `${requestConfig.url?.substring(1)}`, requestConfig.method!.toUpperCase())) requestConfig.headers.set(value.name, value.value)
     await until(isOnline).toBe(true)
+    for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
     return requestConfig
   })
-  const errorReturn = (err: any) => {
-    try {
-      window.$message?.error('网络错误')
-    } catch { }
-    return Promise.reject(err)
-  }
   a.interceptors.response.use(v => {
     if (config.value['bika.devMode']) {
       const app = useAppStore()
@@ -65,9 +60,12 @@ export const api = (() => {
     }
     return v
   }, async err => {
+    
+    if (isCancel(err)) return Promise.reject(err)
+    if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
     if (err?.request?.status == 401 && localStorage.getItem('userLoginData')) {
       localStorage.setItem('token', (await login(JSON.parse(localStorage.getItem('userLoginData')!))).data.data.token)
-      return a(err.config)
+      return a(err.config ?? {})
     }
     else if (err?.request?.status == 401 && !location.pathname.includes('auth')) {
       localStorage.removeItem('token')
@@ -75,18 +73,17 @@ export const api = (() => {
       return Promise.reject(err)
     }
     if (location.pathname.startsWith('/auth')) return Promise.reject(err)
-    if (isCancel(err)) return Promise.reject(err)
-    const error = err?.response as AxiosResponse
-    if (error?.data.error == '1014') return Promise.resolve({ data: false })
-    if (/^[45]/g.test(<string>err?.request?.status?.toString())) return errorReturn(err)
-    const config: InternalAxiosRequestConfig & { __retryCount: number, retry: number } = err.config
-    if (config?.__retryCount && config.__retryCount >= config.retry) return errorReturn(err)
-    config.__retryCount = config?.__retryCount ?? 0
-    config.__retryCount++
+    if (!err?.response) return errorReturn(err, err.cause?.message)
+    if (err.response.data.error == '1014') return Promise.resolve({ data: false })
+    if (/^[45]/g.test(<string>err?.request?.status?.toString())) return errorReturn(err, err.response.data.message)
+    if (!err.config) return errorReturn(err, err.cause?.message)
+    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err.response.data.message)
+    err.config.__retryCount = err.config?.__retryCount ?? 0
+    err.config.__retryCount++
     await delay(1000)
-    return a(config)
-  });
-  (<any>a.defaults).retry = 10 //重试次数
+    return a(err.config)
+  })
+  a.defaults.retry = 10 //重试次数
   return a
 })()
 window.$api.api = api

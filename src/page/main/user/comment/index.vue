@@ -2,7 +2,7 @@
 import { isEmpty, values } from 'lodash-es'
 import { likeComment, Comment, reportComment } from '@/api'
 import { createLoadingMessage } from '@/utils/message'
-import { computed, ref, shallowRef } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import Children from '@/page/comic/comments/children.vue'
 import { useAppStore } from '@/stores'
 import PreviewUser from '@/components/user/previewUser.vue'
@@ -22,12 +22,23 @@ const children = shallowRef<InstanceType<typeof Children>>()
 const previewUser = shallowRef<InstanceType<typeof PreviewUser>>()
 
 const comments = computed(() => values(app.user?.comments))
+
+import List from '@/components/list.vue'
+import { userPageScroll } from '@/stores/temp'
+import { onBeforeRouteLeave } from 'vue-router'
+const list = shallowRef<GenericComponentExports<typeof List>>()
+onMounted(() => {
+  list.value?.listInstanse?.scrollTo({ top: userPageScroll.image })
+})
+onBeforeRouteLeave(() => {
+  if (list.value?.scrollTop) userPageScroll.image = list.value?.scrollTop
+})
 </script>
 
 <template>
   <VanNavBar title="我的评论" left-text="返回" left-arrow @click-left="$router.back()" />
   <List :item-height="120" item-resizable reloadable @reload="then => app.$reload.me().then(then)"
-    class="h-[calc(100%-46px)]" :data="comments" :is-requesting="isEmpty(app.user)"
+    class="h-[calc(100%-46px)]" :data="comments" :is-requesting="isEmpty(app.user)" ref="list"
     v-slot="{ height, data: { item: comment } }">
     <CommentRow @click="c => {
       _father = c

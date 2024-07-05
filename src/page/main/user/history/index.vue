@@ -1,12 +1,13 @@
 <script setup lang='ts'>
 import { WatchHistory, } from '@/api/plusPlan'
-import { shallowRef } from 'vue'
+import { onMounted, shallowRef } from 'vue'
 import { useAppStore } from '@/stores'
 import { values, sortBy } from 'lodash-es'
 import config from '@/config'
 import List from '@/components/list.vue'
 import { SmartAbortController } from '@/utils/requset'
 import { onBeforeRouteLeave } from 'vue-router'
+import { userPageScroll } from '@/stores/temp'
 const app = useAppStore()
 const isRefreshing = shallowRef(false)
 const sca = new SmartAbortController()
@@ -28,13 +29,21 @@ const resyncHistory = () => new Promise<Record<string, WatchHistory>>((ok, fail)
   }
 })
 onBeforeRouteLeave(() => sca.abort())
+
+const list = shallowRef<GenericComponentExports<typeof List>>()
+onMounted(() => {
+  list.value?.listInstanse?.scrollTo({ top: userPageScroll.history })
+})
+onBeforeRouteLeave(() => {
+  if (list.value?.scrollTop) userPageScroll.history = list.value?.scrollTop
+})
 </script>
 
 <template>
   <VanNavBar title="历史记录" left-text="返回" left-arrow @click-left="$router.back()" />
   <List :item-height="160" reloadable @reload="then => resyncHistory().then(then)" class="h-[calc(100%-46px)]"
     :data="isRefreshing ? [] : sortBy(values(app.readHistory), i => i[3]).toReversed().filter(Boolean)"
-    :is-requesting="isRefreshing" v-slot="{ height, data: { item } }">
+    :is-requesting="isRefreshing" v-slot="{ height, data: { item } }" ref="list">
     <ComicCard :comic="item[1]" :height />
   </List>
 </template>

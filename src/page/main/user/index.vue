@@ -5,7 +5,14 @@ import { ceil, isEmpty } from 'lodash-es'
 import { createLoadingMessage } from '@/utils/message'
 import config from '@/config'
 import { sum } from 'lodash-es'
+import { onBeforeRouteLeave } from 'vue-router'
 const app = useAppStore()
+
+document.body.classList.add('user-page')
+onBeforeRouteLeave(() => {
+  document.body.classList.remove('user-page')
+})
+
 
 document.title = '用户 | bika'
 if (isEmpty(app.user)) {
@@ -19,7 +26,6 @@ if (isEmpty(app.user)) {
     loading.destroy()
   })
 }
-
 
 const exp = computed(() => app.user?.data.exp ?? 0)
 const needExp = computed(() => 600 * (app.user?.data.level ?? 1) - 400)
@@ -52,7 +58,7 @@ const teniggerMode = () => window.$message.info('青少年不能使用这个，�
     </template>
     <template #header>
       <div class="mt-2 -mb-2">{{ app.user?.data.name }} <span class="mr-1 text-xs text-[--p-color] font-normal">Lv{{
-          app.user?.data.level }}</span></div>
+        app.user?.data.level }}</span></div>
     </template>
     <template #description>
       <VanTag plain type="primary">
@@ -64,7 +70,8 @@ const teniggerMode = () => window.$message.info('青少年不能使用这个，�
         <n-progress color="var(--p-color)" type="line" status="info" :percentage="expPresent" :show-indicator="false" />
       </div>
     </template>
-    <div class="absolute text-xs text-[--van-text-color-2] top-1/2 right-3 -translate-y-1/2">编辑<van-icon name="arrow" /></div>
+    <div class="absolute text-xs text-[--van-text-color-2] top-1/2 right-3 -translate-y-1/2">编辑<van-icon name="arrow" />
+    </div>
   </NThing>
   <VanRow class="w-full bg-[--van-background-2] h-[4rem]">
     <VanCol span="8">
@@ -84,22 +91,25 @@ const teniggerMode = () => window.$message.info('青少年不能使用这个，�
     </VanCol>
   </VanRow>
   <div class="bg-[--van-background-2] w-full h-[calc(100%-2.5rem-5rem-4rem)] overflow-y-auto">
-    <div class="w-full h-20 flex justify-around items-center text-[--p-color]">
-      <div @click="$router.push('/user/history')" class="flex flex-col justify-center items-center van-haptics-feedback">
-        <VanIcon name="clock-o" size="2rem"></VanIcon>
-        <span>历史记录</span>
+    <div class="w-full h-20 flex justify-around items-center">
+      <div @click="$router.push('/user/history')"
+        class="flex flex-col justify-center items-center van-haptics-feedback">
+        <VanIcon name="clock-o" size="2rem" color="var(--p-color)"></VanIcon>
+        <span class="text-[--van-text-color]">历史记录</span>
       </div>
-      <div @click="$router.push('/user/favourt')" class="flex flex-col justify-center items-center van-haptics-feedback">
-        <VanIcon name="star-o" size="2rem"></VanIcon>
-        <span>我的收藏</span>
+      <div @click="$router.push('/user/favourt')"
+        class="flex flex-col justify-center items-center van-haptics-feedback">
+        <VanIcon name="star-o" size="2rem" color="var(--p-color)"></VanIcon>
+        <span class="text-[--van-text-color]">我的收藏</span>
       </div>
       <div @click="$router.push('/user/image')" class="flex flex-col justify-center items-center van-haptics-feedback">
-        <VanIcon name="photo-o" size="2rem"></VanIcon>
-        <span>图片收藏</span>
+        <VanIcon name="photo-o" size="2rem" color="var(--p-color)"></VanIcon>
+        <span class="text-[--van-text-color]">图片收藏</span>
       </div>
-      <div @click="$router.push('/user/comment')" class="flex flex-col justify-center items-center van-haptics-feedback">
-        <VanIcon name="chat-o" size="2rem"></VanIcon>
-        <span>我的评论</span>
+      <div @click="$router.push('/user/comment')"
+        class="flex flex-col justify-center items-center van-haptics-feedback">
+        <VanIcon name="chat-o" size="2rem" color="var(--p-color)"></VanIcon>
+        <span class="text-[--van-text-color]">我的评论</span>
       </div>
     </div>
     <VanCell title="青少年模式" @click="teniggerMode" is-link></VanCell>

@@ -1,50 +1,28 @@
-import { HmacSHA256, enc } from "crypto-js";
+import config from "@/config"
+import { HmacSHA256, enc } from "crypto-js"
 
-const config = Object.freeze({
-  AppChannel: "1",
-  Accept: "application/vnd.picacomic.com.v1+json",
-  Platform: "android",
-  ImageQuality: "original",
-  Uuid: "webUUID",
-  BaseUrl: 'https://picaapi.picacomic.com/',
-  appleKillFlag: 'C69BAF41DA5ABD1FFEDC6D2FEA56B',
-  appleVerSion: '~d}$Q7$eIni=V)9\\RK/P.RM4;9[7|@/CA}b~OW!3?EV`:<>M7pddUBL5n|0/*Cn'
-})
-function getsignature(url: string, ts: string, method: string) {
-  let raw = url.replace(config.BaseUrl, "") + ts + getNonce() + method + config.appleKillFlag;
-  raw = raw.toLowerCase();
-  return HmacSHA256(raw, config.appleVerSion).toString(enc.Hex);
-}
-export function postHeader(setTime: string, pathname: string, mothod: string) {
-  const mySignature = getsignature(config.BaseUrl + pathname, setTime, mothod);
-  const header = [
-    { 'name': 'app-channel', 'value': '1' },
-    { 'name': 'app-uuid', 'value': 'webUUID' },
-    { 'name': "accept", 'value': 'application/vnd.picacomic.com.v1+json' },
-    { 'name': "app-platform", 'value': 'android' },
-    { 'name': "Content-Type", 'value': 'application/json; charset=UTF-8' },
-    { 'name': "time", 'value': setTime },
-    { 'name': "nonce", 'value': getNonce() },
-    { 'name': "image-quality", 'value': config.ImageQuality },
-    { 'name': 'signature', 'value': mySignature }
-  ]
-  const getToken = localStorage.getItem('token');
-  if (getToken != undefined) header.push({ 'name': 'authorization', 'value': getToken });
-  return header;
-}
-function getNonce() {
-  let useronce = localStorage.getItem('nonce');
-  if (useronce == undefined) {
-    useronce = randomString(32).toLowerCase();
-    localStorage.setItem('nonce', useronce ?? '')
+export function getBikaApiHeaders(pathname: string, method: string) {
+  type Headers = [name: string, value: string][]
+  pathname = pathname.substring(1)
+  const requestTime = (new Date().getTime() / 1000).toFixed(0)
+  let nonce = localStorage.getItem('nonce')
+  if (!nonce) {
+    const chars = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678"
+    nonce = Array.from({ length: 32 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('').toLowerCase()
+    localStorage.setItem('nonce', nonce)
   }
-  return useronce;
-}
-function randomString(e: number) {
-  e = e || 32;
-  const t = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678",
-    a = t.length
-  let n = "";
-  for (let i = 0; i < e; i++) n += t.charAt(Math.floor(Math.random() * a));
-  return n
+  const headers: Headers = [
+    ['app-channel', '1'],
+    ['app-uuid', 'webUUID'],
+    ['accept', 'application/vnd.picacomic.com.v1+json'],
+    ['app-platform', 'android'],
+    ['Content-Type', 'application/json; charset=UTF-8'],
+    ['time', requestTime],
+    ['nonce', nonce],
+    ['image-quality', config.value["bika.read.imageQuality"]],
+    ['signature', HmacSHA256(`${pathname}${requestTime}${nonce}${method}C69BAF41DA5ABD1FFEDC6D2FEA56B`.toLowerCase(), '~d}$Q7$eIni=V)9\\RK/P.RM4;9[7|@/CA}b~OW!3?EV`:<>M7pddUBL5n|0/*Cn').toString(enc.Hex)]
+  ]
+  const token = localStorage.getItem('token')
+  if (token) headers.push(['authorization', token])
+  return headers
 }

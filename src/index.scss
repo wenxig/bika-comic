@@ -44,3 +44,9 @@ html,
     pointer-events: all;
   }
 }
+
+.user-page #app *:not(.van-switch *), .setting-page #app *:not(.van-switch *) {
+  --bezier: cubic-bezier(.4, 0, .2, 1);
+  --text-bezier: cubic-bezier(0.17, 0.15, 0.2, 1);
+  transition: .1s color var(--text-bezier), .3s border-color var(--text-bezier), .3s background-color var(--bezier) !important;
+}

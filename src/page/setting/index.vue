@@ -10,7 +10,13 @@ document.title = '设置 | bika'
 import Popup from '@/components/popup.vue'
 import { NScrollbar } from 'naive-ui'
 import { version } from '../../../package.json'
+import { onBeforeRouteLeave } from 'vue-router'
 const $window = window
+
+document.body.classList.add('setting-page')
+onBeforeRouteLeave(() => {
+  document.body.classList.remove('setting-page')
+})
 
 const clearDb = () => (createDialog({
   title: '清除本地数据库',
