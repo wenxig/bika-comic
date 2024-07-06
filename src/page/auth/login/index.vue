@@ -7,15 +7,17 @@ import { useMessage } from 'naive-ui'
 import { joinInPlusPlan } from '@/api/plusPlan'
 import config from '@/config'
 import symbol from '@/symbol'
+import { useLocalStorage } from '@vueuse/core'
 const formValue = shallowReactive<Login>({
   email: '',
   password: ''
 })
+const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 document.title = '登陆 | bika'
 async function submit() {
   const loading = createLoadingMessage('登陆中')
   try {
-    localStorage.setItem(symbol.loginData, JSON.stringify(formValue))
+    userLoginData.value = formValue
     const { data: { data: { token } } } = await login(formValue)
     localStorage.setItem(symbol.loginToken, token)
     await joinInPlusPlan()

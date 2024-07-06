@@ -1,11 +1,11 @@
 import config, { isOnline } from '@/config'
 import { useAppStore } from '@/stores'
-import axios, { isAxiosError, isCancel, type AxiosRequestConfig} from 'axios'
+import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
 import { fromPairs, isEmpty, isFunction, isObject, toPairs } from 'lodash-es'
 import { ProPlusComic, ProPlusMaxComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
-import { until } from '@vueuse/core'
+import { until, useLocalStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
 import { errorReturn, setValue } from '@/utils/requset'
 import symbol from '@/symbol'
@@ -53,9 +53,12 @@ interface Res<T> {
   code: number,
   data: T
 }
+
+const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 try {
-  const userLogin = JSON.parse(localStorage.getItem(symbol.loginData)!)
-  var id: string | null = HmacMD5(userLogin.email, userLogin.password).toString()
+  const userLogin = userLoginData.value
+  if (userLogin.email) var id: string | null = HmacMD5(userLogin.email, userLogin.password).toString()
+  else var id: string | null = null
 } catch {
   var id: string | null = null
 }

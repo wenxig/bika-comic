@@ -23,6 +23,7 @@ export const baseConfig = {
   "bika.proxy.interface": proxyData.interface[0],
   "bika.proxy.image": proxyData.image[0],
   "bika.proxy.db": proxyData.db[0],
+  "bika.proxy.chat": proxyData.chat[0],
   'bika.subscribe.updateTime': `${newDate.getFullYear()}-${newDate.getMonth()}-${newDate.getDate()}`,
   'bika.info.unsortComic': false,
   'bika.plusPlan': true,

@@ -34,16 +34,12 @@ watch(alertData, () => {
       </div>
     </List>
   </Popup>
-  <Popup v-model:show="showAlertPops" position="center" class="flex justify-center items-center h-full w-full flex-col">
-    <div class="w-4/5 min-h-[60%] max-h-[80%] bg-[--van-background-2] rounded-t-md overflow-hidden overflow-y-auto"
-      ref="overlay" @click.stop>
+  <Popup v-model:show="showAlertPops" position="center" closeable noBorder
+    class="w-4/5 h-[90%] bg-[--van-background-2] rounded-md overflow-hidden overflow-y-auto flex flex-col">
+    <div ref="overlay" @click.stop class="w-full">
       <Image :src="alertData?.thumb ?? ''" previewable />
       <div class="text-[--p-color] text-center w-full text-lg font-bold">{{ alertData?.title }}</div>
       <Text :text="alertData?.content" class="m-1 w-[calc(100%-8px)]" />
-    </div>
-    <div
-      class="w-4/5 bg-[--van-background-2] h-10 text-[--p-color] rounded-b-md van-hairline--top van-haptics-feedback flex justify-center items-center text-lg">
-      关闭
     </div>
   </Popup>
 </template>

@@ -9,6 +9,7 @@ import { padStart } from 'lodash-es'
 import { useMessage } from 'naive-ui'
 import Popup from '@/components/popup.vue'
 import symbol from '@/symbol'
+import { useLocalStorage } from '@vueuse/core'
 const toDay = new Date()
 const formValue = shallowReactive<SignUp & Record<string, string>>({
   email: '',
@@ -26,13 +27,14 @@ const formValue = shallowReactive<SignUp & Record<string, string>>({
 const repeatPassword = shallowRef('')
 
 document.title = '注册 | bika'
+const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 async function submit() {
   const loading = createLoadingMessage('注册中')
   try {
-    localStorage.setItem(symbol.loginData, JSON.stringify({
+    userLoginData.value = {
       email: formValue.email,
       password: formValue.password
-    }))
+    }
     await signUp(formValue)
     const { data: { data: { token } } } = await login({
       email: formValue.email,

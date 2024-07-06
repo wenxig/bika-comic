@@ -57,7 +57,7 @@ const app = useAppStore()
       </template>
     </VanRow>
     <VanRow class=" *:text-xs p-1 text-[--van-text-color-2]">
-      <template v-if="comic">
+      <template v-if="comic.description">
         <div class="w-[98%] bg-red-500 bg-opacity-20 rounded-lg px-2 text-[--van-text-color]" style="margin: 0 auto;" v-if="comic.description.includes(symbol.hardToReadText)">
           <h2 class="!text-red-500">重口警告</h2>
           <p>这个本子已被标记为重口（官方声明</p>

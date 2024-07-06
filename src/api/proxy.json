@@ -9,5 +9,8 @@
   "db":[
     "https://raw.githubusercontent.com/bika-robot/picacg-database/main/data3",
     "https://raw.fastgit.org/bika-robot/picacg-database/main/data3"
+  ],
+  "chat":[
+    "wss://live-server.bidobido.xyz"
   ]
 }

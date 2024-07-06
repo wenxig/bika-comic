@@ -9,7 +9,7 @@ import { SmartAbortController, errorReturn, setValue } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
-import { until } from '@vueuse/core'
+import { until, useLocalStorage } from '@vueuse/core'
 import { createLoadingMessage, createDialog } from '@/utils/message'
 import symbol from '@/symbol'
 export { type RawImage, Image } from '@/utils/image'
@@ -17,6 +17,7 @@ const createClass = <T extends { docs: any[] }, C>(v: T, Class: new (data: T['do
   v.docs = v.docs.map(v => new Class(v))
   return v
 }
+const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 export interface Result<T> {
   docs: T[]
   limit: number
@@ -57,8 +58,8 @@ export const api = (() => {
   }, async err => {
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
-    if (err?.request?.status == 401 && localStorage.getItem(symbol.loginData)) {
-      localStorage.setItem(symbol.loginToken, (await login(JSON.parse(localStorage.getItem(symbol.loginData)!))).data.data.token)
+    if (err?.request?.status == 401 && userLoginData.value.email) {
+      localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
       return api(err.config ?? {})
     }
     else if (err?.request?.status == 401 && !location.pathname.includes('auth')) {
