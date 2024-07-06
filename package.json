@@ -1,6 +1,6 @@
 {
   "name": "bika-comic",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "license": "LGPL-3.0-or-later",
   "scripts": {
     "dev": "vite",

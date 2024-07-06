@@ -67,8 +67,8 @@ export const api = (() => {
       return Promise.reject(err)
     }
     if (location.pathname.startsWith('/auth')) return Promise.reject(err)
-    if (!err?.response) return errorReturn(err, err.message)
-    if (err.response.data.error == '1014') return Promise.resolve({ data: false }) // only /comic/:id
+    if (err?.response)
+      if (err.response.data.error == '1014') return Promise.resolve({ data: false }) // only /comic/:id
     if (!err.config) return errorReturn(err, err.message)
     if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
     err.config.__retryCount = err.config?.__retryCount ?? 0
