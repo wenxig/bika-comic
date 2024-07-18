@@ -2,7 +2,7 @@
 import userIcon from '@/assets/images/userIcon.png?url'
 import { useAppStore } from '@/stores'
 import { computed, shallowRef, watch } from 'vue'
-import Card from './card.vue'
+import Card from '@/components/subscribe/card.vue'
 import { Subscribe } from '@/api/plusPlan'
 import { ProPlusComic } from '@/api'
 import { useRoute, useRouter } from 'vue-router'

@@ -2,7 +2,7 @@
 import { searchComicsWithTag, searchComics, ProPlusComic, searchComicsWithAuthor, searchComicsWithTranslater, getComicInfo, searchComicsWithUploader, searchComicsWithCategories, ProComic } from '@/api'
 import { useAppStore } from '@/stores'
 import { isBoolean, isEmpty, noop } from 'lodash-es'
-import { reactiveComputed, watchDebounced } from '@vueuse/core'
+import {  watchDebounced } from '@vueuse/core'
 import { computed, shallowRef, watch } from 'vue'
 import { SmartAbortController } from '@/utils/requset'
 import { getSearchHitory } from '@/api/plusPlan'

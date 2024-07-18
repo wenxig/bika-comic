@@ -1,11 +1,11 @@
 <script setup lang='ts'>
 import VuePictureCropper, { cropper } from 'vue-picture-cropper'
-import { editAvator, editSlogan, UserProfile } from '@/api'
+import { editAvator, editSlogan } from '@/api'
 import { useAppStore } from '@/stores'
 import { createLoadingMessage } from '@/utils/message'
-import { computedWithControl, until, useFileDialog } from '@vueuse/core'
+import { until, useFileDialog } from '@vueuse/core'
 import { noop } from 'lodash-es'
-import { computed, reactive, shallowRef } from 'vue'
+import { reactive, shallowRef } from 'vue'
 import userIcon from '@/assets/images/userIcon.png?url'
 import { showImagePreview } from '@/utils/image'
 document.title = '编辑 | 用户 | bika'
@@ -103,7 +103,8 @@ const _editSlogan = async () => {
     </van-popover>
     <van-field class="my-2" v-model="slogan" type="textarea" rows="1" autosize label="简介" placeholder="null"
       label-align="top" />
-    <VanButton block class="w-[98%] mx-auto" size="normal" type="primary" @click="_editSlogan()" :loading="isEdittingSlogan">提交简介更新</VanButton>
+    <VanButton block class="w-[98%] mx-auto" size="normal" type="primary" @click="_editSlogan()"
+      :loading="isEdittingSlogan">提交简介更新</VanButton>
   </div>
   <Popup v-model:show="AvatorEditor.show.value" closeable class="flex flex-col w-[90vw] py-5 h-[115vw]">
     <NSpin :show="!AvatorEditor.option.isReady" class="w-[90%] m-auto">

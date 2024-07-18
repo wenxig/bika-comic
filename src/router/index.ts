@@ -16,10 +16,10 @@ const router = createRouter({
       component: Setup
     }, {
       path: '/auth/login',
-      component: () => import('@/page/auth/login/index.vue'),
+      component: () => import('@/page/auth/login.vue'),
     }, {
       path: '/auth/signup',
-      component: () => import('@/page/auth/signup/index.vue'),
+      component: () => import('@/page/auth/signup.vue'),
     }, {
       path: '/main',
       component: () => import('@/page/main/index.vue'),
@@ -30,70 +30,67 @@ const router = createRouter({
         redirect: '/main/home/random',
         children: [{
           path: 'random',
-          component: () => import('@/page/main/home/random/index.vue'),
+          component: () => import('@/page/main/home/random.vue'),
         }, {
           path: 'level',
-          component: () => import('@/page/main/home/levelboard/index.vue'),
+          component: () => import('@/page/main/home/level/index.vue'),
           redirect: '/main/home/level/day',
           children: [{
             path: 'user',
-            component: () => import('@/page/main/home/levelboard/userTotel.vue'),
+            component: () => import('@/page/main/home/level/userTotel.vue'),
           }, {
             path: ':path(day|week|month)',
-            component: () => import('@/page/main/home/levelboard/comicTotel.vue'),
+            component: () => import('@/page/main/home/level/comicTotel.vue'),
           }]
         }, {
           path: 'find',
-          component: () => import('@/page/main/home/find/index.vue'),
+          component: () => import('@/page/main/home/find.vue'),
         }, {
           path: ':name',
-          component: () => import('@/page/main/home/provide/index.vue')
+          component: () => import('@/page/main/home/provide.vue')
         }]
       }, {
         path: 'user',
         component: () => import('@/page/main/user/index.vue'),
       }, {
         path: 'subscribe',
-        component: () => import('@/page/main/subscribe/index.vue'),
+        component: () => import('@/page/main/subscribe.vue'),
       }, {
         path: 'chat',
         component: () => import('@/page/main/chat/index.vue'),
         redirect: '/main/chat/room',
         children: [{
           path: 'room',
-          component: () => import('@/page/main/chat/room/index.vue'),
-        }, {
-          path: 'friend',
-          component: () => import('@/page/main/chat/friend/index.vue'),
+          component: () => import('@/page/main/chat/room.vue'),
         }]
       }, {
         path: 'find',
-        component: () => import('@/page/main/home/find/index.vue'),
+        component: () => import('@/page/main/home/find.vue'),
       }, {
         path: ':name',
-        component: () => import('@/page/main/home/provide/index.vue')
+        component: () => import('@/page/main/home/provide.vue')
       }]
     }, {
       path: '/user/history',
-      component: () => import('@/page/main/user/history/index.vue'),
+      component: () => import('@/page/main/user/history.vue'),
     }, {
       path: '/user/favourt',
-      component: () => import('@/page/main/user/favourt/index.vue'),
+      component: () => import('@/page/main/user/favourt.vue'),
     }, {
       path: '/user/image',
-      component: () => import('@/page/main/user/image/index.vue'),
+      component: () => import('@/page/main/user/image.vue'),
     }, {
       path: '/user/comment',
-      component: () => import('@/page/main/user/comment/index.vue'),
+      component: () => import('@/page/main/user/comment.vue'),
     }, {
       path: '/user/edit',
-      component: () => import('@/page/main/user/edit/index.vue'),
+      component: () => import('@/page/main/user/edit.vue'),
     }, {
       path: '/setting',
-      component: () => import('@/page/setting/index.vue'),
+      component: () => import('@/page/setting.vue'),
     }, {
       path: '/search',
-      component: () => import('@/page/search/index.vue'),
+      component: () => import('@/page/search.vue'),
     }, {
       path: '/game',
       component: () => import('@/page/game/index.vue'),
@@ -104,10 +101,10 @@ const router = createRouter({
       children: [{
         path: 'info',
         name: 'gameInfo',
-        component: () => import('@/page/game/about/info/index.vue'),
+        component: () => import('@/page/game/about/info.vue'),
       }, {
         path: 'comments',
-        component: () => import('@/page/game/about/comment/index.vue'),
+        component: () => import('@/page/game/about/comment.vue'),
       }]
     }, {
       path: '/comic/:id',
@@ -116,17 +113,17 @@ const router = createRouter({
       children: [{
         path: 'info',
         name: 'comicInfo',
-        component: () => import('@/page/comic/info/index.vue'),
+        component: () => import('@/page/comic/info.vue'),
       }, {
         path: 'comments',
-        component: () => import('@/page/comic/comments/index.vue'),
+        component: () => import('@/page/comic/comments.vue'),
       }]
     }, {
       path: '/chat/room/:id',
-      component: () => import('@/page/chat/room/index.vue')
+      component: () => import('@/page/chat/room.vue')
     }, {
       path: '/comic/:id/read/:ep',
-      component: () => import('@/page/comic/read/index.vue')
+      component: () => import('@/page/comic/read.vue')
     }, {
       path: '/:pathMatch(.*)*',
       redirect: '/'

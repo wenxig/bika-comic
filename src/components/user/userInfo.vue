@@ -5,7 +5,6 @@ import userIcon from '@/assets/images/userIcon.png?url'
 import { ChatUserProfile } from '@/api/chat'
 import { times } from 'lodash-es'
 import { userCharactersTranslater } from '@/utils/translater'
-import { shallowRef } from 'vue'
 const $props = defineProps<{
   user: User | ChatUserProfile | UserProfile | undefined
   hideSlogan?: boolean
@@ -17,9 +16,6 @@ const needExp = computed(() => {
   return e
 })
 const avatar = computed(() => (<any>$props.user)?.avatar || (<any>$props.user)?.avatarUrl || userIcon)
-
-
-const tagAboutText = shallowRef('')
 </script>
 
 <template>

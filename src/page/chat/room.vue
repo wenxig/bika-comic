@@ -2,11 +2,10 @@
 import { useChatStore } from '@/stores/chat'
 import { createLoadingMessage } from '@/utils/message'
 import { shallowRef, watch } from 'vue'
-import MsgList from '../msgList.vue'
+import MsgList from '@/components/chat/msgList.vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { toCn } from '@/utils/translater'
 import symbol from '@/symbol'
-import { useTitle } from '@vueuse/core'
 const $route = useRoute()
 const app = useChatStore()
 const roomId = <string>$route.params.id

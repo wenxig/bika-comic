@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "bu": "./script/build_upload.sh"
+    "bu": "./script/build_upload.sh",
+    "typecheck": "vue-tsc --noEmit -p ./tsconfig.json --composite false"
   },
   "dependencies": {
     "@vant/touch-emulator": "latest",

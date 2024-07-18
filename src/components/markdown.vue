@@ -1,8 +1,5 @@
 <script setup lang='ts'>
-import { isNumber } from 'lodash-es'
 import { parse } from 'marked'
-// import '@/assets/style/typora-ayu-mirage.scss'
-// import '@/assets/style/typora-ayu.scss'
 import typo from '@/assets/style/typo.scss?url'
 import { computed } from 'vue'
 const $props = defineProps<{

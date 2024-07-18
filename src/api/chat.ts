@@ -155,7 +155,7 @@ export class RoomConnection {
   public onOpen(fn: () => any) {
     this.emitter.on('open', fn)
   }
-  public sendText(message: string, mentions: string[]) {
+  public sendText(_message: string, _mentions: string[]) {
     // chat.post('/message/send-message', {
     //   roomId: this.roomId,
     //   message,

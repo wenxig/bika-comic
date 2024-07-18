@@ -2,7 +2,6 @@
 import config, { fullscreen } from '@/config'
 import { computedWithControl } from '@vueuse/core'
 import { ImagePreviewInstance } from 'vant'
-// import Image from '@/components/image.vue'
 import { watch, shallowRef, FunctionalComponent,reactive } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores'

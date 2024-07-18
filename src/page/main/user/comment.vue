@@ -3,10 +3,10 @@ import { isEmpty } from 'lodash-es'
 import { likeComment, Comment } from '@/api'
 import { createLoadingMessage } from '@/utils/message'
 import { onMounted, ref, shallowRef } from 'vue'
-import Children from '@/page/comic/comments/children.vue'
+import Children from '@/components/comic/comment/children.vue'
 import { useAppStore } from '@/stores'
 import PreviewUser from '@/components/user/previewUser.vue'
-import CommentRow from '@/page/comic/comments/commentRow.vue'
+import CommentRow from '@/components/comic/comment/commentRow.vue'
 document.title = '我的评论 | bika'
 const app = useAppStore()
 const _father = ref<Comment>()

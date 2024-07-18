@@ -6,7 +6,7 @@ import { createLoadingMessage } from '@/utils/message'
 import { useTitle, reactiveComputed } from '@vueuse/core'
 import { useGameStore } from '@/stores/game'
 import { likeGame } from '@/api/game'
-import Download from './download.vue'
+import Download from '@/components/game/download.vue'
 const gameStore = useGameStore()
 const game = computed(() => gameStore.game.game)
 const preload = reactiveComputed(() => gameStore.game.preload ?? {})

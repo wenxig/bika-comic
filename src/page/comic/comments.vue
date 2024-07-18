@@ -1,8 +1,8 @@
 <script setup lang='ts'>
 import { useRoute } from 'vue-router';
 import { computed, shallowRef } from 'vue';
-import CommentSender from './commentSender.vue';
-import Comments from './comment.vue';
+import CommentSender from '@/components/comic/comment/commentSender.vue';
+import Comments from '@/components/comic/comment/comment.vue';
 import { useTitle } from '@vueuse/core';
 import { useComicStore } from '@/stores/comic';
 

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { useZIndex } from '@/utils/layout'
-import { reactiveComputed, useWindowSize } from '@vueuse/core'
-import { last, noop, throttle } from 'lodash-es'
+import { useWindowSize } from '@vueuse/core'
+import { noop } from 'lodash-es'
 import { computed, shallowReadonly, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 const $router = useRouter()

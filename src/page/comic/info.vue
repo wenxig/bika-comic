@@ -2,15 +2,14 @@
 import { useAppStore } from '@/stores'
 import { computed } from 'vue'
 import { isEmpty, toNumber } from 'lodash-es'
-import Likes from './likes.vue'
+import Likes from '@/components/comic/info/likes.vue'
 import { ProPlusComic, ProPlusMaxComic } from '@/api'
-import { createLoadingMessage } from '@/utils/message'
 import { useTitle, reactiveComputed } from '@vueuse/core'
 import config from '@/config'
 import { useComicStore } from '@/stores/comic'
-import Eps from './eps.vue'
-import TopInfo from './topInfo.vue'
-import Uploader from './uploader.vue'
+import Eps from '@/components/comic/info/eps.vue'
+import TopInfo from '@/components/comic/info/topInfo.vue'
+import Uploader from '@/components/comic/info/uploader.vue'
 const app = useAppStore()
 const comicStore = useComicStore()
 const comic = computed(() => comicStore.comic.comic)

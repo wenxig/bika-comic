@@ -1,6 +1,5 @@
-import { isFunction } from 'lodash-es'
 import { Converter } from 'opencc-js'
-import { computed, isRef, toRef, type MaybeRefOrGetter } from 'vue'
+import { computed, toRef, type MaybeRefOrGetter } from 'vue'
 export const toCn = Converter({ from: 'tw', to: 'cn' })
 export const toTw = Converter({ from: 'cn', to: 'tw' })
 export const sorterValue: {

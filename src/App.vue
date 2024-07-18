@@ -1,35 +1,54 @@
 <script setup lang="ts">
 import { SpeedInsights } from "@vercel/speed-insights/vue"
-import { ConfigProviderThemeVars } from 'vant'
-import { GlobalThemeOverrides, NDialogProvider, NLoadingBarProvider, darkTheme, lightTheme, zhCN } from 'naive-ui'
-import { reactiveComputed, useCssVar } from '@vueuse/core'
-import App from './_App.vue'
-import config, { baseConfig, isDark } from './config'
-import { allPopups } from "./utils/layout"
+import config, { baseConfig, isOnline } from './config'
 import { getConfig, putConfig } from "./api/plusPlan"
 import { defaultsDeep } from "lodash-es"
-import { nextTick, watch } from "vue"
+import { nextTick, watch, shallowRef } from "vue"
 import { SmartAbortController } from "./utils/requset"
 import symbol from "./symbol"
-
-// theme setup
-const themeColor = useCssVar('--primary-color')
-const themeColorLight = useCssVar('--primary-color-hover')
-const themeColorDark = useCssVar('--primary-color-pressed')
-const themeVars = reactiveComputed(() => ({
-  primaryColor: themeColor.value,
-} satisfies ConfigProviderThemeVars))
-const themeOverrides = reactiveComputed(() => ({
-  common: {
-    ...(isDark.value ? darkTheme.common : lightTheme.common),
-    primaryColor: themeVars.primaryColor,
-    primaryColorHover: themeColorLight.value,
-    primaryColorPressed: themeColorDark.value,
-    primaryColorSuppl: themeColorDark.value
+import { MessageReactive, useDialog, useLoadingBar, useMessage } from 'naive-ui'
+import Text from '@/components/text.vue'
+import { createLoadingMessage } from './utils/message'
+import { isEmpty } from 'lodash-es'
+import 'vue-json-pretty/lib/styles.css'
+import { getVer } from './api/plusPlan'
+import Popup from '@/components/popup.vue'
+import { useLocalStorage } from '@vueuse/core'
+import Dev from '@/components/dev.vue';
+window.$message = useMessage()
+window.$loading = useLoadingBar()
+window.$dialog = useDialog()
+const ver = shallowRef('')
+const version = useLocalStorage(symbol.version, '')
+getVer().then(v => {
+  ver.value = v
+  if (isEmpty(version.value)) version.value = v
+  showUpdatePopup.value = !import.meta.env.DEV && (!isEmpty(version.value) && v != version.value)
+})
+const showUpdatePopup = shallowRef(false)
+const isUpdateing = shallowRef(false)
+async function update() {
+  isUpdateing.value = true
+  const loading = createLoadingMessage('更新中')
+  try {
+    const sws = await navigator.serviceWorker.getRegistrations()
+    await Promise.all(sws.map(sw => sw.unregister())) // 40
+    const allCacheKeys = await caches.keys()
+    await Promise.all(allCacheKeys.map(key => caches.delete(key))) // 100
+    version.value = ver.value
+    await loading.success(undefined, 300)
+    location.reload()
+  } catch {
+    loading.fail()
   }
-} satisfies GlobalThemeOverrides))
+  isUpdateing.value = false
+}
+let onLineMessage: MessageReactive | undefined = undefined
+watch(isOnline, isOnline => {
+  if (isOnline) onLineMessage?.destroy()
+  else onLineMessage = window.$message.info('尚未接入互联网')
+}, { immediate: true })
 
-// config setup
 let isSetup = true
 if (isSetup) getConfig().then(async v => {
   if (!v) return
@@ -60,16 +79,17 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
 
 <template>
   <SpeedInsights />
-  <NConfigProvider :themeOverrides class="h-full" :locale="zhCN">
-    <NLoadingBarProvider container-class="z-[200000]">
-      <NDialogProvider to="#popups">
-        <van-config-provider :themeVars class="h-full" :theme="isDark ? 'dark' : 'light'">
-          <NMessageProvider :max="5" to="#messages">
-            <App />
-          </NMessageProvider>
-        </van-config-provider>
-      </NDialogProvider>
-    </NLoadingBarProvider>
-  </NConfigProvider>
+  <Suspense>
+    <router-view
+      :key="(($route.path.includes('/read/')) ? $route.path : ($route.path.includes('/search') ? `${$route.query.mode}${$route.query.keyword}` : undefined))" />
+  </Suspense>
+  <Popup position="center" round v-model:show="showUpdatePopup" class="w-[70%] h-[80vw] p-3">
+    <div class="text-[--p-color] font-bold text-xl">发现新版本</div>
+    <Text :text="'v' + ver" />
+    <Text text="强烈建议更新，否则可能会因为服务器协议更新而产生冲突。因冲突引发的后果用户自行承担。" class="w-full" />
+    <VanButton type="primary" :disabled="isUpdateing" :loading="isUpdateing"
+      class="absolute bottom-3 w-[calc(100%-24px)] left-3" size="small" block @click="update()" loading-text="加载中...">更新
+    </VanButton>
+  </Popup>
+  <Dev />
 </template>
-

@@ -1,7 +1,5 @@
 <script setup lang='ts'>
 import { useAppStore } from '@/stores'
-import { useComicStore } from '@/stores/comic'
-import { toCn } from '@/utils/translater'
 import { chunk, isEmpty } from 'lodash-es'
 import { useRoute } from 'vue-router'
 
@@ -9,7 +7,6 @@ const $route = useRoute()
 const name = $route.params.name.toString()
 const app = useAppStore()
 const space = computed(() => app.collections_list.find(v => v.title == name))
-const comicStore = useComicStore()
 
 
 import { shallowRef, inject, watch, computed } from 'vue'

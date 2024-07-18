@@ -1,6 +1,4 @@
-import { isCancel, isAxiosError, type AxiosError } from "axios"
 import { remove } from "lodash-es"
-import { delay } from "./delay"
 
 export class SmartAbortController implements AbortController {
   private _controller = new AbortController()

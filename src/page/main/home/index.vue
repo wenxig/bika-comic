@@ -18,7 +18,6 @@ onBeforeRouteLeave(() => {
 document.title = '首页 | bika'
 const $router = useRouter()
 const $route = useRoute()
-const headerSwipeHeight = 260
 const baseHeaderSearchHeight = shallowRef(54)
 const searchText = shallowRef('')
 const isSearching = shallowRef(false)

@@ -9,7 +9,7 @@ import { searchResult } from '@/stores/temp'
 document.title = '设置 | bika'
 import Popup from '@/components/popup.vue'
 import { NScrollbar } from 'naive-ui'
-import { version } from '../../../package.json'
+import { version } from '../../package.json'
 import { onBeforeRouteLeave } from 'vue-router'
 const $window = window
 

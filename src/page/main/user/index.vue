@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { useAppStore } from '@/stores'
-import { computed, onUnmounted, watch } from 'vue'
-import { ceil, isEmpty, max, times } from 'lodash-es'
+import { onUnmounted, watch } from 'vue'
+import { isEmpty } from 'lodash-es'
 import { createLoadingMessage } from '@/utils/message'
 import config from '@/config'
 import { sum } from 'lodash-es'
