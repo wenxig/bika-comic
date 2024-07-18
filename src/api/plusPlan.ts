@@ -1,4 +1,4 @@
-import config, { isOnline } from '@/config'
+import config, { isOnline, type baseConfig } from '@/config'
 import { useAppStore } from '@/stores'
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
@@ -151,17 +151,17 @@ export const patchSearchHitory = async (data: string[], config: AxiosRequestConf
 
 export const getConfig = async (config: AxiosRequestConfig = {}) => {
   if (!id) return false
-  return (await api.get<Res<Record<string, any>>>(`/${id}/setting`, config)).data.data
+  return (await api.get<Res<typeof baseConfig>>(`/${id}/setting`, config)).data.data
 }
 
-export const putConfig = async (data: Record<string, any>, config: AxiosRequestConfig = {}) => {
+export const putConfig = async (data: typeof baseConfig, config: AxiosRequestConfig = {}) => {
   if (!id || isEmpty(data)) return false
-  return (await api.put<Res<Record<string, any>>>(`/${id}/setting`, data, config)).data.data
+  return (await api.put<Res<typeof baseConfig>>(`/${id}/setting`, data, config)).data.data
 }
 
-export const patchConfig = async (data: Record<string, any>, config: AxiosRequestConfig = {}) => {
+export const patchConfig = async (data: typeof baseConfig, config: AxiosRequestConfig = {}) => {
   if (!id || isEmpty(data)) return false
-  return (await api.patch<Res<Record<string, any>>>(`/${id}/setting`, data, config)).data.data
+  return (await api.patch<Res<typeof baseConfig>>(`/${id}/setting`, data, config)).data.data
 }
 
 interface RawSubscribe {
@@ -216,10 +216,10 @@ const newUpdates = (() => {
     if (isObject(err?.request?.data)) return Promise.reject(err)
     if (!isAxiosError(err)) return Promise.reject(err)
     if (!err.config) return Promise.reject(err)
-    if (err.config.retry && err.config.__retryCount && err.config.__retryCount >= err.config.retry) return errorReturn(err)
+    if (err.config.retry && err.config.__retryCount && err.config.__retryCount >= err.config.retry) return errorReturn(err, err.message)
     err.config.__retryCount = err.config.__retryCount ?? 0
     err.config.__retryCount++
-    if (err?.status == 404) err.config.url = `/${dayjs().add(-err.config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`
+    if (err.response?.status == 404) err.config.url = `/${dayjs().add(-err.config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`    
     await delay(1000)
     return newUpdates(err.config)
   })

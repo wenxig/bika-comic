@@ -1,6 +1,4 @@
 import { createRouter, createWebHistory, type RouteLocationRaw, isNavigationFailure, NavigationFailureType } from "vue-router"
-import login from '@/page/auth/login/index.vue'
-import main from '@/page/main/index.vue'
 import { isEmpty, noop } from "lodash-es"
 import { getComicEps, getComicInfo, getComicLikeOthers, } from '@/api'
 import { useComicStore } from "@/stores/comic"
@@ -9,22 +7,22 @@ import { AxiosError, isCancel } from "axios"
 import { useGameStore } from "@/stores/game"
 import { getGameInfo } from "@/api/game"
 import { useAppStore } from "@/stores"
-import symbol from "@/symbol"
+import Setup from './setup.vue';
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: "/",
-      redirect: () => localStorage.getItem(symbol.loginToken) ? '/main/home' : '/auth/login',
+      component: Setup
     }, {
       path: '/auth/login',
-      component: login,
+      component: () => import('@/page/auth/login/index.vue'),
     }, {
       path: '/auth/signup',
       component: () => import('@/page/auth/signup/index.vue'),
     }, {
       path: '/main',
-      component: main,
+      component: () => import('@/page/main/index.vue'),
       redirect: '/main/home',
       children: [{
         path: 'home',
@@ -36,6 +34,14 @@ const router = createRouter({
         }, {
           path: 'level',
           component: () => import('@/page/main/home/levelboard/index.vue'),
+          redirect: '/main/home/level/day',
+          children: [{
+            path: 'user',
+            component: () => import('@/page/main/home/levelboard/userTotel.vue'),
+          }, {
+            path: ':path(day|week|month)',
+            component: () => import('@/page/main/home/levelboard/comicTotel.vue'),
+          }]
         }, {
           path: 'find',
           component: () => import('@/page/main/home/find/index.vue'),
@@ -47,11 +53,25 @@ const router = createRouter({
         path: 'user',
         component: () => import('@/page/main/user/index.vue'),
       }, {
-        path: 'setting',
-        component: () => import('@/page/setting/index.vue'),
-      }, {
         path: 'subscribe',
         component: () => import('@/page/main/subscribe/index.vue'),
+      }, {
+        path: 'chat',
+        component: () => import('@/page/main/chat/index.vue'),
+        redirect: '/main/chat/room',
+        children: [{
+          path: 'room',
+          component: () => import('@/page/main/chat/room/index.vue'),
+        }, {
+          path: 'friend',
+          component: () => import('@/page/main/chat/friend/index.vue'),
+        }]
+      }, {
+        path: 'find',
+        component: () => import('@/page/main/home/find/index.vue'),
+      }, {
+        path: ':name',
+        component: () => import('@/page/main/home/provide/index.vue')
       }]
     }, {
       path: '/user/history',
@@ -69,6 +89,9 @@ const router = createRouter({
       path: '/user/edit',
       component: () => import('@/page/main/user/edit/index.vue'),
     }, {
+      path: '/setting',
+      component: () => import('@/page/setting/index.vue'),
+    }, {
       path: '/search',
       component: () => import('@/page/search/index.vue'),
     }, {
@@ -85,7 +108,6 @@ const router = createRouter({
       }, {
         path: 'comments',
         component: () => import('@/page/game/about/comment/index.vue'),
-        meta: { unRecord: true }
       }]
     }, {
       path: '/comic/:id',
@@ -98,8 +120,10 @@ const router = createRouter({
       }, {
         path: 'comments',
         component: () => import('@/page/comic/comments/index.vue'),
-        meta: { unRecord: true }
       }]
+    }, {
+      path: '/chat/room/:id',
+      component: () => import('@/page/chat/room/index.vue')
     }, {
       path: '/comic/:id/read/:ep',
       component: () => import('@/page/comic/read/index.vue')

@@ -6,15 +6,15 @@ import { userPageScroll } from '@/stores/temp'
 import { onMounted, shallowReactive, shallowRef } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { createLoadingMessage } from '@/utils/message'
-document.title = '收藏 | bika'
+document.title = '我的收藏 | bika'
 const app = useAppStore()
 
 const list = shallowRef<GenericComponentExports<typeof List>>()
 onMounted(() => {
-  list.value?.listInstanse?.scrollTo({ top: userPageScroll.image })
+  list.value?.listInstanse?.scrollTo({ top: userPageScroll.favourt })
 })
 onBeforeRouteLeave(() => {
-  if (list.value?.scrollTop) userPageScroll.image = list.value?.scrollTop
+  if (list.value?.scrollTop) userPageScroll.favourt = list.value?.scrollTop
 })
 
 const isBatchDeletingFavourt = shallowRef(false)
@@ -26,8 +26,8 @@ const batchRemoveFavourtList = async () => {
   isBatchDeletingFavourt.value = false
   try {
     await Promise.all(batchDeleteFavourtList.map((v, index) => {
-      console.log('batch remove:', v, index, app.user?.favourite[index])
-      if (v) return (app.user?.favourite ?? [])[index].favourt({}, false)
+      console.log('batch remove:', v, index, app.user()?.favourite.docs.value[index])
+      if (v) return (app.user()?.favourite.docs.value ?? [])[index].favourt({}, false)
     }))
     await app.$reload.me()
     batchDeleteFavourtList.splice(0, Infinity)
@@ -37,9 +37,18 @@ const batchRemoveFavourtList = async () => {
   }
   isBatchDeletingFavourting.value = false
 }
-const batchRemoveFavourtListSelectAll = () => times(app.user?.favourite.length ?? 0, index => batchDeleteFavourtList[index] = true)
-const batchRemoveFavourtListSelectTog = () => times(app.user?.favourite.length ?? 0, index => batchDeleteFavourtList[index] = !batchDeleteFavourtList[index])
+const batchRemoveFavourtListSelectAll = () => times(app.user()?.favourite.total.value ?? 0, index => batchDeleteFavourtList[index] = true)
+const batchRemoveFavourtListSelectTog = () => times(app.user()?.favourite.total.value ?? 0, index => batchDeleteFavourtList[index] = !batchDeleteFavourtList[index])
 
+const loadNext = async () => {
+  const loading = createLoadingMessage()
+  try {
+    await app.user()?.favourite.next()
+    loading.success()
+  } catch {
+    loading.fail()
+  }
+}
 </script>
 
 <template>
@@ -53,9 +62,12 @@ const batchRemoveFavourtListSelectTog = () => times(app.user?.favourite.length ?
       <div class="text-[--p-color] van-haptics-feedback" v-else @click="isBatchDeletingFavourt = true">删除</div>
     </template>
   </VanNavBar>
-  <List :item-height="160" :reloadable="!isBatchDeletingFavourt" @reload="then => app.$reload.me().then(then)"
-    class="h-[calc(100%-46px)] w-full" :data="app.user?.favourite ?? []" ref="list" :is-requesting="isEmpty(app.user)"
-    v-slot="{ height, data: { item: comic, index } }">
+  <List :item-height="160" :reloadable="!isBatchDeletingFavourt"
+    @reload="then => { app.user()?.favourite.reload(); app.user()?.favourite.next().then(then) }"
+    class="h-[calc(100%-46px)] w-full" :data="app.user()?.favourite.docs.value ?? []" ref="list"
+    :is-requesting="isEmpty(app.user()) || !!app.user()?.favourite.isRequesting.value"
+    v-slot="{ height, data: { item: comic, index } }" @next="loadNext()"
+    :end="isEmpty(app.user()) ? false : (app.user()!.favourite.done.value)">
     <div class="w-full relative" style="--van-checkbox-duration: 0s;" :style="{ height: `${height}px` }">
       <ComicCard :comic :height />
       <div @click="isBatchDeletingFavourt && (batchDeleteFavourtList[index] = !batchDeleteFavourtList[index])"

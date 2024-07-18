@@ -11,15 +11,17 @@ import config, { isDark, isOnline } from './config'
 import { getVer } from './api/plusPlan'
 import Popup from '@/components/popup.vue'
 import symbol from './symbol'
+import { useLocalStorage } from '@vueuse/core'
 window.$message = useMessage()
 window.$loading = useLoadingBar()
 window.$dialog = useDialog()
 const app = useAppStore()
 const ver = shallowRef('')
+const version = useLocalStorage(symbol.version, '')
 getVer().then(v => {
   ver.value = v
-  if (isEmpty(localStorage.getItem(symbol.version))) localStorage.setItem(symbol.version, v)
-  showUpdatePopup.value = !import.meta.env.DEV && (!isEmpty(localStorage.getItem(symbol.version)) && v != localStorage.getItem(symbol.version))
+  if (isEmpty(version.value)) version.value = v
+  showUpdatePopup.value = !import.meta.env.DEV && (!isEmpty(version.value) && v != version.value)
 })
 const showUpdatePopup = shallowRef(false)
 const isUpdateing = shallowRef(false)
@@ -31,7 +33,7 @@ async function update() {
     await Promise.all(sws.map(sw => sw.unregister())) // 40
     const allCacheKeys = await caches.keys()
     await Promise.all(allCacheKeys.map(key => caches.delete(key))) // 100
-    localStorage.setItem(symbol.version, ver.value)
+    version.value = ver.value
     await loading.success(undefined, 300)
     location.reload()
   } catch {
@@ -62,9 +64,9 @@ if (!import.meta.env.DEV) watch(() => config.value['bika.devMode'], devMode => {
   }
 }, { immediate: true })
 
+
 let onLineMessage: MessageReactive | undefined = undefined
 watch(isOnline, isOnline => {
-
   if (isOnline) onLineMessage?.destroy()
   else onLineMessage = window.$message.info('尚未接入互联网')
 }, { immediate: true })

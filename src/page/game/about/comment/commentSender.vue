@@ -49,7 +49,7 @@ async function submit() {
     } else {
       await sendComment(game.value!._id, input.value)
       emiter.emit('commitReload', [])
-      app.user = undefined
+      app.user()?.comments.reload()
     }
     loading.success()
     show.value = false

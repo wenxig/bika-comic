@@ -1,6 +1,6 @@
 import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
 import { getBikaApiHeaders } from './bk_until'
-import { max, times, uniqBy, flatten, sortBy, values } from 'lodash-es'
+import { max, times, uniqBy, flatten, sortBy, values, isEmpty } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { toCn, toTw } from '@/utils/translater'
 import router from '@/router'
@@ -13,7 +13,7 @@ import { until, useLocalStorage } from '@vueuse/core'
 import { createLoadingMessage, createDialog } from '@/utils/message'
 import symbol from '@/symbol'
 export { type RawImage, Image } from '@/utils/image'
-const createClass = <T extends { docs: any[] }, C>(v: T, Class: new (data: T['docs'][number]) => C): T & { docs: C[] } => {
+const createClass = <T extends Result<any>, C>(v: T, Class: new (data: T['docs'][number]) => C): Result<C> => {
   v.docs = v.docs.map(v => new Class(v))
   return v
 }
@@ -44,7 +44,7 @@ export const api = (() => {
     for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
     return requestConfig
   })
-  api.interceptors.response.use(v => {
+  api.interceptors.response.use(async v => {
     if (config.value['bika.devMode']) {
       const app = useAppStore()
       const base = app.devData.get('defaultApi') ?? {
@@ -54,15 +54,16 @@ export const api = (() => {
       base.data.push(v)
       app.devData.set('defaultApi', base)
     }
+    if (!v.data.data) return await api(v)
     return v
   }, async err => {
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
-    if (err?.request?.status == 401 && userLoginData.value.email) {
+    if (err?.response?.status == 401 && userLoginData.value.email) {
       localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
       return api(err.config ?? {})
     }
-    else if (err?.request?.status == 401 && !location.pathname.includes('auth')) {
+    else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
       localStorage.removeItem(symbol.loginToken)
       await router.force.replace('/auth/login')
       return Promise.reject(err)
@@ -109,7 +110,10 @@ export abstract class Comic {
       await favouriteComic(this._id, config)
       if ('isFavourite' in this) this.isFavourite = !this.isFavourite
       const app = useAppStore()
-      if (message) await app.$reload.me()
+      if (message) {
+        app.user()?.favourite.reload()
+        await app.user()?.favourite.next()
+      }
       if (loading!) loading.success()
     } catch {
       if (loading!) loading.fail()
@@ -357,7 +361,7 @@ export abstract class PlusComicStream<T = ProPlusComic> implements ComicStream<T
     this.docs.value.push(...value)
     triggerRef(this.docs)
   }
-  public constructor(protected tag: string, public sort: SortType = 'dd', protected getDataFunction?: (keyword: string, page: number, sort: SortType, config?: AxiosRequestConfig) => Promise<Result<any>>) { }
+  public constructor(protected tag: string, public sort: SortType = 'dd', protected getDataFunction?: (keyword: string, page: number, sort: SortType, config?: AxiosRequestConfig) => Promise<Result<T>>) { }
   public pages = shallowRef(NaN)
   public total = computed(() => this.docs.value.length)
   public page = shallowRef(0)
@@ -420,9 +424,12 @@ export class RandomComicStream {
 }
 export type ResultOfSearch = Pick<SearchResult, 'docs' | 'total'>
 export const searchComics = async (keyword: string, page = 1, sort: SortType = 'dd', config: AxiosRequestConfig = {}): Promise<SearchResult<ProPlusComic>> => {
-  const /** 程序猿的千重解构 */[{ data: { data: { comics: data_TW } } }, { data: { data: { comics: data_CN } } }] = await Promise.all([
-    api.post<RawData<{ comics: SearchResult }>>(`/comics/advanced-search?page=${page}&sort=${sort}`, { keyword: toTw(keyword), sort }, config),
-    api.post<RawData<{ comics: SearchResult }>>(`/comics/advanced-search?page=${page}&sort=${sort}`, { keyword: toCn(keyword), sort }, config)
+  const twTag = toTw(keyword)
+  const cnTag = toCn(keyword)
+  if (twTag == cnTag) var data_TW: SearchResult<RawProPlusComic> = { docs: [], pages: 0, limit: 0, page: 0, total: 0 }, { data: { data: { comics: data_CN } } } = await api.post<RawData<{ comics: SearchResult }>>(`/comics/advanced-search?page=${page}&sort=${sort}`, { keyword: cnTag, sort }, config)
+  else var /** 程序猿的千重解构 */[{ data: { data: { comics: data_TW } } }, { data: { data: { comics: data_CN } } }] = await Promise.all([
+    api.post<RawData<{ comics: SearchResult }>>(`/comics/advanced-search?page=${page}&sort=${sort}`, { keyword: twTag, sort }, config),
+    api.post<RawData<{ comics: SearchResult }>>(`/comics/advanced-search?page=${page}&sort=${sort}`, { keyword: cnTag, sort }, config)
   ])
   const data = uniqBy(data_TW.docs.concat(data_CN.docs), v => v._id).map(v => new ProPlusComic(v))
   return {
@@ -543,7 +550,6 @@ export class ComicStreamWithNoop extends PlusComicStream {
   public done = computed(() => true)
 }
 
-export type UserCharacters = 'knight' | 'member'
 export type UserSex = 'f' | 'm' | 'bot'
 interface RawUser {
   _id: string
@@ -552,8 +558,8 @@ interface RawUser {
   verified: boolean
   exp: number
   level: number
-  characters: UserCharacters[]
-  role?: UserCharacters
+  characters: string[]
+  role?: string
   avatar: RawImage
   title: string
   slogan: string
@@ -565,8 +571,8 @@ export class User {
   public verified!: boolean
   public exp!: number
   public level!: number
-  public characters!: UserCharacters[]
-  public role?: UserCharacters
+  public characters!: string[]
+  public role?: string
   private _avatar?: Image
   public get avatar() {
     return this._avatar!
@@ -729,7 +735,7 @@ export class Comment {
     else await reportComment(this._id)
   }
 }
-export class CommentsStream implements Stream<RawComment> {
+export class CommentsStream implements Stream<Comment> {
   constructor(public id: string) { }
   protected sac = new SmartAbortController()
   public stop() {
@@ -743,13 +749,10 @@ export class CommentsStream implements Stream<RawComment> {
     this.page.value = 0
     this.pages.value = NaN
   }
-  protected addValue(value: RawComment[]) {
-    this.docs.value.push(...value.map(v => new Comment(v)))
-    triggerRef(this.docs)
-  }
-  protected addTopValue(value: Comment[]) {
+  protected async addTopValue(value: Comment[]) {
     this.top.value.push(...value.map(v => new Comment(v)))
-    triggerRef(this.top)
+    this.top.value = uniqBy(this.top.value, '_id')
+
   }
   public host = 'comics'
   public pages = shallowRef(NaN)
@@ -766,9 +769,13 @@ export class CommentsStream implements Stream<RawComment> {
       topComments: Comment[]
     }>>(`/${this.host}/${this.id}/comments?page=${this.page.value}`, { signal: this.sac.signal })).data.data
     this.pages.value = data.comments.pages
+    if (!isEmpty(data.topComments)) await this.addTopValue(data.topComments)
     this.addValue(data.comments.docs)
-    if (this.page.value == 1) this.addTopValue(data.topComments)
     this.isRequesting.value = false
+  }
+  protected addValue(value: RawComment[]) {
+    this.docs.value.push(...value.filter(v => !v.isTop).map(v => new Comment(v)))
+    triggerRef(this.docs)
   }
 }
 
@@ -808,7 +815,7 @@ interface RawUserProfile {
   verified: boolean
   exp: number
   level: number
-  characters: UserCharacters[]
+  characters: string[]
   created_at: string
   avatar: RawImage
   isPunched: boolean
@@ -824,7 +831,7 @@ export class UserProfile {
   public verified!: boolean
   public exp!: number
   public level!: number
-  public characters!: UserCharacters[]
+  public characters!: string[]
   public created_at!: string
   public get created_time() {
     return new Date(this.created_at)
@@ -877,33 +884,76 @@ export class UserSentComment {
     setValue(this, v)
   }
 }
+
 export interface Me {
-  comments: UserSentComment[]
-  favourite: ProComic[]
+  comments: MyCommentsStream
+  favourite: MyFavourtComicStream
   data: UserProfile
 }
+
 export const getMe = async (config: AxiosRequestConfig = {}): Promise<Me> => {
-  const getFav = async () => {
-    const firstPage = (await api.get<RawData<{ comics: Result<RawProComic> }>>(`/users/favourite?s=dd&page=1`, config)).data.data.comics
-    const otherPages = new Array<Result<RawProComic>>()
-    otherPages.push(firstPage)
-    await Promise.all(times(firstPage.pages - 1, async i => otherPages.push((await api.get<RawData<{ comics: Result<RawProComic> }>>(`/users/favourite?s=dd&page=${i + 2}`, config)).data.data.comics)))
-    return flatten(sortBy(otherPages, 'page').map(v => v.docs))
+  const data = {
+    data: <UserProfile | undefined>undefined,
+    comments: new MyCommentsStream(),
+    favourite: new MyFavourtComicStream()
   }
-  const getCom = async () => {
-    const firstPage = (await api.get<RawData<{ comments: Result<RawUserSentComment> }>>(`/users/my-comments?page=1`, config)).data.data.comments
-    const otherPages = new Array<Result<RawUserSentComment>>()
-    otherPages.push(firstPage)
-    await Promise.all(times(firstPage.pages - 1, async i => otherPages.push((await api.get<RawData<{ comments: Result<RawUserSentComment> }>>(`/users/my-comments?page=${i + 2}`, config)).data.data.comments)))
-    return flatten(sortBy(otherPages, 'page').map(v => v.docs))
+  const [profile] = await Promise.all([
+    getUserProfile(config),
+    data.comments.next(),
+    data.favourite.next()
+  ])
+  data.data = profile
+  return <Me>data
+}
+
+export const getUserProfile = async (config: AxiosRequestConfig = {}) => new UserProfile((await api.get<RawData<{ user: RawUserProfile }>>(`/users/profile`, config)).data.data.user)
+
+export class MyFavourtComicStream extends PlusComicStream<ProComic> {
+  constructor() {
+    super('', 'dd', async (_k, page, sort, config) => createClass((await api.get<RawData<{ comics: Result<RawProComic> }>>(`/users/favourite?s=${sort}&page=${page}`, config)).data.data.comics, ProComic))
   }
-  const data = await Promise.all([api.get<RawData<{ user: RawUserProfile }>>(`/users/profile`, config), getFav(), getCom()])
-  return {
-    data: new UserProfile(data[0].data.data.user),
-    comments: data[2].map(v => new UserSentComment(v)),
-    favourite: data[1].map(v => new ProComic(v))
+  public reload(tag = '', sort = this.sort) {
+    this.tag = tag
+    this.sort = sort
+    this.pages.value = NaN
+    this.page.value = 0
+    this.docs.value = []
   }
 }
+
+export class MyCommentsStream implements Stream<UserSentComment> {
+  public docs = shallowRef<UserSentComment[]>([])
+  public pages = shallowRef(NaN)
+  public total = computed(() => this.docs.value.length)
+  public page = shallowRef(0)
+  public done = computed(() => this.page.value >= this.pages.value)
+  public isRequesting = shallowRef(false)
+  protected sac = new SmartAbortController()
+  public async next() {
+    if (this.isRequesting.value) return
+    this.page.value++
+    this.isRequesting.value = true
+    const data = (await api.get<RawData<{ comments: Result<RawUserSentComment> }>>(`/users/my-comments?page=${this.page.value}`, { signal: this.sac.signal })).data.data
+    this.pages.value = data.comments.pages
+    this.addValue(data.comments.docs)
+    this.isRequesting.value = false
+  }
+  protected addValue(value: RawUserSentComment[]) {
+    this.docs.value.push(...value.map(v => new UserSentComment(v)))
+    triggerRef(this.docs)
+  }
+  public reload(): void {
+    this.docs.value = []
+    this.page.value = 0
+    this.pages.value = NaN
+  }
+  public stop(): void {
+    this.sac.abort()
+  }
+}
+
+
+
 
 interface RawKnight extends RawUser {
   comicsUploaded: number
@@ -953,14 +1003,38 @@ export class Announcement {
     setValue(this, v)
   }
 }
-export const getAnnouncements = async (config: AxiosRequestConfig = {}) => {
-  const firstPage = (await api.get<RawData<{ announcements: Result<RawAnnouncement> }>>(`/announcements?page=1`, config)).data.data.announcements
-  const otherPages = new Array<Result<RawAnnouncement>>()
-  otherPages.push(firstPage)
-  await Promise.all(times(firstPage.pages - 1, async i => otherPages.push((await api.get<RawData<{ announcements: Result<RawAnnouncement> }>>(`/announcements?page=${i + 2}`, config)).data.data.announcements)))
-  return flatten(sortBy(otherPages, 'page').map(v => v.docs.map(v => new Announcement(v))))
-}
 
+export class AnnouncementStream implements Stream<Announcement> {
+  public docs = shallowRef<Announcement[]>([])
+  public pages = shallowRef(NaN)
+  public total = computed(() => this.docs.value.length)
+  public page = shallowRef(0)
+  public done = computed(() => this.page.value >= this.pages.value)
+  public isRequesting = shallowRef(false)
+  protected sac = new SmartAbortController()
+  public async next() {
+    if (this.isRequesting.value) return
+    this.page.value++
+    this.isRequesting.value = true
+    const data = (await api.get<RawData<{ announcements: Result<RawAnnouncement> }>>(`/announcements?page=${this.page.value}`, { signal: this.sac.signal })).data.data
+    this.pages.value = data.announcements.pages
+    if (this.page.value == 1) data.announcements.docs.splice(0, 3)
+    this.addValue(data.announcements.docs)
+    this.isRequesting.value = false
+  }
+  protected addValue(value: RawAnnouncement[]) {
+    this.docs.value.push(...value.map(v => new Announcement(v)))
+    triggerRef(this.docs)
+  }
+  public reload(): void {
+    this.docs.value = []
+    this.page.value = 0
+    this.pages.value = NaN
+  }
+  public stop(): void {
+    this.sac.abort()
+  }
+}
 export interface Login {
   email: string
   password: string
@@ -984,4 +1058,8 @@ export const signUp = (data: SignUp) => api.post<RawData<never>>('/auth/register
 
 export const editSlogan = (slogan: string) => api.put<RawData<never>>('/users/profile', {
   slogan
+})
+
+export const editAvator = (imageDataUrl: string) => api.put('/users/avatar', {
+  avatar: imageDataUrl
 })

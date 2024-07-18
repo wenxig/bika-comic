@@ -10,9 +10,9 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import tailwindcss from 'tailwindcss'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import legacyPlugin from '@vitejs/plugin-legacy'
-import replace from '@rollup/plugin-replace'
 import _package from './package.json'
 import tailwindConfig from './tailwind.config.ts'
+
 export default defineConfig(({ command }) => ({
   plugins: [
     vue(),
@@ -23,12 +23,6 @@ export default defineConfig(({ command }) => ({
         NaiveUiResolver()
       ],
     }),
-    replace({
-      values: {
-        __VERSION__: `"${_package.version}"`
-      },
-      preventAssignment: true
-    }) as any,
     VitePWA({
       includeAssets: ['favicon.png'],
       manifest: {
@@ -118,14 +112,9 @@ export default defineConfig(({ command }) => ({
     terserOptions: {
       compress: {
         drop_debugger: true,
+        drop_console: true
       },
-    },
-
-  },
-  base: "/",
-  server: {
-    hmr: {
-      overlay: false
     }
-  }
+  },
+  base: "/"
 }))

@@ -1,9 +1,9 @@
 <script setup lang='ts'>
 import { Announcement } from '@/api'
 import { useAppStore } from '@/stores'
-import { isEmpty } from 'lodash-es'
 import { shallowRef, watch } from 'vue'
 import Popup from '@/components/popup.vue'
+import { createLoadingMessage } from '@/utils/message'
 
 const show = defineModel<boolean>({ required: true })
 const app = useAppStore()
@@ -14,13 +14,24 @@ watch(alertData, () => {
   overlay.value!.scrollTo({ top: 0 })
 }, { flush: 'post' })
 
+const nextLoad = async (ok?: VoidFunction) => {
+  const loading = createLoadingMessage()
+  try {
+    await app.announcements().next()
+    loading.success()
+  } catch {
+    loading.fail()
+  }
+  if (ok) ok()
+}
 </script>
 
 <template>
   <Popup v-model:show="show" position="right" class="w-full h-full overflow-x-hidden van-hairline--bottom shadow-sm"
     closeable>
     <div class="w-full h-[10%] text-[--p-color] text-lg font-bold flex items-center pl-3">公告</div>
-    <List :item-height="160" :data="app.announcements" class="h-[90%]" :is-requesting="isEmpty(app.announcements)"
+    <List :item-height="160" :data="app.announcements().docs.value" class="h-[90%]" @next="nextLoad"
+      :end="app.announcements().done.value" :is-requesting="app.announcements().isRequesting.value"
       v-slot="{ height, data: { item: announcement } }">
       <div class="w-full van-hairline--bottom flex" :style="{ height: `${height}px` }" @click="() => {
         alertData = announcement

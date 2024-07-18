@@ -6,7 +6,7 @@ import { last } from 'lodash-es'
 export type ComicPreload = {
   comic?: ProPlusMaxComic | false
   preload?: ProComic | ProPlusComic | ProPlusMaxComic
-  likeComic: ProComic[]
+  likeComic?: ProComic[]
   eps: Ep[]
 }
 
@@ -16,7 +16,7 @@ export const useComicStore = defineStore('comic', () => {
     comic: undefined,
     preload: undefined,
     eps: [],
-    likeComic: []
+    likeComic: undefined
   })
   const $setupPreload = (v: ComicPreload['preload'] | false, cid?: string) => {
     switch (v) {
@@ -27,7 +27,7 @@ export const useComicStore = defineStore('comic', () => {
           comic: false,
           preload: undefined,
           eps: [],
-          likeComic: []
+          likeComic: undefined
         })
         return
       }
@@ -38,7 +38,7 @@ export const useComicStore = defineStore('comic', () => {
           comic: undefined,
           preload: v,
           eps: [],
-          likeComic: []
+          likeComic: undefined
         })
       }
     }
@@ -52,7 +52,7 @@ export const useComicStore = defineStore('comic', () => {
           comic: false,
           preload: {} as any,
           eps: [],
-          likeComic: []
+          likeComic: undefined
         })
         return
       }
@@ -63,7 +63,7 @@ export const useComicStore = defineStore('comic', () => {
           comic: v,
           preload: v,
           eps: [],
-          likeComic: []
+          likeComic: undefined
         })
       }
     }

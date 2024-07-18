@@ -11,13 +11,13 @@ html,
   overflow-x: hidden;
 }
 
+$pColor: #db547c;
+$lightPColor: lighten($pColor, 8);
+$pressedPColor: darken($pColor, 8);
 :root:root {
-  $pColor: #db547c;
   --primary-color: #{$pColor};
-  $lightPColor: lighten($pColor, 8);
-  --primary-color-hover: #{$lightPColor};
-  $pressedPColor: darken($pColor, 8);
   --primary-color-pressed: #{$pressedPColor};
+  --primary-color-hover: #{$lightPColor};
   --van-primary-color: var(--primary-color) !important;
   --van-blue: var(--primary-color) !important;
   --p-color: var(--primary-color);
@@ -45,8 +45,12 @@ html,
   }
 }
 
-.user-page #app *:not(.van-switch *), .setting-page #app *:not(.van-switch *) {
-  --bezier: cubic-bezier(.4, 0, .2, 1);
+.user-page #app *:not(.van-switch *),
+.setting-page #app *:not(.van-switch *) {
+  --bezier: cubic-bezier(0.4, 0, 0.2, 1);
   --text-bezier: cubic-bezier(0.17, 0.15, 0.2, 1);
-  transition: .1s color var(--text-bezier), .3s border-color var(--text-bezier), .3s background-color var(--bezier) !important;
+  transition:
+    0.1s color var(--text-bezier),
+    0.3s border-color var(--text-bezier),
+    0.3s background-color var(--bezier) !important;
 }

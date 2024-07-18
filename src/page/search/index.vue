@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { ComicStreamWithKeyword, ComicStreamWithAuthor, ComicStreamWithTranslater, ComicStreamWithTag, ComicStreamWithUploader, ComicStreamWithCategories, ComicStreamWithId, ComicStream, ComicStreamWithNoop, ProPlusComic, ProComic } from '@/api'
-import { shallowRef, onMounted, ref, computed } from 'vue'
+import { shallowRef, onMounted, ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ComicCard from '@/components/comic/comicCard.vue'
 import Search from '@/components/search/search.vue'
@@ -8,7 +8,7 @@ import { isEmpty, noop, uniqBy } from 'lodash-es'
 import config, { FillerTag } from '@/config'
 import { searchResult as lastSearchResult, searchListScroolPosition } from '@/stores/temp'
 import List from '@/components/list.vue'
-import { computedWithControl, useTitle, watchOnce } from '@vueuse/core'
+import { computedWithControl, useTitle, useTransition, watchOnce } from '@vueuse/core'
 import { patchSearchHitory } from '@/api/plusPlan'
 import { modeMap, sorterValue } from '@/utils/translater'
 import Sorter from '@/components/search/sorter.vue'
@@ -104,24 +104,43 @@ const nextSearch = async (then?: VoidFunction) => {
   }
   if (then) then()
 }
+
+const showSearch = shallowRef(true)
+watch(() => list.value?.scrollTop, async (scrollTop, old) => {
+  if (!scrollTop || !old) return
+  if (scrollTop - old > 0) showSearch.value = false
+  else showSearch.value = true
+}, { immediate: true })
+
+const searchCom = shallowRef<InstanceType<typeof Search>>()
+const toSearchInHideMode = async () => {
+  showSearch.value = true
+  searchCom.value?.searchInstance?.focus()
+}
 </script>
 
 <template>
-  <header class="w-full h-auto text-[--van-text-color]">
-    <Search :base-text="searchText" :base-mode="searchMode" show-action />
-    <div class="van-hairline--top-bottom h-8 w-full items-center bg-[--van-background-2] flex *:!text-nowrap">
+  <header class="w-full h-[86px] text-[--van-text-color] duration-200 transition-transform"
+    :class="[showSearch ? '!translate-y-0' : '!-translate-y-[54px]']">
+    <Search ref="searchCom" :base-text="searchText" :base-mode="searchMode" show-action />
+    <!--  -->
+    <div class="van-hairline--bottom h-8 w-full relative items-center bg-[--van-background-2] flex *:!text-nowrap">
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center" @click="showfifler = true">
-        <van-icon name="filter-o" size="1.5rem" />过滤
+        <van-icon name="filter-o" size="1.5rem"
+          :badge="config.value['bika.search.fillerTags'].filter(v => v.mode != 'auto').length || undefined" />过滤
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center" @click="sorter?.show()">
         <van-icon name="sort" size="1.5rem" class="sort-icon" />排序
-        <span class="text-[--p-color] text-xs">-{{ sorterValue.find(v => v.value ==
-          config.value['bika.search.sort'])?.text
+        <span class="text-[--p-color] text-xs">-{{
+          sorterValue.find(v => v.value == config.value['bika.search.sort'])?.text
           }}</span>
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center">
         <VanSwitch v-model="config.value['bika.search.showAIProject']" size="1rem" />展示AI作品
       </div>
+      <VanIcon name="search" class="absolute top-1/2 duration-200 transition-transform right-0 -translate-y-1/2"
+        :class="[showSearch ? 'translate-x-full' : '-translate-x-2']" size="25px" color="var(--van-text-color-2)"
+        @click="toSearchInHideMode" />
     </div>
   </header>
   <Popup v-model:show="showfifler" position="bottom" class="max-h-[70%] !overflow-x-hidden" closeable round
@@ -132,35 +151,31 @@ const nextSearch = async (then?: VoidFunction) => {
       </VanButton>
     </div>
     <div class="w-full flex flex-wrap">
-      <van-loading class="ml-2" size="24px" v-if="isEmpty(tags())">加载中...</van-loading>
+      <van-loading class="w-full flex justify-center" size="24px" v-if="isEmpty(tags())">加载中...</van-loading>
       <template v-else>
-        <VanTag :type="isInMustshows(tag.title) ? 'warning' : 'primary'" class="m-1" size="large" v-for="tag of tags()"
-          :plain="isInUnshows(tag.title)" @click="() => {
-            let obj = _fiflerTags.find(v => v.name == tag.title)
-            if (!obj) _fiflerTags.push({ name: tag.title, mode: 'auto' })
-            obj = _fiflerTags.find(v => v.name == tag.title)!
-            switch (getMode(tag.title)) {
+        <VanTag :type="isInMustshows(tag) ? 'warning' : 'primary'" class="m-1" size="large"
+          v-for="tag of tags().map(v => v.title)" :plain="isInUnshows(tag)" @click="() => {
+            let obj = _fiflerTags.find(v => v.name == tag)
+            if (!obj) _fiflerTags.push({ name: tag, mode: 'auto' })
+            obj = _fiflerTags.find(v => v.name == tag)!
+            switch (getMode(tag)) {
               case 'auto': return obj.mode = 'unshow'
               case 'unshow': return obj.mode = 'show'
               case 'show': return obj.mode = 'auto'
             }
           }">
-          {{ toCn(tag.title) }}
+          {{ toCn(tag) }}
         </VanTag>
       </template>
     </div>
   </Popup>
   <NResult status="info" title="未输入搜索字段" description="尝试输入一些吧" v-if="isEmpty($route.query.keyword)"></NResult>
   <List :itemHeight="160" :data="listData" reloadable @reload="then => reload().then(then)" v-else
-    :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value" class="h-[calc(100vh-86px)]"
-    v-slot="{ data: { item: comic }, height }" :end="comicStream.done.value" @next="nextSearch" ref="list">
+    :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value"
+    v-slot="{ data: { item: comic }, height }" class="duration-200 transition-[height,transform]"
+    :end="comicStream.done.value" @next="nextSearch" ref="list"
+    :class="[showSearch ? 'h-[calc(100vh-86px)] translate-y-0' : 'h-[calc(100vh-32px)] -translate-y-[54px]']">
     <ComicCard :comic :height />
   </List>
   <Sorter ref="sorter" @reload="reload()" />
 </template>
-
-<style scoped lang='scss'>
-.sort-icon::before {
-  font-weight: 100;
-}
-</style>

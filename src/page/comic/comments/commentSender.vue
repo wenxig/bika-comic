@@ -39,7 +39,9 @@ defineExpose<{
   }
 })
 
+const isSubmitting = shallowRef(false)
 async function submit() {
+  isSubmitting.value = true
   const loading = createLoadingMessage('发送中')
   try {
     if (isChildren) {
@@ -48,7 +50,7 @@ async function submit() {
     } else {
       await sendComment(comic.value!._id, input.value)
       emiter.emit('commitReload', [])
-      app.user = undefined
+      app.user()?.comments.reload()
     }
     loading.success()
     show.value = false
@@ -56,12 +58,12 @@ async function submit() {
   } catch {
     loading.fail()
   }
+  isSubmitting.value = false
 }
 </script>
 
 <template>
-  <Popup v-model:show="show" position="center"
-    class="w-[98vw] h-[98vh] bg-[--van-background]" round>
+  <Popup v-model:show="show" position="center" class="w-[98vw] h-[98vh] bg-[--van-background]" round>
     <div class="h-8 pr-2 flex justify-end items-center bg-[--van-background-2] rounded-t-2xl">
       <van-icon name="cross" size="1.5rem" @click="show = false" color="var(--van-text-color)" />
     </div>
@@ -74,7 +76,7 @@ async function submit() {
             placeholder="填写你的评论..." :rules="[{ required: true, message: '不能发送空内容' }]" />
         </VanCellGroup>
         <div style="margin: 16px;">
-          <VanButton round block type="primary" native-type="submit">
+          <VanButton round block type="primary" native-type="submit" :loading="isSubmitting">
             提交
           </VanButton>
         </div>

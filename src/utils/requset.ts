@@ -31,9 +31,10 @@ export const errorReturn = (err: Error, because = '') => {
   } catch { }
   return Promise.reject(err)
 }
-export const setValue = <T extends object>(v: T, v2: T) => {
+export const setValue = <T extends object, O extends (keyof T)[] = []>(v: T, v2: T, omit?: O) => {
+  const _omit = new Set<O[number]>(omit)
   for (const key in v2) {
-    const element = v2[key]
-    if (element) v[key] = element
+    if (_omit.has(key)) continue
+    v[key] = v2[key]
   }
 }

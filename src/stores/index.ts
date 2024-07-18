@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
-import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, getAnnouncements, getLevelboard } from '@/api'
-import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Announcement, Levelboard, ProComic } from '@/api'
-import { reactive, shallowRef, watch } from 'vue'
+import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getUserProfile } from '@/api'
+import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
+import { markRaw, reactive, shallowRef, watch } from 'vue'
 import { getSearchHitory, getWatchHitory, getSubscribe, type Subscribe, isInPlusPlan, getFavourtImages, putFavourtImages, WatchHistory } from '@/api/plusPlan'
 import { SmartAbortController } from '@/utils/requset'
 import type { AxiosRequestConfig } from 'axios'
@@ -42,7 +42,18 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const user = shallowRef<Me>()
-  const $reloadMe = async (config: AxiosRequestConfig = {}) => user.value = await getMe(config)
+  const $reloadMe = async (config: AxiosRequestConfig = {}) => {
+    if (user.value) {
+      user.value.favourite.reload()
+      user.value.comments.reload()
+      await Promise.all([
+        getUserProfile(config).then(v => user.value!.data = v),
+        user.value.favourite.next(),
+        user.value.comments.next()
+      ])
+    }
+    else user.value = markRaw(await getMe(config))
+  }
 
   const subscribes = shallowRef<Subscribe[]>([])
   const subscribesUpdates = shallowRef<ProPlusComic[]>([])
@@ -81,7 +92,14 @@ export const useAppStore = defineStore('app', () => {
     subscribesData.value = obj
   })
 
-  const announcements = shallowRef<Announcement[]>([])
+  const announcements = shallowRef(new AnnouncementStream())
+  const $reloadAnnouncements = async () => {
+    announcements.value?.reload()
+    await Promise.all([
+      announcements.value?.next(),
+      announcements.value?.next()
+    ])
+  }
 
   const levelBoard = shallowRef<Levelboard>({
     comics: [[], [], []],
@@ -100,14 +118,17 @@ export const useAppStore = defineStore('app', () => {
 
   const devData = reactive(new Map<string, DevData>())
   const showDevPupop = shallowRef(false)
+
+
   return {
-    subscribes, showDevPupop, devData, favourtImages, levelBoard, announcements, newUpdateComics, subscribesData, subscribesUpdates, categories, collections_list, hotTags, user, searchHistory, readHistory,
+    subscribes, showDevPupop, devData, favourtImages, levelBoard, announcements: () => announcements.value, newUpdateComics, subscribesData, subscribesUpdates, categories, collections_list, hotTags, user: () => user.value, searchHistory, readHistory,
     $reload: {
       me: $reloadMe,
       subscribes: $reloadSubscribes,
       readHistory: $reloadReadHistory,
       levelboard: $reloadLevelBoard,
-      favourtImages: $reloadFavourtIamges
+      favourtImages: $reloadFavourtIamges,
+      announcements: $reloadAnnouncements
     }
   }
 })
@@ -116,27 +137,17 @@ const sac = new SmartAbortController()
 export async function init() {
   const app = useAppStore()
   config.value['bika.plusPlan'] = await isInPlusPlan()
-  const datas = await Promise.all([
-    getCategories({ signal: sac.signal }),
-    getHotTags({ signal: sac.signal }),
-    getCollections({ signal: sac.signal }),
-    getNewUpdatesComic({ signal: sac.signal }),
-    getAnnouncements({ signal: sac.signal }),
-    getSearchHitory({ signal: sac.signal }),
+  await Promise.all([
+    getCategories({ signal: sac.signal }).then(v => app.categories = v),
+    getHotTags({ signal: sac.signal }).then(v => app.hotTags = v),
+    getCollections({ signal: sac.signal }).then(v => app.collections_list = v),
+    getNewUpdatesComic({ signal: sac.signal }).then(v => app.newUpdateComics = v),
+    app.$reload.announcements(),
+    getSearchHitory({ signal: sac.signal }).then(v => v && (app.searchHistory = v)),
     app.$reload.levelboard({ signal: sac.signal }),
     app.$reload.readHistory({ signal: sac.signal }),
     app.$reload.subscribes({ signal: sac.signal }),
     app.$reload.me({ signal: sac.signal }),
     app.$reload.favourtImages({ signal: sac.signal }),
   ] as const)
-  app.$patch({
-    categories: datas[0],
-    hotTags: datas[1],
-    collections_list: datas[2],
-    newUpdateComics: datas[3],
-    announcements: datas[4].slice(3)
-  })
-  if (datas[5]) app.$patch({
-    searchHistory: datas[5]
-  })
 }

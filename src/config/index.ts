@@ -4,6 +4,7 @@ import { defaultsDeep } from "lodash-es"
 import { useFullscreen, usePreferredDark } from "@vueuse/core"
 import { useOnline } from '@vueuse/core'
 import symbol from "@/symbol"
+import dayjs from "dayjs"
 
 export const isOnline = useOnline()
 export interface FillerTag {
@@ -11,7 +12,6 @@ export interface FillerTag {
   mode: "unshow" | "show" | "auto"
 }
 type ImageQuality = 'original' | 'low' | 'medium' | 'high'
-const newDate = new Date()
 export const baseConfig = {
   'bika.read.preloadIamgeNumbers': 2,
   'bika.read.watchFullscreen': true,
@@ -24,7 +24,7 @@ export const baseConfig = {
   "bika.proxy.image": proxyData.image[0],
   "bika.proxy.db": proxyData.db[0],
   "bika.proxy.chat": proxyData.chat[0],
-  'bika.subscribe.updateTime': `${newDate.getFullYear()}-${newDate.getMonth()}-${newDate.getDate()}`,
+  'bika.subscribe.updateTime': dayjs().format("YYYY-MM-DD"),
   'bika.info.unsortComic': false,
   'bika.plusPlan': true,
   'bika.devMode': false,

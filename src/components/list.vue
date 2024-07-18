@@ -50,7 +50,7 @@ watch([() => $props.data, isReq], ([data]) => {
     isReq.value = true
     $emit('next', () => isReq.value = false)
   }
-})
+}, { immediate: true })
 </script>
 
 <template>

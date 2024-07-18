@@ -79,8 +79,8 @@ const settingShow = shallowRef(false)
     <VanImagePreview :max-zoom="Infinity" :vertical="config.value['bika.read.vertical']" :show
       v-if="show && !config.value['bika.read.vertical']" :images="showImages" :close-on-click-image="false"
       :close-on-click-overlay="false" :close-on-popstate="false" :loop="false" :show-index="false" ref="imagePreview"
-      @change="i => setPage(i - (!!getValue(-1) ? 1 : 0))" style="--aside-width:15vw;" class="!z-[1]"
-      overlay-class="!z-[1]">
+      @change="i => setPage(i - (!!getValue(-1) ? 1 : 0))" style="--aside-width:15vw;" class="!z-[0]"
+      overlay-class="!z-[0]">
       <template #cover>
         <div class="fixed top-0 left-0 w-[--aside-width] h-[100vh] flex items-center"
           @click="isInSpace(page - 1, 0, images.length) ? page-- : $emit('lastEp')">

@@ -37,7 +37,7 @@ const reload = async () => {
   if (!commitStream.value.done.value) await commitStream.value.next()
 }
 emiter.on('childrenCommitReload', ([id]) => {
-  if (_id.value != id || !floatPopup.value?.show) return
+  if (_id.value != id) return
   return reload()
 })
 defineExpose({

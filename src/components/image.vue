@@ -80,7 +80,7 @@ defineSlots<{
   }" v-if="images.error.has(src) && !hideError"
     :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]">
     <slot name="loading" v-if="$slots.loading"></slot>
-    <template>
+    <template v-else>
       <VanIcon name="warning-o" size="2.5rem" color="var(--van-text-color-2)" />
       <div class="text-sm text-[--van-text-color-2]">点击重试</div>
     </template>

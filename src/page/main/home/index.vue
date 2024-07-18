@@ -1,11 +1,12 @@
 <script setup lang='ts'>
 import { useAppStore } from '@/stores'
-import { shallowRef } from 'vue'
+import { inject, nextTick, provide, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { toReactive, useCycleList } from '@vueuse/core'
 import Alert from './alert.vue'
 import { toCn, useSearchMode } from '@/utils/translater'
 import { createLoadingMessage } from '@/utils/message'
+import symbol from '@/symbol'
 const app = useAppStore()
 const cl = toReactive(useCycleList(() => app.hotTags))
 const clId = setInterval(() => {
@@ -18,8 +19,7 @@ document.title = '首页 | bika'
 const $router = useRouter()
 const $route = useRoute()
 const headerSwipeHeight = 260
-const headerSelectHeight = 30
-const headerSearchHeight = 54
+const baseHeaderSearchHeight = shallowRef(54)
 const searchText = shallowRef('')
 const isSearching = shallowRef(false)
 const urlText = (str: string) => str.replace(/^[\@\#]+/g, '')
@@ -35,8 +35,11 @@ const selectPage = shallowRef($route.path.substring($route.path.lastIndexOf('/')
 await $router.force.replace(`/main/home/${selectPage.value}`)
 const showAlert = shallowRef(false)
 
+const showTabber = inject(symbol.showTabbar)
+
 const beforeChange = async (t: string) => {
   const loading = createLoadingMessage()
+  showNavBar.value = showTabber!.value = true
   try {
     await $router.force.replace(`/main/home/${t}`)
     loading.success()
@@ -45,25 +48,35 @@ const beforeChange = async (t: string) => {
   }
   return true
 }
+const showTabbar = inject(symbol.showTabbar)!
+const showNavBar = shallowRef(true)
+provide(symbol.showNavBar, showNavBar)
+watch(showNavBar, showNavBar => {
+  baseHeaderSearchHeight.value = (showNavBar ? 54 : 0)
+})
+
+const inputEl = shallowRef<HTMLInputElement>()
+const toSearchInHideMode = async () => {
+  showNavBar.value = showTabbar.value = true
+  await nextTick()
+  inputEl.value?.focus()
+}
 </script>
 <template>
-  <header
-    class="h-[--header-search-height] w-full bg-[--van-background-2] flex items-center relative overflow-hidden *:overflow-hidden">
-    <Image :src="app.user?.data.avatar" round v-if="!isSearching" @click="$router.force.replace('/main/user')"
-      class="w-[calc(var(--header-search-height)/1.3)] h-[calc(var(--header-search-height)/1.3)] ml-1" />
-    <div class="w-1/2 ml-3 h-[calc(var(--header-search-height)/1.5)]"></div>
-    <div
-      :class="[!isSearching ? 'rounded-full w-1/2 ml-3 left-[calc(var(--header-search-height)/1.3)]' : 'rounded-lg w-[calc(100%-18px)] left-1']"
-      style="transition: all 200ms;"
-      class="border-solid border-[1px] absolute border-gray-400 text-gray-400 h-[calc(var(--header-search-height)/1.5)] px-1 flex items-center">
+  <header :class="[showNavBar ? 'translate-y-0' : '-translate-y-full']"
+    class="h-[54px] duration-200 transition-transform w-full bg-[--van-background-2] flex items-center relative overflow-hidden *:overflow-hidden">
+    <Image :src="app.user()?.data.avatar" round v-if="!isSearching" @click="$router.force.replace('/main/user')"
+      class="!w-[41px] !h-[41px] ml-1" />
+    <div class="w-1/2 ml-3 h-[36px]"></div>
+    <div :class="[!isSearching ? 'rounded-full w-1/2 ml-3 left-[41px]' : 'rounded-lg w-[calc(100%-18px)] left-1']"
+      class="transition-all duration-200 border-solid border absolute border-gray-400 text-gray-400 h-[36px] px-1 flex items-center">
       <VanIcon name="search" color="rgb(156 163 175)" size="1.5rem" @click="handleSearch(searchText || cl.state)" />
       <form action="/" @submit.prevent="handleSearch(searchText)" class="h-full w-full">
         <input type="search" class="h-full w-full border-none bg-transparent" spellcheck="false"
-          @focus="isSearching = true" v-model="searchText" :placeholder="cl.state">
+          @focus="isSearching = true" v-model="searchText" :placeholder="cl.state" ref="inputEl" />
       </form>
     </div>
-    <div class="flex justify-evenly w-[calc(100%-(var(--header-search-height)/1.3)-2px-50%-0.75rem-0.5rem)]"
-      v-if="!isSearching">
+    <div class="flex justify-evenly w-[calc(50%-63px)]" v-if="!isSearching">
       <VanIcon color="rgb(156 163 175)" @click="$router.force.push('/game')">
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"
           class=" w-[1.8rem] h-[1.8rem]">
@@ -79,27 +92,23 @@ const beforeChange = async (t: string) => {
       </VanIcon>
       <van-icon name="bullhorn-o" color="rgb(156 163 175)" size="1.8rem" @click="showAlert = true" />
     </div>
-    <div @click="isSearching = false" v-if="isSearching"
-      class="bg-[--van-black] opacity-50 h-full w-full fixed top-[calc(var(--header-search-height))] left-0 z-[5]">
-    </div>
-    <SearchPop :show="isSearching" v-model="searchText" @search="handleSearch(searchText)" />
+    <SearchPop v-model:show="isSearching" v-model="searchText" @search="handleSearch(searchText)" />
   </header>
-  <VanTabs shrink class="h-[--header-select-height] w-full relative z-[1]" v-model:active="selectPage" :beforeChange>
-    <VanTab title="推荐" name="random" />
-    <VanTab title="排行榜" name="level" />
-    <VanTab title="分区" name="find" />
-    <VanTab v-for="p of app.collections_list" :title="toCn(p.title)" :name="p.title" />
-  </VanTabs>
-  <div class="w-full h-[calc(100%-var(--header-select-height)-var(--header-search-height)-14px)] mt-[14px]">
+  <div class="h-[44px] relative duration-200 transition-transform"
+    :class="[showNavBar ? 'translate-y-0' : '-translate-y-[54px]']">
+    <VanTabs shrink class="w-full" v-model:active="selectPage" :beforeChange>
+      <VanTab title="推荐" name="random" />
+      <VanTab title="排行榜" name="level" />
+      <VanTab title="分区" name="find" />
+      <VanTab v-for="p of app.collections_list" :title="toCn(p.title)" :name="p.title" />
+    </VanTabs>
+    <VanIcon name="search" class="absolute top-1/2 duration-200 transition-transform right-0 -translate-y-1/2"
+      :class="[showNavBar ? 'translate-x-full' : '-translate-x-2']" size="25px" color="var(--van-text-color-2)"
+      @click="toSearchInHideMode" />
+  </div>
+  <div class="w-full duration-200 transition-[height,transform]"
+    :class="[showNavBar ? 'h-[calc(100%-98px)] translate-y-0' : 'h-full -translate-y-[54px]']">
     <RouterView />
   </div>
   <Alert v-model="showAlert" />
 </template>
-
-<style scoped lang='scss'>
-* {
-  --header-swipe-height: calc(v-bind(headerSwipeHeight) * 1px);
-  --header-select-height: calc(v-bind(headerSelectHeight) * 1px);
-  --header-search-height: calc(v-bind(headerSearchHeight) * 1px);
-}
-</style>

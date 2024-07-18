@@ -63,7 +63,7 @@ const quitLogin = () => {
 </script>
 
 <template>
-  <VanNavBar title="设置" />
+  <VanNavBar title="设置" left-arrow @click-left="$router.back()" />
   <NScrollbar class="w-full h-[calc(100%-46px)]">
     <VanCellGroup title="系统设置">
       <van-cell center title="深色模式">
@@ -135,7 +135,7 @@ const quitLogin = () => {
       @confirm="(v) => { config.value['bika.proxy.image'] = v.selectedValues[0]; showImageProxySelect = false }"
       v-model="_ImageProxy" />
   </Popup>
-  <Popup v-model:show="showInterfaceProxySelect" round position="bottom" >
+  <Popup v-model:show="showInterfaceProxySelect" round position="bottom">
     <van-picker :columns="allProxies.interface.map(v => ({ text: new Url(v).host, value: v }))"
       @cancel="showInterfaceProxySelect = false"
       @confirm="(v) => { config.value['bika.proxy.interface'] = v.selectedValues[0]; showInterfaceProxySelect = false }"

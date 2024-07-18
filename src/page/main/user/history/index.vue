@@ -8,7 +8,7 @@ import List from '@/components/list.vue'
 import { SmartAbortController } from '@/utils/requset'
 import { onBeforeRouteLeave } from 'vue-router'
 import { userPageScroll } from '@/stores/temp'
-document.title = '历史 | bika'
+document.title = '历史记录 | bika'
 const app = useAppStore()
 const isRefreshing = shallowRef(false)
 const sca = new SmartAbortController()

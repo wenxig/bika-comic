@@ -1,7 +1,6 @@
 import config from "@/config"
 import symbol from "@/symbol"
 import { HmacSHA256, enc } from "crypto-js"
-
 export function getBikaApiHeaders(pathname: string, method: string) {
   type Headers = [name: string, value: string][]
   pathname = pathname.substring(1)

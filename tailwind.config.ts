@@ -1,4 +1,6 @@
-export default {
+import type { Config } from 'tailwindcss'
+
+export default <Config>{
   corePlugins: {
     preflight: false
   },
@@ -10,4 +12,4 @@ export default {
     extend: {},
   },
   plugins: [],
-} as import('tailwindcss').Config
+}

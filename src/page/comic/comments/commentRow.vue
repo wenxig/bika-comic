@@ -22,17 +22,18 @@ defineSlots<{
 <template>
   <VanRow v-bind="$props"
     class="van-hairline--bottom relative pb-[24px] bg-[--van-background-2] text-[--van-text-color]"
-    :style="`min-height:${height - 24}px;`" @click="$emit('click', comment)"
-    :class="{ 'border-x border-b border-t-0 first:!border-t-[1px] border-[--van-primary-color] border-solid': comment.isTop }">
+    :style="`min-height:${height - 24}px;`" @click="$emit('click', comment)">
     <VanCol span="4" class="!flex justify-center items-start">
       <div @click.stop="$emit('showUser', comment._user)">
         <Image :src="comment._user.avatar || userIcon" class="h-[3.5rem] mt-2 w-[3.5rem]" round fit="cover" />
       </div>
     </VanCol>
     <VanCol class="!flex flex-col ml-1" span="19">
-      <div class="flex">
-        <div class="font-bold">{{ comment._user.name }}</div>
-        <span class="text-xs m-1 text-[--van-text-color-2]">
+      <div class="flex flex-col">
+        <div class="text-[--van-text-color]">{{ comment._user.name }}
+          <span class="mr-1 text-xs text-[--p-color] font-normal">Lv{{ comment._user.level }}</span>
+        </div>
+        <span class="text-xs -mt-1 text-[--van-text-color-2]">
           <NTime :time="new Date(comment.created_at)"></NTime>
         </span>
       </div>
@@ -40,7 +41,9 @@ defineSlots<{
         <div class="h-auto text-wrap text-[--van-text-color-2]">评论被举报</div>
       </template>
       <template v-else>
-        <Text :text="comment.content" :ellipsis="'ellipsis' in $props ? ellipsis : 3" />
+        <Text :text="comment.content" :ellipsis="'ellipsis' in $props ? ellipsis : 3">
+          <VanTag type="primary" v-if="comment.isTop" plain class="mr-1">置顶</VanTag>
+        </Text>
       </template>
     </VanCol>
     <div class="absolute bottom-1 right-1 flex">
@@ -55,7 +58,7 @@ defineSlots<{
       <button v-if="showChildrenComment" class="flex items-center bg-transparent border-none"
         @click.stop="$emit('comment', comment)">
         <VanIcon name="chat-o" size="16px" />
-        <span class="ml-1 text-[13px]">{{ comment.commentsCount }}</span>
+        <span class="ml-1 text-[13px]" v-if="comment.commentsCount">{{ comment.commentsCount }}</span>
       </button>
       <slot />
     </div>

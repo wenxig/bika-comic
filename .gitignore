@@ -9,6 +9,7 @@ lerna-debug.log*
 node_modules
 .DS_Store
 dist
+dev-dist
 dist-ssr
 coverage
 *.local
@@ -27,5 +28,6 @@ coverage
 *.sw?
 
 package-lock.json
+pnpm-lock.yaml
 
-dev-dist
+components.d.ts

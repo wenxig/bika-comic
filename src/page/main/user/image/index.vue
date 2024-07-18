@@ -7,7 +7,7 @@ import { SmartAbortController } from '@/utils/requset'
 import { onBeforeRouteLeave } from 'vue-router'
 import { useAppStore } from '@/stores'
 import config from '@/config'
-document.title = '图片 | bika'
+document.title = '图片收藏 | bika'
 const comicView = shallowRef<InstanceType<typeof ComicView>>()
 const show = shallowRef(false)
 const app = useAppStore()

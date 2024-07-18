@@ -3,12 +3,14 @@ import { useAppStore } from '@/stores'
 import { random } from '@/stores/temp'
 import { createLoadingMessage } from '@/utils/message'
 import { chunk, isEmpty, uniqBy } from 'lodash-es'
-import { nextTick, onMounted, shallowRef } from 'vue'
+import { inject, nextTick, onMounted, shallowRef, watch } from 'vue'
 import List from '@/components/list.vue'
+const list = shallowRef<GenericComponentExports<typeof List>>()
 import { useRouter } from 'vue-router'
 import { RandomComicStream } from '@/api'
+import { toReactive } from '@vueuse/core'
+import symbol from '@/symbol'
 const app = useAppStore()
-const list = shallowRef<GenericComponentExports<typeof List>>()
 const swipe = 50
 const $router = useRouter()
 const stream = random.stream ?? (random.stream = new RandomComicStream())
@@ -17,7 +19,7 @@ onMounted(async () => {
   if (!isEmpty(docs.value)) {
     console.log(random.scroll)
     await nextTick()
-    list.value!.listInstanse!.scrollTo({ top: random.scroll })
+    list.value?.listInstanse?.scrollTo({ top: random.scroll })
   }
 })
 if (isEmpty(docs.value)) {
@@ -42,7 +44,15 @@ const stop = $router.beforeEach(() => {
   random.scroll = list.value?.scrollTop!
 })
 
-
+const shows = toReactive({
+  nav: inject(symbol.showNavBar),
+  tab: inject(symbol.showTabbar),
+})
+watch(() => list.value?.scrollTop, async (scrollTop, old) => {
+  if (!scrollTop || !old) return
+  if (scrollTop - old > 0) shows.nav = shows.tab = false
+  else shows.nav = shows.tab = true
+}, { immediate: true })
 </script>
 
 <template>

@@ -11,12 +11,14 @@ import { SmartAbortController } from '@/utils/requset'
 import { createLoadingMessage } from '@/utils/message'
 import { noop } from 'lodash-es'
 import { SearchInstance } from 'vant'
-import SubscribeButton from '@/components/subscribe/sButton.vue';
+import SubscribeButton from '@/components/subscribe/sButton.vue'
 import { modeMap, useSearchMode } from '@/utils/translater'
+import { useZIndex } from '@/utils/layout'
 const $props = defineProps<{
   baseText?: string
   baseMode?: SearchMode
   showAction?: boolean
+  class?: any
 }>()
 const route = useRoute()
 const search = shallowRef<SearchInstance>()
@@ -124,10 +126,16 @@ const deleteSubscribe = async () => {
     isRequesting.value = false
   }
 }
+
+defineExpose({
+  searchInstance: search
+})
+const [zIndex] = useZIndex(isShowSearchPop)
 </script>
 
 <template>
-  <form action="/" @submit.prevent ref="f" :class="{ 'fixed top-0 left-0 w-[100vw] z-[1000]': isShowSearchPop }">
+  <form action="/" @submit.prevent ref="f" :style="{ zIndex }"
+    :class="[{ 'fixed top-0 left-0 w-[100vw] z-[1000]': isShowSearchPop }, $props.class]">
     <VanSearch ref="search" :show-action="showAction && !isShowSearchPop" v-model="searchText" placeholder="请输入搜索内容"
       @search="handleSearch(searchText)" @click-left-icon="handleSearch(searchText)" @focus="showHotTags"
       @cancel="$router.back()" autocomplete="off">
@@ -158,10 +166,8 @@ const deleteSubscribe = async () => {
       </template>
     </VanSearch>
   </form>
-  <SearchPop :show="isShowSearchPop" v-model="searchText" @search="handleSearch(searchText)" />
-  <div @click=" isShowSearchPop = false" v-if="isShowSearchPop"
-    class="bg-[--van-black] opacity-50 h-full w-full fixed top-[calc(var(--van-search-input-height)+var(--van-search-padding))] left-0 z-[5]">
-  </div>
+  <SearchPop v-model:show="isShowSearchPop" v-model="searchText" @search="handleSearch(searchText)" :zIndex />
+
 </template>
 <style scoped lang='scss'>
 .sub-icon::before {

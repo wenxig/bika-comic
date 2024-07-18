@@ -1,9 +1,9 @@
 <script setup lang='ts'>
 import { useZIndex } from '@/utils/layout'
 import { reactiveComputed, useWindowSize } from '@vueuse/core'
-import { noop } from 'lodash-es'
-import { shallowRef, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { last, noop, throttle } from 'lodash-es'
+import { computed, shallowReadonly, shallowRef, watch } from 'vue'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 const $router = useRouter()
 const $props = withDefaults(defineProps<{
   anchors?: 'high' | 'low',
@@ -12,9 +12,11 @@ const $props = withDefaults(defineProps<{
   anchors: 'high',
   lockScroll: false
 })
-const height = defineModel<number>('height', { default: 0 })
+const height = shallowRef(0)
+const show = shallowRef(false)
+const [zIndex, isLast] = useZIndex(show)
 const { height: windowHeight } = useWindowSize()
-const anchors: number[] = reactiveComputed(() => $props.anchors == 'high' ? [
+const anchors = computed(() => $props.anchors == 'high' ? [
   0,
   Math.round(0.4 * windowHeight.value),
   Math.round(0.7 * windowHeight.value),
@@ -25,67 +27,45 @@ const anchors: number[] = reactiveComputed(() => $props.anchors == 'high' ? [
   Math.round(0.6 * windowHeight.value),
   Math.round(0.9 * windowHeight.value),
 ])
-const show = shallowRef(height.value != 0)
-watch(height, height => {
-  if (height != 0 && !show.value) {
-    console.log('height change: show')
-    show.value = true
-  }
-  else if (height == 0 && show.value) {
-    console.log('height change: close')
-    show.value = false
-  }
-}, { immediate: true })
 
-defineSlots<{
-  default(arg: { height: number }): void
-}>()
-const [zIndex, isLast] = useZIndex(show)
 
-let stopRouter = noop
-watch(show, _show => {
-  if (_show) {
-    stopRouter = $router.beforeEach(() => {
-      console.log('float popup:', isLast.value, show.value)
 
-      if (isLast.value) {
-        if (show.value) {
-          return show.value = false
-        } else {
-          return
-        }
-      } else {
-        return
-      }
-    })
+// 路由拦截
+let stopRouterBreak = noop
+watch(show, () => {
+  if (show.value) {
+    stopRouterBreak = $router.beforeEach(() => isLast.value ? show.value = false : undefined)
+  } else {
+    stopRouterBreak()
   }
-  else {
-    stopRouter()
-  }
-}, { immediate: true })
+})
+onBeforeRouteLeave(stopRouterBreak)
 
 defineExpose({
   show(node = 2) {
-    console.log('function show')
+    height.value = anchors.value[node]
     show.value = true
-    height.value = anchors[node]
   },
   close() {
-    console.log('function close')
     show.value = false
   },
-  isShowing: show
+  isShowing: shallowReadonly(show),
+  height: shallowReadonly(height)
 })
+defineSlots<{
+  default(arg: { height: number }): void
+}>()
 </script>
 
 <template>
   <Teleport to="#popups">
-    <Transition name="van-slide-up">
-      <VanFloatingPanel v-show="show" :anchors v-model:height="height" :content-draggable="false" :lock-scroll
-        :style="{ zIndex }" class="overflow-hidden border-0 border-t border-solid border-[--van-border-color]">
+    <Transition @after-leave="height = 0" name="van-slide-up">
+      <VanFloatingPanel v-show="show" @height-change="(height == 0) && (show = false)" :anchors v-model:height="height"
+        :content-draggable="false" :lock-scroll :style="{ zIndex }"
+        class="overflow-hidden border-0 border-t border-solid border-[--van-border-color]">
         <div class="bg-[--van-background] w-full"
-          :style="{ height: `calc(${height}px - var(--van-floating-panel-header-height))` }">
-          <slot v-if="height != 0" :height></slot>
+          :style="{ height: `calc(${height!}px - var(--van-floating-panel-header-height))` }">
+          <slot v-if="height != 0" :height="height!"></slot>
         </div>
       </VanFloatingPanel>
     </Transition>

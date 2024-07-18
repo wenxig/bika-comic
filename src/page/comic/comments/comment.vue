@@ -74,7 +74,7 @@ const nextLoad = async () => {
 
 <template>
   <div class="w-full h-full overflow-hidden bg-[--van-background]" :style="`--father-height: ${commentHeight}px;`">
-    <List :data="[...top, ...data]" ref="list" reloadable item-resizable :item-height="120"
+    <List :data="[...top, ...data]" ref="list" reloadable :item-height="120"
       :class="['h-[calc(var(--father-height)-var(--van-floating-panel-header-height))]', $props.listClass]"
       :is-requesting :end="searchDone" v-slot="{ data: { item }, height }" @next="nextLoad"
       @reload="then => handleReloadCommit().then(then)">
