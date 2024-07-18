@@ -14,7 +14,7 @@ import 'vue-json-pretty/lib/styles.css'
 import { getVer } from './api/plusPlan'
 import Popup from '@/components/popup.vue'
 import { useLocalStorage } from '@vueuse/core'
-import Dev from '@/components/dev.vue';
+import Dev from '@/components/dev.vue'
 window.$message = useMessage()
 window.$loading = useLoadingBar()
 window.$dialog = useDialog()
@@ -83,7 +83,7 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
     <router-view
       :key="(($route.path.includes('/read/')) ? $route.path : ($route.path.includes('/search') ? `${$route.query.mode}${$route.query.keyword}` : undefined))" />
   </Suspense>
-  <Popup position="center" round v-model:show="showUpdatePopup" class="w-[70%] h-[80vw] p-3">
+  <Popup position="center" round  v-model:show="showUpdatePopup" class="w-[70%] h-[80vw] p-3">
     <div class="text-[--p-color] font-bold text-xl">发现新版本</div>
     <Text :text="'v' + ver" />
     <Text text="强烈建议更新，否则可能会因为服务器协议更新而产生冲突。因冲突引发的后果用户自行承担。" class="w-full" />
@@ -91,5 +91,8 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
       class="absolute bottom-3 w-[calc(100%-24px)] left-3" size="small" block @click="update()" loading-text="加载中...">更新
     </VanButton>
   </Popup>
+  <template>
+    <VanImagePreview :show="false" />
+  </template>
   <Dev />
 </template>

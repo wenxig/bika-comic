@@ -1,4 +1,17 @@
 {
+  "vueCompilerOptions": {
+    "target": 3,
+    "plugins": [
+      "@vue-macros/volar/short-vmodel",
+      "@vue-macros/volar/export-expose",
+      "@vue-macros/volar/boolean-prop",
+    ],
+    "vueMacros": {
+      "shortVmodel": {
+        "prefix": "$",
+      },
+    },
+  },
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -34,6 +47,7 @@
       "./components.d.ts",
       "./env.d.ts",
       "./src/global.d.ts",
+      "unplugin-vue-macros/macros-global"
     ],
     "allowSyntheticDefaultImports": true,
   },

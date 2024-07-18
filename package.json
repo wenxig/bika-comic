@@ -41,6 +41,7 @@
     "@vitejs/plugin-legacy": "latest",
     "@vitejs/plugin-vue": "latest",
     "@vitejs/plugin-vue-jsx": "latest",
+    "@vue-macros/volar": "^0.23.1",
     "@vue/tsconfig": "latest",
     "autoprefixer": "latest",
     "postcss": "latest",
@@ -51,6 +52,7 @@
     "typescript": "latest",
     "unplugin-icons": "latest",
     "unplugin-vue-components": "latest",
+    "unplugin-vue-macros": "^2.9.5",
     "vite": "latest",
     "vite-plugin-pwa": "latest",
     "vue-tsc": "latest"
