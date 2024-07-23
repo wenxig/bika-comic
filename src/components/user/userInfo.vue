@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { User, UserProfile } from '@/api'
 import userIcon from '@/assets/images/userIcon.png?url'
 import { ChatUserProfile } from '@/api/chat'
-import { times } from 'lodash-es'
 import { userCharactersTranslater } from '@/utils/translater'
 const $props = defineProps<{
   user: User | ChatUserProfile | UserProfile | undefined
@@ -11,9 +10,17 @@ const $props = defineProps<{
 }>()
 const exp = computed(() => $props.user?.exp ?? 0)
 const needExp = computed(() => {
-  let e = 150
-  times(($props.user?.level ?? 1) - 1, () => e = e * 2)
-  return e
+  const level = $props.user?.level ?? 1
+  const splitLevel = 2
+  if (level <= splitLevel) {
+    switch (level) {
+      case 1: return 150
+      case 2: return 600
+      default: return 1000
+    }
+  } else {
+    return 1000 * (level - splitLevel)
+  }
 })
 const avatar = computed(() => (<any>$props.user)?.avatar || (<any>$props.user)?.avatarUrl || userIcon)
 </script>

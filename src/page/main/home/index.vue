@@ -71,8 +71,9 @@ const toSearchInHideMode = async () => {
       class="transition-all duration-200 border-solid border absolute border-gray-400 text-gray-400 h-[36px] px-1 flex items-center">
       <VanIcon name="search" color="rgb(156 163 175)" size="1.5rem" @click="handleSearch(searchText || cl.state)" />
       <form action="/" @submit.prevent="handleSearch(searchText)" class="h-full w-full">
-        <input type="search" class="h-full w-full border-none bg-transparent" spellcheck="false"
-          @focus="isSearching = true" v-model="searchText" :placeholder="cl.state" ref="inputEl" />
+        <input type="search" class="h-full w-full border-none bg-transparent text-black" spellcheck="false"
+          @blur="showTabbar = true" @focus="isSearching = true; showTabbar = false" v-model="searchText"
+          :placeholder="cl.state" ref="inputEl" />
       </form>
     </div>
     <div class="flex justify-evenly w-[calc(50%-63px)]" v-if="!isSearching">
@@ -106,7 +107,7 @@ const toSearchInHideMode = async () => {
       @click="toSearchInHideMode" />
   </div>
   <div class="w-full duration-200 transition-[height,transform]"
-    :class="[showNavBar ? 'h-[calc(100%-98px)] translate-y-0' : 'h-full -translate-y-[54px]']">
+    :class="[showNavBar ? 'h-[calc(100%-98px)] translate-y-0' : '!h-[calc(100%-44px)] -translate-y-[54px]']">
     <RouterView />
   </div>
   <Alert v-model="showAlert" />

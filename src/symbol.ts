@@ -14,5 +14,6 @@ export default Object.freeze({
   showTabbar: <InjectionKey<ShallowRef<boolean>>>Symbol('showTabbar'),
   audioElement: <InjectionKey<ShallowRef<HTMLAudioElement>>>Symbol('audioElement'),
   chatRoomTemp: 'temp.chat.room',
-  chatRoomUselessSlogan: '#### **此APP為僅限成人**\n> [泡泡官网]()https://bubble.bidobido.xyz\n\n---\n\n'
+  chatRoomUselessSlogan: '#### **此APP為僅限成人**\n> [泡泡官网]()https://bubble.bidobido.xyz\n\n---\n\n',
+  splitAuthorRegexp: /\,|，|\&|\|/ig
 })

@@ -2,9 +2,9 @@
 import { getComicPages, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { toNumber, clone } from 'lodash-es'
+import { toNumber, clone, isEmpty } from 'lodash-es'
 import { useAppStore } from '@/stores'
-import { useTitle, reactiveComputed, until } from '@vueuse/core'
+import { useTitle, reactiveComputed } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
 import config from '@/config'
 import ComicView from '@/components/comic/comicView.vue'
@@ -41,7 +41,6 @@ watch(() => comicView.value?.index, page => {
 }, { immediate: true })
 onBeforeRouteLeave((t, f) => { if (t.fullPath != f.fullPath) saveHistory() })
 onMounted(async () => {
-  await until(() => app.readHistory).not.toBeNull()
   saveHistory()
 })
 
@@ -58,15 +57,23 @@ const lastPagesLength = shallowRef<number>();
 (async () => {
   const loading = createLoadingMessage()
   onUnmounted(loading.destroy)
-  const [v, v2] = await Promise.all([
-    getComicPages(comicId, epId),
-    (epId - 1 == 0) ? undefined : getComicPages(comicId, epId - 1)
-  ])
-  rawImages.value = v.map(v => v.media)
-  images.value = v.map(v => v.media.getUrl())
-  if (!v2) return loading
-  lastPagesLength.value = v2.map(v => v.media).length
-  return loading
+  try {
+    if (eps[epId + 1]) getComicPages(comicId, epId + 1)  // 下一
+    const [v, v2] = await Promise.all([
+      getComicPages(comicId, epId), // 当前
+      (epId - 1 == 0) ? undefined : getComicPages(comicId, epId - 1), // 上一
+    ])
+    console.log(v.map(v => v.media))
+
+    rawImages.value = v.map(v => v.media)
+    images.value = v.map(v => v.media.getUrl())
+    if (!v2) return loading
+    lastPagesLength.value = v2.map(v => v.media).length
+    return loading
+  } catch (error) {
+    console.error(error)
+    throw loading
+  }
 })()
   .then(loading => loading.success())
   .catch(loading => loading.fail())
@@ -75,11 +82,10 @@ const lastPagesLength = shallowRef<number>();
 //选集
 const epSelectShow = shallowRef(false)
 const _eps = reactiveComputed(() => config.value['bika.info.unsortComic'] ? clone(comicStore.comic.eps).reverse() : comicStore.comic.eps)
-
-
+const showInLast = () => window.$message.info('已是最后的章节')
+const showInFirst = () => window.$message.info('已是第一个章节')
 // 评论
 const comment = shallowRef<InstanceType<typeof FloatPopup>>()
-
 
 // 关于
 const showComicInfo = shallowRef(false)
@@ -91,8 +97,8 @@ const showComicLike = shallowRef(false)
 <template>
   <ComicView :images show :comic-title="comicStore.comic.comic ? comicStore.comic.comic.title : ''"
     :startPosition="page" :ep-title="epInfo?.title" @back="$router.back()" ref="comicView"
-    @last-ep="(epId - 1 > 0 && lastPagesLength) && $router.force.replace(`/comic/${comicId}/read/${epId - 1}#${lastPagesLength}`)"
-    @next-ep="(epId + 1 <= _eps.length) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)">
+    @last-ep="epId - 1 > 0 ? (lastPagesLength && $router.force.replace(`/comic/${comicId}/read/${epId - 1}#${lastPagesLength}`)) : showInFirst()"
+    @next-ep="(epId + 1 <= _eps.length) ? (!isEmpty(images) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)) : showInLast()">
     <template #menu>
       <div @click="epSelectShow = true">
         <van-icon name="list-switch" size="2rem" class="-mb-1" />
@@ -134,9 +140,9 @@ const showComicLike = shallowRef(false)
   </ComicView>
 
   <!-- 章节选择 -->
-  <Popup v-model:show="epSelectShow" class="h-[70%]" round position="bottom">
-    <Eps :eps="comicStore.comic.eps" :id="comicStore.comic.preload._id" :now="epId" v-if="!!comicStore.comic.preload"
-      mode="replace" />
+  <Popup v-model:show="epSelectShow" class="max-h-[70%] min-h-[30%] pt-5 overflow-hidden overflow-y-auto" round
+    position="bottom" closeable>
+    <Eps :eps="comicStore.comic.eps" :id="comicStore.comic.preload?._id ?? ''" :now="epId" mode="replace" />
   </Popup>
 
   <!-- 评论 -->

@@ -12,16 +12,11 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import _package from './package.json'
 import tailwindConfig from './tailwind.config.ts'
-import VueMacros from 'unplugin-vue-macros/vite'
 
 export default defineConfig(({ command }) => ({
   plugins: [
-    VueMacros({
-      plugins: {
-        vue: vue(),
-        vueJsx: vueJsx()
-      }
-    }),
+    vue(),
+    vueJsx(),
     Components({
       resolvers: [
         VantResolver(),

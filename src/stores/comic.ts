@@ -18,6 +18,14 @@ export const useComicStore = defineStore('comic', () => {
     eps: [],
     likeComic: undefined
   })
+  const $clear = () => {
+    comic.value = {
+      comic: undefined,
+      preload: undefined,
+      eps: [],
+      likeComic: undefined
+    }
+  }
   const $setupPreload = (v: ComicPreload['preload'] | false, cid?: string) => {
     switch (v) {
       case false: {
@@ -70,10 +78,11 @@ export const useComicStore = defineStore('comic', () => {
   }
   const $getLatest = () => last([...lastsComics.values()])
   const $setComic = (v: ComicPreload['comic']) => {
-    if (v==undefined) return
+    if (v == undefined) return
     comic.value.comic = v
+    if (v) comic.value.preload = v
     return comic.value.comic
   }
   const $load = (v: ComicPreload) => comic.value = v
-  return { lastsComics, comic, $setupPreload, $setupComic, $getLatest, $setComic, $load }
+  return { lastsComics, $clear, comic, $setupPreload, $setupComic, $getLatest, $setComic, $load }
 })

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import List from '@/components/list.vue'
 import { useChatStore } from '@/stores/chat'
-import symbol from '@/symbol'
+import { toCn } from '@/utils/translater';
 const chatS = useChatStore()
 if (!chatS.rooms) chatS.$reload.chatRooms()
 </script>
@@ -16,7 +16,7 @@ if (!chatS.rooms) chatS.$reload.chatRooms()
         <div class="font-bold van-ellipsis !text-lg">
           {{ room.title }}
         </div>
-        <Markdown :text="room.description.replaceAll(symbol.chatRoomUselessSlogan, '')" class="w-full h-full" />
+        <Text :text="toCn(room.shortDescription)" class="!text-[--van-text-color-2]" />
       </div>
     </div>
   </List>

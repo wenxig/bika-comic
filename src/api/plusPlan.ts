@@ -76,16 +76,16 @@ export const joinInPlusPlan = async (config: AxiosRequestConfig = {}) => {
 
 type RawWatchHistory = [page: string, comic: RawProPlusMaxComic, index: number, time: number]
 export class WatchHistory extends Array {
-  public [0]!: string
+  /** @description 章节序号 */  public [0]!: string
   private comic!: ProPlusMaxComic
   public get [1](): ProPlusMaxComic {
     return this.comic
   }
-  public set [1](v: RawProPlusMaxComic) {
+  /** @description 漫画信息 */ public set [1](v: RawProPlusMaxComic) {
     this.comic = new ProPlusMaxComic(v)
   }
-  public [2]!: number
-  public [3]!: number
+  /** @description 观看页数 */ public [2]!: number
+  /** @description 观看时间 */ public [3]!: number
   constructor(v: RawWatchHistory) {
     super(4)
     this[0] = v[0]
@@ -219,7 +219,7 @@ const newUpdates = (() => {
     if (err.config.retry && err.config.__retryCount && err.config.__retryCount >= err.config.retry) return errorReturn(err, err.message)
     err.config.__retryCount = err.config.__retryCount ?? 0
     err.config.__retryCount++
-    if (err.response?.status == 404) err.config.url = `/${dayjs().add(-err.config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`    
+    if (err.response?.status == 404) err.config.url = `/${dayjs().add(-err.config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`
     await delay(1000)
     return newUpdates(err.config)
   })

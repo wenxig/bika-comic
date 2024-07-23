@@ -1,8 +1,7 @@
 <script setup lang='ts'>
-import { useAppStore } from '@/stores'
 import { random } from '@/stores/temp'
 import { createLoadingMessage } from '@/utils/message'
-import { chunk, isEmpty, uniqBy } from 'lodash-es'
+import { chunk, isEmpty } from 'lodash-es'
 import { inject, nextTick, onMounted, shallowRef, watch } from 'vue'
 import List from '@/components/list.vue'
 const list = shallowRef<GenericComponentExports<typeof List>>()
@@ -10,7 +9,7 @@ import { useRouter } from 'vue-router'
 import { RandomComicStream } from '@/api'
 import { toReactive } from '@vueuse/core'
 import symbol from '@/symbol'
-const app = useAppStore()
+import { useMainPageLevelComicShows } from '@/utils/requset'
 const swipe = 50
 const $router = useRouter()
 const stream = random.stream ?? (random.stream = new RandomComicStream())
@@ -53,6 +52,8 @@ watch(() => list.value?.scrollTop, async (scrollTop, old) => {
   if (scrollTop - old > 0) shows.nav = shows.tab = false
   else shows.nav = shows.tab = true
 }, { immediate: true })
+
+const topComics = useMainPageLevelComicShows()
 </script>
 
 <template>
@@ -65,9 +66,22 @@ watch(() => list.value?.scrollTop, async (scrollTop, old) => {
           class="bg-[--van-background-2] h-[--swipe] flex items-center text-xl font-bold text-[--p-color] rounded-t-lg">
           &nbsp;今日排行榜</div>
         <van-swipe lazy-render class="!rounded-b-lg" :style="{ height: `${height - swipe}px` }" autoplay="3000">
-          <van-swipe-item v-for="comic in uniqBy(app.levelBoard?.comics.map(v => v[0]), v => v?._id)"
-            class="!rounded-lg h-auto bg-[--van-background-2]" :style="{ height: `${height - swipe}px` }">
-            <ComicCard v-if="comic" :comic :height="height - swipe" type="big" class="!rounded-b-lg" />
+          <van-swipe-item v-for="{ comic, level } of topComics" class="!rounded-lg h-auto bg-[--van-background-2]"
+            :style="{ height: `${height - swipe}px` }">
+            <ComicCard v-if="comic" :comic :height="height - swipe" type="big" class="!rounded-b-lg">
+              <div
+                class="absolute bottom-[-2%] right-[-3%] flex *:border-r *:border-[0px] *:bg-[--p-color] *:text-white *:text-xs *:px-1 *:opacity-70 *:border-white *:border-solid">
+                <div v-if="level[0] + 1" class="levelTag">
+                  日榜第{{ level[0] + 1 }}
+                </div>
+                <div v-if="level[1] + 1" class="levelTag">
+                  周榜第{{ level[1] + 1 }}
+                </div>
+                <div v-if="level[2] + 1" class="levelTag">
+                  月榜第{{ level[2] + 1 }}
+                </div>
+              </div>
+            </ComicCard>
           </van-swipe-item>
         </van-swipe>
       </div>
@@ -80,5 +94,9 @@ watch(() => list.value?.scrollTop, async (scrollTop, old) => {
 <style scoped lang='scss'>
 * {
   --swipe: calc(v-bind(swipe) * 1px);
+}
+
+.levelTag {
+  @apply first:rounded-tl-lg last:rounded-br-lg last:border-none;
 }
 </style>

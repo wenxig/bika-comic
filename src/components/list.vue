@@ -22,7 +22,7 @@ const $emit = defineEmits<{
 }>()
 const vList = shallowRef<InstanceType<typeof NVirtualList>>()
 const { y: listScrollTop } = useScroll(() => vList.value?.getScrollContainer())
-const handleScroll: VirtualListProps['onScroll'] = debounce(() => {
+const handleScroll: VirtualListProps['onScroll'] = debounce(async () => {
   const list = vList.value?.virtualListInstRef?.itemsElRef?.querySelector(' .v-vl-visible-items')
   if (!list) return
   // 能用

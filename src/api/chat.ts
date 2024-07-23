@@ -3,11 +3,11 @@ import router from "@/router"
 import { useAppStore } from "@/stores"
 import symbol from "@/symbol"
 import { delay } from "@/utils/delay"
-import { errorReturn, setValue } from "@/utils/requset"
+import { errorReturn, setValue, uuid } from "@/utils/requset"
 import { until, useLocalStorage, useWebSocket } from "@vueuse/core"
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from "axios"
 import localforage from "localforage"
-import { noop } from "lodash-es"
+import { noop, random } from "lodash-es"
 import mitt from 'mitt'
 import type { UserSex } from "."
 import { shallowReactive, shallowRef, watch, type Ref } from "vue"
@@ -62,8 +62,57 @@ const chat = (() => {
   chat.defaults.retry = 10 //重试次数
   return chat
 })()
-
+const messageChat = (() => {
+  const chat = axios.create({
+    baseURL: import.meta.env.DEV ? 'http://localhost:8787/chat' : '/api/chat',
+    timeout: 20000,
+  })
+  chat.interceptors.request.use(async v => {
+    await until(isOnline).toBe(true)
+    const token = chatToken.value
+    if (token) v.headers.Authorization = `Bearer ${token}`
+    return v
+  })
+  chat.interceptors.response.use(v => {
+    if (config.value['bika.devMode']) {
+      const app = useAppStore()
+      const base = app.devData.get('chatApi') ?? {
+        name: '聊天api',
+        data: []
+      }
+      base.data.push(v)
+      app.devData.set('chatApi', base)
+    }
+    return v
+  }, async err => {
+    if (isCancel(err)) return Promise.reject(err)
+    if (!isAxiosError<{
+      message: any,
+      code: number
+    }>(err)) return Promise.reject(err)
+    if (err?.response?.status == 401 && chatToken.value) {
+      chatToken.value = await login(JSON.parse(chatToken.value!))
+      return chat(err.config ?? {})
+    }
+    else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
+      chatToken.value = undefined
+      await router.force.replace('/auth/login')
+      return Promise.reject(err)
+    }
+    if (!err.config) return Promise.reject(err)
+    if (/^[45]/g.test(err.status?.toString() ?? '')) return errorReturn(err, err.response?.data.message ?? err.message)
+    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err.response?.data.message ?? err.message)
+    err.config.__retryCount = err.config?.__retryCount ?? 0
+    err.config.__retryCount++
+    // 重新发起请求
+    await delay(1000)
+    return chat(err.config)
+  })
+  chat.defaults.retry = 10 //重试次数
+  return chat
+})()
 window.$api.chat = chat
+window.$api.messageChat = messageChat
 
 interface LoginRes {
   token: string
@@ -82,6 +131,7 @@ interface RawRoom {
   id: string
   title: string
   description: string
+  shortDescription: string
   minLevel: number
   minRegisterDays: number
   isPublic: boolean
@@ -89,7 +139,7 @@ interface RawRoom {
   icon: string
 }
 
-export class Room {
+export class Room implements RawRoom {
   public isAvailable!: boolean
   public id!: string
   public title!: string
@@ -99,6 +149,7 @@ export class Room {
   public isPublic!: boolean
   public allowedCharacters!: string[]
   public icon!: string
+  public shortDescription!: string
   public join() {
     return new RoomConnection(this.id)
   }
@@ -106,12 +157,12 @@ export class Room {
     setValue(this, v)
   }
 }
-
+const chatDB = localforage.createInstance({ name: 'chat' })
 export const getChatRooms = async (config: AxiosRequestConfig = {}) => {
-  let roomsTemp = await localforage.getItem<GetRoomRes>(symbol.chatRoomTemp)
+  let roomsTemp = await chatDB.getItem<GetRoomRes>(symbol.chatRoomTemp)
   if (!roomsTemp)
     roomsTemp = (await chat.get<GetRoomRes>('/room/list', config)).data
-  localforage.setItem(symbol.chatRoomTemp, roomsTemp)
+  chatDB.setItem(symbol.chatRoomTemp, roomsTemp)
   return roomsTemp.rooms.map(r => new Room(r))
 }
 export class RoomConnection {
@@ -130,7 +181,7 @@ export class RoomConnection {
         _this.isOpen.value = false
       },
     })
-    this.ws = ws.ws
+    window.$api.chatRoomWs = this.ws = ws.ws
     this.stopDataWatch = watch(ws.data, _data => {
       if (!_data) return
       const data = createChatMessageData(JSON.parse(_data))
@@ -155,13 +206,31 @@ export class RoomConnection {
   public onOpen(fn: () => any) {
     this.emitter.on('open', fn)
   }
-  public sendText(_message: string, _mentions: string[]) {
-    // chat.post('/message/send-message', {
-    //   roomId: this.roomId,
-    //   message,
-    //   referenceId: `c2ae40b6-3b9d-11ef-8c5b-acde${random(10000000, 99999999)}`,
-    //   userMentions: mentions,
-    // })
+  public sendText(message: string, mentions: string[]) {
+    messageChat.post('/message/send-message', {
+      roomId: this.roomId,
+      message,
+      referenceId: uuid(),
+      userMentions: mentions,
+    })
+  }
+  public sendImage(img: File, mentions: string[]) {
+    const formData = new FormData()
+    formData.append('roomId', this.roomId)
+    formData.append('caption', '')
+    formData.append('referenceId', uuid())
+    formData.append('userMentions', JSON.stringify(mentions))
+    formData.append('medias', img, img.name);
+    chat.post('/message/send-image', formData)
+  }
+  public sendAudio(audio: File, mentions: string[]) {
+    const formData = new FormData()
+    formData.append('roomId', this.roomId)
+    formData.append('caption', '')
+    formData.append('referenceId', uuid())
+    formData.append('userMentions', JSON.stringify(mentions))
+    formData.append('medias', audio, audio.name)
+    chat.post('/message/send-audio', formData)
   }
 }
 const userBase = new Array<ChatUserProfile>()
@@ -182,10 +251,10 @@ interface RawChatUserProfile {
   created_at: string
   avatarUrl: string
 }
-export class ChatUserProfile {
+export class ChatUserProfile implements RawChatUserProfile {
   public totalBlocked!: number
   public id!: string
-  public email!: '***'
+  public readonly email = '***'
   public name!: string
   public birthday!: string
   public gender!: UserSex
@@ -254,9 +323,10 @@ interface RawBaseUserReply {
   userId: string
   type: string
 }
-class BaseUserReply {
+class BaseUserReply implements RawBaseUserReply {
   public id!: string
   public userId!: string
+  public type!: string
 }
 interface RawChatReplyTextMessage extends RawBaseUserReply {
   id: string

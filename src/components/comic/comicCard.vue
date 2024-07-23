@@ -1,7 +1,7 @@
 <script setup lang='ts'>
-import { ProComic, ProPlusComic, ProPlusMaxComic } from '@/api'
+import { Comic, ProComic, ProPlusComic, ProPlusMaxComic } from '@/api'
 import Image from '../image.vue'
-import { toCn } from '@/utils/translater'
+import { spiltAnthors, toCn } from '@/utils/translater'
 import { useElementSize } from '@vueuse/core'
 import { shallowRef } from 'vue'
 import { max, isEmpty } from 'lodash-es'
@@ -29,7 +29,7 @@ const { height: contentHeight } = useElementSize(info)
 </script>
 
 <template>
-  <button v-if="comic"
+  <button v-if="(comic instanceof Comic)"
     class="overflow-hidden w-full van-hairline--bottom flex bg-center bg-[--van-background-2] text-[--van-text-color] border-none relative active:bg-gray p-0 items-start"
     :style="[
       { [resizeable ? 'minHeight' : 'height']: `${((resizeable ? max([contentHeight, height]) : height) ?? 0)}px` },
@@ -70,12 +70,16 @@ const { height: contentHeight } = useElementSize(info)
         <span v-if="(comic instanceof ProComic)" class="text-[--p-color]">[{{ comic.epsCount }}ep]</span>
         {{ comic.title }}
       </span>
-      <span class="text-[--van-primary-color]" :class="[!resizeable && 'van-ellipsis']">作者：{{ comic.author }}</span>
+      <div class="text-[--van-primary-color] flex flex-wrap *:text-nowrap" :class="[!resizeable && 'van-ellipsis']">
+        <span>作者：</span>
+        <span v-for=" author of spiltAnthors(comic?.author)" class="mr-2 van-haptics-feedback underline"
+          @click="comic && $router.force[mode](`/search?keyword=${author}&mode=anthor`)">{{ author }}</span>
+      </div>
       <span class="text-[--van-text-color-2]" :class="[!resizeable && 'van-ellipsis']"
         v-if="(comic instanceof ProPlusComic) && !isEmpty(comic.chineseTeam)">
         汉化：{{ comic.chineseTeam }}
       </span>
-      <div class=" my-1 w-full h-auto">
+      <div class="my-1 w-full h-auto">
         <van-tag type="primary" v-for="tag of comic.categories.slice(0, MAX_TAGS)"
           class="mr-1 *:!text-nowrap !text-nowrap">{{ toCn(tag) }}</van-tag>
         <van-tag type="primary" plain v-if="comic.categories.length > MAX_TAGS"
@@ -91,6 +95,7 @@ const { height: contentHeight } = useElementSize(info)
           <span class="ml-1 text-[13px]">{{ comic.likesCount }}</span>
         </span>
       </div>
+      <slot />
     </div>
   </button>
 </template>

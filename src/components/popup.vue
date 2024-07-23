@@ -41,7 +41,7 @@ defineEmits<{
 
 <template>
   <VanPopup :position :round :closeable v-model:show="show" :z-index teleport="#popups" @open="turlyShow = true"
-    @closed="() => { turlyShow = false; $emit('closed') }"
+    @closed="() => { turlyShow = false; $emit('closed') }" class="max-h-[100vh] !overflow-y-auto overflow-hidden"
     :class="!noBorder && 'border-0 border-t border-solid border-[--van-border-color]'">
     <slot v-if="turlyShow"></slot>
   </VanPopup>

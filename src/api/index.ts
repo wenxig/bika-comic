@@ -1,17 +1,17 @@
 import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
-import { getBikaApiHeaders } from './bk_until'
 import { max, times, uniqBy, flatten, sortBy, values, isEmpty } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
-import { toCn, toTw } from '@/utils/translater'
+import { spiltAnthors, toCn, toTw } from '@/utils/translater'
 import router from '@/router'
 import config, { isOnline } from '@/config'
-import { SmartAbortController, errorReturn, setValue } from '@/utils/requset'
+import { SmartAbortController, errorReturn, getBikaApiHeaders, setValue } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
 import { until, useLocalStorage } from '@vueuse/core'
 import { createLoadingMessage, createDialog } from '@/utils/message'
 import symbol from '@/symbol'
+import localforage from 'localforage'
 export { type RawImage, Image } from '@/utils/image'
 const createClass = <T extends Result<any>, C>(v: T, Class: new (data: T['docs'][number]) => C): Result<C> => {
   v.docs = v.docs.map(v => new Class(v))
@@ -54,7 +54,15 @@ export const api = (() => {
       base.data.push(v)
       app.devData.set('defaultApi', base)
     }
-    if (!v.data.data) return await api(v)
+    if (!v.data.data) {
+      if (["/", ''].includes(v.config.url ?? '')) return v
+      if (v.config.__retryCount && v.config.retry && v.config.__retryCount >= v.config.retry) return Promise.reject('no data error')
+      v.config.__retryCount = v.config?.__retryCount ?? 0
+      v.config.__retryCount++
+      await delay(1000)
+      for (const value of getBikaApiHeaders(v.config.url ?? '/', v.config.method!.toUpperCase())) v.config.headers.set(...value)
+      return await api(v.config)
+    }
     return v
   }, async err => {
     if (isCancel(err)) return Promise.reject(err)
@@ -76,6 +84,7 @@ export const api = (() => {
     err.config.__retryCount = err.config?.__retryCount ?? 0
     err.config.__retryCount++
     await delay(1000)
+    for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
     return api(err.config)
   })
   api.defaults.retry = 10 //重试次数
@@ -491,7 +500,7 @@ export class ComicStreamWithKeyword extends PlusComicStream {
 
 export const searchComicsWithAuthor = async (author: string, page = 1, sort: SortType = 'dd', config: AxiosRequestConfig = {}) => {
   const data = await searchComics(author, page, sort, config)
-  data.docs = data.docs.filter(v => v.author == author)
+  data.docs = data.docs.filter(v => spiltAnthors(v.author).includes(author.trim()))
   return data
 }
 export class ComicStreamWithAuthor extends PlusComicStream {
@@ -648,15 +657,28 @@ export class Page {
 }
 type Pages = Result<RawPage>
 export const getComicPage = async (id: string, index: number, page: number, config: AxiosRequestConfig = {}) => (await api.get<RawData<{ pages: Pages }>>(`/comics/${id}/order/${index}/pages?page=${page}`, config)).data.data.pages
-const comicsPagesStore = new Map<string, Page[]>()
+const comicsPagesDB = localforage.createInstance({ name: 'comic-page' })
+await comicsPagesDB.ready()
+const comicPageRequesting = new Map<string, Promise<Page[]>>()
 export const getComicPages = async (id: string, index: number, config: AxiosRequestConfig = {}) => {
   const key = id + index
-  if (comicsPagesStore.has(key)) return comicsPagesStore.get(key)!
-  const firstPage = await getComicPage(id, index, 1, config)
-  const otherPages = new Array<Pages>()
-  otherPages.push(firstPage)
-  await Promise.all(times(firstPage.pages - 1, async i => otherPages.push(await getComicPage(id, index, i + 2, config))))
-  return flatten(sortBy(otherPages, 'page').map(v => v.docs.map(v => new Page(v))))
+  const pageDB = await comicsPagesDB.getItem<Pages[]>(key)
+  if (pageDB) return flatten(pageDB.map(v => v.docs.map(v => new Page(v))))
+  if (comicPageRequesting.has(key)) return comicPageRequesting.get(key)!
+  const _pages = new Promise<Page[]>(async r => {
+    const firstPage = await getComicPage(id, index, 1, config)
+    const otherPages = new Array<Pages>()
+    otherPages.push(firstPage)
+    otherPages.push(...await Promise.all(times(firstPage.pages - 1, i => getComicPage(id, index, i + 2, config))))
+    const pages = flatten(sortBy(otherPages, 'page').map(v => v.docs.map(v => new Page(v))))
+    console.log(pages)
+    r(pages)
+    await comicsPagesDB.setItem<Pages[]>(key, sortBy(otherPages, 'page'))
+  })
+  comicPageRequesting.set(key, _pages)
+  const pages = await _pages
+  comicPageRequesting.delete(key)
+  return pages
 }
 export type ResultActionData<T extends string> = RawData<{ action: T }>
 export const likeComic = async (id: string, config: AxiosRequestConfig = {}) => (await api.post<ResultActionData<'like' | 'unlike'>>(`/comics/${id}/like`, {}, config)).data.data.action

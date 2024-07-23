@@ -7,7 +7,7 @@ import { AxiosError, isCancel } from "axios"
 import { useGameStore } from "@/stores/game"
 import { getGameInfo } from "@/api/game"
 import { useAppStore } from "@/stores"
-import Setup from './setup.vue';
+import Setup from './setup.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -160,10 +160,10 @@ router.beforeEach(async (to, from) => {
   try {
     const comicStore = useComicStore()
     const id = to.params.id.toString()
-    if (isEmpty(comicStore.comic.preload)) comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
+    // if (isEmpty(comicStore.comic.preload)) comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
     if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.lastsComics.get(id) ? comicStore.$load(comicStore.lastsComics.get(id)!) : comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
-    if (comicStore.comic.preload?._id != id) comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
-    else if (isEmpty(comicStore.comic.comic)) getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)).catch(noop)
+    if (comicStore.comic.preload?._id != id) comicStore.$clear()
+     if (isEmpty(comicStore.comic.comic)) getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)).catch(noop)
     if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
     if (isEmpty(comicStore.comic.eps)) getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps).catch(noop)
     if (isEmpty(comicStore.comic.likeComic)) getComicLikeOthers(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes).catch(noop)

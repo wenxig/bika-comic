@@ -133,21 +133,20 @@ export const useAppStore = defineStore('app', () => {
   }
 })
 
-const sac = new SmartAbortController()
 export async function init() {
   const app = useAppStore()
   config.value['bika.plusPlan'] = await isInPlusPlan()
   await Promise.all([
-    getCategories({ signal: sac.signal }).then(v => app.categories = v),
-    getHotTags({ signal: sac.signal }).then(v => app.hotTags = v),
-    getCollections({ signal: sac.signal }).then(v => app.collections_list = v),
-    getNewUpdatesComic({ signal: sac.signal }).then(v => app.newUpdateComics = v),
+    getCategories().then(v => app.categories = v),
+    getHotTags().then(v => app.hotTags = v),
+    getCollections().then(v => app.collections_list = v),
+    getNewUpdatesComic().then(v => app.newUpdateComics = v),
     app.$reload.announcements(),
-    getSearchHitory({ signal: sac.signal }).then(v => v && (app.searchHistory = v)),
-    app.$reload.levelboard({ signal: sac.signal }),
-    app.$reload.readHistory({ signal: sac.signal }),
-    app.$reload.subscribes({ signal: sac.signal }),
-    app.$reload.me({ signal: sac.signal }),
-    app.$reload.favourtImages({ signal: sac.signal }),
+    getSearchHitory().then(v => v && (app.searchHistory = v)),
+    app.$reload.levelboard(),
+    app.$reload.readHistory(),
+    app.$reload.subscribes(),
+    app.$reload.me(),
+    app.$reload.favourtImages(),
   ] as const)
 }

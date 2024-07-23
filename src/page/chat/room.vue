@@ -9,9 +9,11 @@ import symbol from '@/symbol'
 const $route = useRoute()
 const app = useChatStore()
 const roomId = <string>$route.params.id
+const tip = window.$message.info('请关掉vpn以链接', { duration: 0 })
 const loading = createLoadingMessage('载入房间中')
 document.title = `加载中 | 聊天 | bika`
 onBeforeRouteLeave(loading.destroy)
+onBeforeRouteLeave(tip.destroy)
 await new Promise<void>(r => {
   if (app.rooms) return r()
   const stop = watch(() => app.rooms, rooms => {
@@ -27,8 +29,9 @@ const conn = room?.join()
 onBeforeRouteLeave(() => {
   conn.close()
 })
+
 conn.onOpen(loading.success)
-conn.onData(console.log)
+conn.onOpen(tip.destroy)
 
 const showRoomInfo = shallowRef(false)
 </script>

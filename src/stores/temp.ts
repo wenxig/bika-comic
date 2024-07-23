@@ -9,7 +9,7 @@ export const childrenComments = new Map<string, ChildrenCommentsStream>()
 export const childrenCommentsScroll = new Map<string, number>()
 
 export const game = {
-  game: new GameStream(),
+  game: <GameStream | undefined>undefined,
   scroll: 0
 }
 

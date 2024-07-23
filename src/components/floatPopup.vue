@@ -14,7 +14,7 @@ const $props = withDefaults(defineProps<{
 })
 const height = shallowRef(0)
 const show = shallowRef(false)
-const [zIndex, isLast] = useZIndex(show)
+const [zIndex, isLast] = useZIndex(() => height.value > 0)
 const { height: windowHeight } = useWindowSize()
 const anchors = computed(() => $props.anchors == 'high' ? [
   0,
