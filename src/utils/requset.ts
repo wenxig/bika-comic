@@ -4,6 +4,7 @@ import { flatten, remove, uniqBy, } from "lodash-es"
 import config from "@/config"
 import symbol from "@/symbol"
 import { HmacSHA256, enc } from "crypto-js"
+import mitt from "mitt"
 export function getBikaApiHeaders(pathname: string, method: string) {
   type Headers = [name: string, value: string][]
   pathname = pathname.substring(1)
@@ -31,25 +32,27 @@ export function getBikaApiHeaders(pathname: string, method: string) {
 }
 export class SmartAbortController implements AbortController {
   private _controller = new AbortController()
+  private mitt = mitt<{
+    abort: void
+  }>()
   public get signal() {
     return this._controller.signal
   };
   public abort(reason?: any): void {
     this._controller.abort(reason)
     this._controller = new AbortController()
-    for (const fn of this._onAborts) fn()
+    this.mitt.emit('abort')
   }
-  private _onAborts: Function[] = []
-  public onAbort(fn: Function) {
-    this._onAborts.push(fn)
-    return () => remove(this._onAborts, f => f == fn)
+  public onAbort(fn: () => any) {
+    this.mitt.on('abort', fn)
+    return () => this.mitt.off('abort', fn)
   }
-  public onAbortOnce(fn: Function) {
-    this._onAborts.push(() => {
-      fn()
-      remove(this._onAborts, f => f == fn)
-    })
-    return () => remove(this._onAborts, f => f == fn)
+  public onAbortOnce(fn: () => any) {
+    const handler = async () => {
+      await fn()
+      this.mitt.off('abort', handler)
+    }
+    this.mitt.on('abort', handler)
   }
 }
 export const errorReturn = (err: Error, because = '') => {

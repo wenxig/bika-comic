@@ -78,7 +78,10 @@ const router = createRouter({
       component: () => import('@/page/main/user/favourt.vue'),
     }, {
       path: '/user/image',
-      component: () => import('@/page/main/user/image.vue'),
+      component: () => import('@/page/main/user/fimage/index.vue'),
+    }, {
+      path: '/user/image/read',
+      component: () => import('@/page/main/user/fimage/read.vue'),
     }, {
       path: '/user/comment',
       component: () => import('@/page/main/user/comment.vue'),

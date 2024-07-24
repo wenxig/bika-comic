@@ -15,12 +15,12 @@ const show = defineModel<boolean>('show', { required: true })
 defineSlots<{
   default(): void
 }>()
+const turlyShow = shallowRef(show.value)
 const [zIndex, isLast] = useZIndex(show)
 let stopRouter = noop
 watch(show, _show => {
   if (_show) stopRouter = $router.beforeEach(() => {
     console.log('popup:', isLast.value, show.value)
-
     if (isLast.value) {
       if (show.value) {
         return show.value = false
@@ -33,7 +33,6 @@ watch(show, _show => {
   })
   else stopRouter()
 }, { immediate: true })
-const turlyShow = shallowRef(show.value)
 defineEmits<{
   closed: []
 }>()

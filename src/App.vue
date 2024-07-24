@@ -81,7 +81,7 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
   <SpeedInsights />
   <Suspense>
     <router-view
-      :key="(($route.path.includes('/read/')) ? $route.path : ($route.path.includes('/search') ? `${$route.query.mode}${$route.query.keyword}` : undefined))" />
+      :key="(($route.path.includes('/read')) ? $route.path : ($route.path.includes('/search') ? `${$route.query.mode}${$route.query.keyword}` : undefined))" />
   </Suspense>
   <Popup position="center" round  v-model:show="showUpdatePopup" class="w-[70%] h-[80vw] p-3">
     <div class="text-[--p-color] font-bold text-xl">发现新版本</div>

@@ -109,9 +109,12 @@ export const useAppStore = defineStore('app', () => {
 
   const favourtImages = reactive<{ value: FavourtImage[] }>({ value: [] })
   const favourtIamgesSac = new SmartAbortController()
+  let isFavourtImagesSetup = false
   watch(favourtImages, v => {
     console.log('change favourt images')
-    putFavourtImages(v.value, { signal: favourtIamgesSac.signal })
+    if (!isFavourtImagesSetup) return isFavourtImagesSetup = true
+    favourtIamgesSac.abort()
+    putFavourtImages(<FavourtImage[]>v.value, { signal: favourtIamgesSac.signal })
   })
   const $reloadFavourtIamges = (c: AxiosRequestConfig = {}) => getFavourtImages(c).then(v => v && (favourtImages.value = v))
 

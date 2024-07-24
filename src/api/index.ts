@@ -1,5 +1,5 @@
 import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
-import { max, times, uniqBy, flatten, sortBy, values, isEmpty } from 'lodash-es'
+import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
 import router from '@/router'
@@ -99,9 +99,20 @@ export abstract class Comic {
   public isLiked?: boolean
   public isFavourite?: boolean
   public likesCount?: number
+  public toJSON() {
+    const keys = <(keyof this)[]>Object.keys(this).map(v => {
+      if (v.startsWith('__')) return v.substring(1)
+
+      if (v.startsWith('_$')) return v.substring(2)
+      return v
+    })
+    const obj: any = {}
+    for (const key of keys) isFunction(this[key]) || (obj[key] = this[key])
+    return obj
+  }
   public async like(config: AxiosRequestConfig = {}, message = true) {
     console.log('change comic like', this.isLiked, this.likesCount, this)
-    if (message) var loading = createLoadingMessage('点赞中')
+    if (message) var loading = createLoadingMessage(this.isFavourite ? '点赞中' : '取消中')
     try {
       const ret = await likeComic(this._id, config)
       if ('isLiked' in this) this.isLiked = !this.isLiked
@@ -114,7 +125,7 @@ export abstract class Comic {
   }
   public async favourt(config: AxiosRequestConfig = {}, message = true) {
     console.log('change comic favourt', this.isFavourite, this)
-    if (message) var loading = createLoadingMessage('收藏中')
+    if (message) var loading = createLoadingMessage(this.isFavourite ? '收藏中' : '删除中')
     try {
       await favouriteComic(this._id, config)
       if ('isFavourite' in this) this.isFavourite = !this.isFavourite
@@ -159,12 +170,12 @@ export class ProComic extends Comic {
   public epsCount!: number
   public finished!: boolean
   public categories!: string[]
-  private _thumb?: Image
+  private _$thumb?: Image
   public get thumb() {
-    return this._thumb!
+    return this._$thumb!
   }
   public set thumb(v) {
-    this._thumb = new Image(v)
+    this._$thumb = new Image(v)
   }
   declare public likesCount: number
   constructor(v: RawProComic) {
@@ -194,12 +205,12 @@ export class ProPlusComic extends Comic {
   public get updated_time() {
     return new Date(this.updated_at)
   }
-  private _thumb?: Image
+  private _$thumb?: Image
   public get thumb() {
-    return this._thumb!
+    return this._$thumb!
   }
   public set thumb(v) {
-    this._thumb = new Image(v)
+    this._$thumb = new Image(v)
   }
   public author!: string
   public description!: string
@@ -259,12 +270,12 @@ export class ProPlusMaxComic extends Comic {
   }
   public title!: string
   public description!: string
-  private _thumb?: Image
+  private _$thumb?: Image
   public get thumb() {
-    return this._thumb!
+    return this._$thumb!
   }
   public set thumb(v) {
-    this._thumb = new Image(v)
+    this._$thumb = new Image(v)
   }
   public author!: string
   public chineseTeam!: string

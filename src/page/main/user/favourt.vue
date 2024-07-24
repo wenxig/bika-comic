@@ -86,8 +86,9 @@ const loadNext = async () => {
     :is-requesting="isEmpty(app.user()) || !!app.user()?.favourite.isRequesting.value"
     v-slot="{ height, data: { item: comic, index } }" @next="loadNext()"
     :end="isEmpty(app.user()) ? false : (app.user()!.favourite.done.value)">
-    <div class="w-full relative" style="--van-checkbox-duration: 0s;" :style="{ height: `${height}px` }">
-      <ComicCard :comic :height :disabled="BatchRemoveFavourt.isDeleting.value || BatchRemoveFavourt.isSetecting.value" />
+    <van-swipe-cell class="w-full relative" style="--van-checkbox-duration: 0s;" :style="{ height: `${height}px` }">
+      <ComicCard :comic :height
+        :disabled="BatchRemoveFavourt.isDeleting.value || BatchRemoveFavourt.isSetecting.value" />
       <div
         @click="BatchRemoveFavourt.isSetecting.value && (BatchRemoveFavourt.list[index] = !BatchRemoveFavourt.list[index])"
         v-if="BatchRemoveFavourt.isDeleting.value || BatchRemoveFavourt.isSetecting.value"
@@ -95,6 +96,9 @@ const loadNext = async () => {
         <VanCheckbox :model-value="BatchRemoveFavourt.list[index]" class="absolute bottom-1 right-1"
           v-if="BatchRemoveFavourt.isSetecting.value" />
       </div>
-    </div>
+      <template #right>
+        <van-button square text="删除" type="danger" class="h-full" @click="comic.favourt()" />
+      </template>
+    </van-swipe-cell>
   </List>
 </template>

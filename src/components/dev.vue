@@ -4,6 +4,7 @@ import config, { isDark } from '@/config'
 import { DevData, useAppStore } from '@/stores'
 import { isBoolean, isNumber, isString } from 'lodash-es'
 import { shallowRef, watch } from 'vue'
+import VueJsonPretty from 'vue-json-pretty';
 const app = useAppStore()
 const isText = (v: unknown): v is (string | number | boolean) => isNumber(v) || isString(v) || isBoolean(v)
 const $window = window

@@ -2,13 +2,13 @@
 import { getComicPages, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { toNumber, clone, isEmpty } from 'lodash-es'
+import { toNumber, clone, isEmpty, remove } from 'lodash-es'
 import { useAppStore } from '@/stores'
 import { useTitle, reactiveComputed } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
 import config from '@/config'
 import ComicView from '@/components/comic/comicView.vue'
-import { patchWatchHitory, WatchHistory } from '@/api/plusPlan'
+import { FavourtImage, patchWatchHitory, WatchHistory } from '@/api/plusPlan'
 import { useComicStore } from '@/stores/comic'
 import CommentVue from '@/components/comic/comment/comment.vue'
 import Eps from '@/components/comic/info/eps.vue'
@@ -96,7 +96,9 @@ const showComicLike = shallowRef(false)
 
 <template>
   <ComicView :images show :comic-title="comicStore.comic.comic ? comicStore.comic.comic.title : ''"
-    :startPosition="page" :ep-title="epInfo?.title" @back="$router.back()" ref="comicView"
+    :startPosition="page" :ep-title="epInfo?.title" ref="comicView" @back="$router.back()"
+    @add-favourt-image="(src, time) => comic && app.favourtImages.value.push(new FavourtImage({ src, time, comic }))"
+    @remove-favourt-image="src => remove(app.favourtImages.value, { src })"
     @last-ep="epId - 1 > 0 ? (lastPagesLength && $router.force.replace(`/comic/${comicId}/read/${epId - 1}#${lastPagesLength}`)) : showInFirst()"
     @next-ep="(epId + 1 <= _eps.length) ? (!isEmpty(images) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)) : showInLast()">
     <template #menu>

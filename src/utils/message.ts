@@ -3,7 +3,7 @@ import { delay } from "./delay"
 import { isFunction } from "lodash-es"
 import type { DialogOptions, DialogReactive, MessageReactive, useMessage } from "naive-ui"
 import { useZIndex } from "./layout"
-import { noop, watchOnce } from "@vueuse/core"
+import { noop } from "@vueuse/core"
 import router from "@/router"
 
 export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中', api = window.$message as ReturnType<typeof useMessage>, wait = false) => {
@@ -64,9 +64,10 @@ export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中
     }
   }
 }
+
 export const createDialog = (options: DialogOptions & { style?: CSSProperties }) => {
-  let success: () => void
-  let fail: () => void
+  let success = noop
+  let fail = noop
   const result: PromiseWith<void, { ins: DialogReactive }> = new Promise<void>((s, f) => { success = s; fail = f })
   const show = shallowRef(true)
   const [zIndex, isLast, stopUse] = useZIndex(show)
@@ -80,35 +81,48 @@ export const createDialog = (options: DialogOptions & { style?: CSSProperties })
     },
     async onClose() {
       if ((await (options.onClose ?? noop)()) === false) return false
-      else show.value = false; fail()
+      else show.value = false; failStop()
     },
     async onPositiveClick(e) {
-      console.log('dialog: success button click')
-
       if ((await (options.onPositiveClick ?? noop)(e)) === false) return false
-      else success()
+      else successStop()
     },
     async onNegativeClick(e) {
-      if ((await (options.onNegativeClick ?? noop)(e)) === false) return false
-      else fail()
+      const ret = await (options.onNegativeClick ?? noop)(e)
+      if (ret) return ret
+      else failStop()
     },
     onEsc() {
-      fail()
+      (options.onEsc ?? noop)()
+      failStop()
     },
-    onMaskClick() {
-      fail()
+    onMaskClick(e) {
+      (options.onMaskClick ?? noop)(e)
+      failStop()
+    },
+    onAfterLeave() {
+      (options.onAfterLeave ?? noop)()
+      stop()
     }
   })
   const stopStyleWatch = watch(zIndex, zIndex => (<CSSProperties>dialog.style).zIndex = zIndex)
-  watchOnce(show, () => {
+  const successStop = () => {
+    success()
+    stop()
+  }
+  const failStop = () => {
     fail()
+    stop()
+  }
+  const stop = () => {
     stopStyleWatch()
     stopUse()
     stopRouterBreak()
     dialog.destroy()
-  })
+    return show.value = false
+  }
   const stopRouterBreak = router.beforeEach(() => {
-    if (isLast) return show.value = false
+    if (isLast) return failStop()
     return true
   })
   result.ins = dialog

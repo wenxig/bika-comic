@@ -10,7 +10,6 @@ import { isDark } from "./config"
 import { ConfigProviderThemeVars, ConfigProvider as VanConfigProvider } from 'vant'
 import { reactiveComputed, useCssVar } from '@vueuse/core'
 
-
 const app = createApp(
   defineComponent(() => {
     const themeColor = useCssVar('--primary-color')

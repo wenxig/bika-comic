@@ -2,11 +2,9 @@
 import config, { fullscreen } from '@/config'
 import { computedWithControl } from '@vueuse/core'
 import { ImagePreviewInstance } from 'vant'
-import { watch, shallowRef, FunctionalComponent,reactive } from 'vue'
+import { watch, shallowRef, FunctionalComponent, reactive } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores'
-import { remove } from 'lodash-es'
-import { FavourtImage } from '@/api/plusPlan'
 const showMenu = shallowRef(false)
 const app = useAppStore()
 const $route = useRoute()
@@ -18,9 +16,11 @@ const $props = defineProps<{
   show?: boolean
 }>()
 defineEmits<{
-  lastEp: [],
-  nextEp: [],
+  lastEp: []
+  nextEp: []
   back: []
+  addFavourtImage: [src: string, time: number]
+  removeFavourtImage: [src: string]
 }>()
 
 
@@ -171,12 +171,12 @@ const settingShow = shallowRef(false)
     </div>
 
     <!-- 设置 -->
-    <Popup v-model:show="settingShow" class="h-1/2" position="bottom" round >
+    <Popup v-model:show="settingShow" class="h-1/2" position="bottom" round>
       <van-cell-group>
         <div class="van-cell van-haptics-feedback" @click="() => {
           app.favourtImages.value.find(v => v.src == images[page])
-            ? remove(app.favourtImages.value, v => v.src == images[page])
-            : app.favourtImages.value.push(new FavourtImage({ src: images[page], time: Date.now() }))
+            ? $emit('removeFavourtImage', images[page])
+            : $emit('addFavourtImage', images[page], Date.now())
         }">
           <van-icon :name="app.favourtImages.value.find(v => v.src == images[page]) ? 'minus' : 'plus'"
             class="van-cell__left-icon" />

@@ -13,6 +13,9 @@ withDefaults(defineProps<{
   disabled?: boolean
   type?: 'default' | 'big' | 'small'
   mode?: 'push' | 'replace'
+  hideEpInfo?: boolean
+  hideViewNumber?: boolean
+  whenClick?: Function
 }>(), {
   mode: 'push',
   type: 'default'
@@ -25,7 +28,10 @@ const comicStore = useComicStore()
 const MAX_TAGS = 5
 const info = shallowRef<HTMLDivElement>()
 const { height: contentHeight } = useElementSize(info)
-
+defineSlots<{
+  cover(arg: { src: string }): any
+  default(): any
+}>()
 </script>
 
 <template>
@@ -35,12 +41,14 @@ const { height: contentHeight } = useElementSize(info)
       { [resizeable ? 'minHeight' : 'height']: `${((resizeable ? max([contentHeight, height]) : height) ?? 0)}px` },
     ]"
     :class="[{ 'van-haptics-feedback': !disabled, 'shadow-sm': type == 'big' }, { '!w-[calc(50%-2px)] rounded-lg shadow-sm !block': type == 'small' }]"
-    @click=" comic instanceof ProPlusMaxComic ? comicStore.$setupComic(comic) : comicStore.$setupPreload(comic); $router.force[mode](`/comic/${comic._id}/info`)"
+    @click="$props.whenClick ? $props.whenClick() : (() => { comic instanceof ProPlusMaxComic ? comicStore.$setupComic(comic) : comicStore.$setupPreload(comic); $router.force[mode](`/comic/${comic._id}/info`) })()"
     :disabled>
     <Image :src="comic.thumb" v-if="type == 'big'" class="blur-lg absolute top-0 left-0 w-full h-full" fit="cover" />
-    <Image :src="comic.thumb" v-if="type != 'small'" class="ml-[2%] w-[30%] h-full relative z-10" fit="contain" />
+    <Image :src="comic.thumb" v-if="type != 'small' && !$slots.cover" class="ml-[2%] w-[30%] h-full" fit="contain" />
+    <slot name="cover" :src="comic.thumb.getUrl()" v-else-if="$slots.cover" class="ml-[2%] w-[30%] h-full" />
     <div class="w-full h-[80%] flex items-center relative" v-else>
-      <Image :src="comic.thumb" class="rounded-t-lg h-full w-full" fit="cover" />
+      <Image v-if="!$slots.cover" :src="comic.thumb" class="rounded-t-lg h-full w-full" fit="cover" />
+      <slot name="cover" :src="comic.thumb.getUrl()" class="rounded-t-lg h-full w-full" />
       <div
         class="absolute w-full h-6 text-white bg-[linear-gradient(transparent,rgba(0,0,0,0.3))] bottom-0 flex items-end justify-start">
         <span class="mr-1 !text-sm">
@@ -66,8 +74,10 @@ const { height: contentHeight } = useElementSize(info)
     </div>
     <div class="w-[62%] min-h-[98%] *:text-sm flex absolute right-[2%] flex-col *:text-justify" ref="info" v-else>
       <span class="font-bold" :class="[!resizeable && 'van-ellipsis']">
-        <span v-if="(comic instanceof ProComic)" class="text-[--p-color]">[{{ comic.pagesCount }}p]</span>
-        <span v-if="(comic instanceof ProComic)" class="text-[--p-color]">[{{ comic.epsCount }}ep]</span>
+        <template v-if="!hideEpInfo">
+          <span v-if="(comic instanceof ProComic)" class="text-[--p-color]">[{{ comic.pagesCount }}p]</span>
+          <span v-if="(comic instanceof ProComic)" class="text-[--p-color]">[{{ comic.epsCount }}ep]</span>
+        </template>
         {{ comic.title }}
       </span>
       <div class="text-[--van-primary-color] flex flex-wrap *:text-nowrap" :class="[!resizeable && 'van-ellipsis']">
@@ -85,7 +95,7 @@ const { height: contentHeight } = useElementSize(info)
         <van-tag type="primary" plain v-if="comic.categories.length > MAX_TAGS"
           class="mr-1 *:!text-nowrap !text-nowrap">...</van-tag>
       </div>
-      <div class="w-full flex">
+      <div class="w-full flex" v-if="!hideViewNumber">
         <span class="flex items-center mr-2 " v-if="comic.totalViews">
           <VanIcon name="eye-o" size="16px" />
           <span class="ml-1 text-[13px]">{{ comic.totalViews }}</span>

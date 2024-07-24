@@ -3,7 +3,7 @@ import { useAppStore } from '@/stores'
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
 import { fromPairs, isEmpty, isFunction, isObject, toPairs } from 'lodash-es'
-import { ProPlusComic, ProPlusMaxComic, type RawProPlusMaxComic } from '.'
+import { ProComic, ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
 import { until, useLocalStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
@@ -37,7 +37,7 @@ export const api = (() => {
     }>(err)) return Promise.reject(err)
     if (isObject(err?.request?.data)) return Promise.reject(err)
     if (!err.config) return Promise.reject(err)
-    if (/^[45]/g.test(err.status?.toString() ?? '')) return errorReturn(err, err.response?.data.message ?? err.message)
+    if (/^[45]/g.test(err.response?.status?.toString() ?? '')) return errorReturn(err, err.response?.data.message ?? err.message)
     if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err.response?.data.message ?? err.message)
     err.config.__retryCount = err.config?.__retryCount ?? 0
     err.config.__retryCount++
@@ -109,12 +109,26 @@ export const patchWatchHitory = async (data: Record<string, WatchHistory>, confi
 interface RawFavourtImage {
   src: string
   time: number
+  comic: RawProComic
 }
 export class FavourtImage {
   public src!: string
   public time!: number
+  private _comic!: ProComic
+  public get comic(): ProComic {
+    return this._comic
+  }
+  public set comic(v: RawProComic) {
+    this._comic = new ProComic(v)
+  }
   public get date() {
     return new Date(this.time)
+  }
+  public toJSON() {
+    return {
+      ...this,
+      comic: this.comic
+    }
   }
   constructor(params: RawFavourtImage) {
     setValue(this, params)

@@ -15,5 +15,5 @@ export default Object.freeze({
   audioElement: <InjectionKey<ShallowRef<HTMLAudioElement>>>Symbol('audioElement'),
   chatRoomTemp: 'temp.chat.room',
   chatRoomUselessSlogan: '#### **此APP為僅限成人**\n> [泡泡官网]()https://bubble.bidobido.xyz\n\n---\n\n',
-  splitAuthorRegexp: /\,|，|\&|\|/ig
+  splitAuthorRegexp: /\,|，|\&|\||、|＆/ig
 })

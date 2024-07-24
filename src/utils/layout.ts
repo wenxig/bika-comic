@@ -17,5 +17,5 @@ export const useZIndex = (show: MaybeRefOrGetter<boolean>): [index: ComputedRef<
     }
   }, { immediate: true })
   onUnmounted(stop)
-  return [computed(() => (allLayers.indexOf(th) + 1) * 10), computed(() => last(allLayers) == th), stop]
+  return [computed(() => (allLayers.indexOf(th) + 1) * 10) , computed(() => last(allLayers) == th), stop]
 }
