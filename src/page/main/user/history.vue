@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { WatchHistory, } from '@/api/plusPlan'
-import { onMounted, shallowRef } from 'vue'
+import { onMounted, shallowRef, watch } from 'vue'
 import { useAppStore } from '@/stores'
 import { values, sortBy } from 'lodash-es'
 import config from '@/config'
@@ -38,6 +38,7 @@ onMounted(() => {
 onBeforeRouteLeave(() => {
   if (list.value?.scrollTop) userPageScroll.history = list.value?.scrollTop
 })
+watch(() => isRefreshing.value ? [] : sortBy(values(app.readHistory), i => i[3]).toReversed().filter(Boolean), v => console.log(v))
 </script>
 
 <template>

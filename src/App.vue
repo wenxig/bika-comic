@@ -9,21 +9,18 @@ import symbol from "./symbol"
 import { MessageReactive, useDialog, useLoadingBar, useMessage } from 'naive-ui'
 import Text from '@/components/text.vue'
 import { createLoadingMessage } from './utils/message'
-import { isEmpty } from 'lodash-es'
 import 'vue-json-pretty/lib/styles.css'
 import { getVer } from './api/plusPlan'
 import Popup from '@/components/popup.vue'
-import { useLocalStorage } from '@vueuse/core'
 import Dev from '@/components/dev.vue'
+import packageJson from '../package.json'
 window.$message = useMessage()
 window.$loading = useLoadingBar()
 window.$dialog = useDialog()
 const ver = shallowRef('')
-const version = useLocalStorage(symbol.version, '')
-getVer().then(v => {
-  ver.value = v
-  if (isEmpty(version.value)) version.value = v
-  showUpdatePopup.value = !import.meta.env.DEV && (!isEmpty(version.value) && v != version.value)
+getVer().then(latestVersion => {
+  ver.value = latestVersion
+  showUpdatePopup.value = !import.meta.env.DEV && latestVersion != packageJson.version
 })
 const showUpdatePopup = shallowRef(false)
 const isUpdateing = shallowRef(false)
@@ -32,10 +29,9 @@ async function update() {
   const loading = createLoadingMessage('更新中')
   try {
     const sws = await navigator.serviceWorker.getRegistrations()
-    await Promise.all(sws.map(sw => sw.unregister())) // 40
+    await Promise.all(sws.map(sw => sw.unregister()))
     const allCacheKeys = await caches.keys()
-    await Promise.all(allCacheKeys.map(key => caches.delete(key))) // 100
-    version.value = ver.value
+    await Promise.all(allCacheKeys.map(key => caches.delete(key)))
     await loading.success(undefined, 300)
     location.reload()
   } catch {
@@ -83,7 +79,7 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
     <router-view
       :key="(($route.path.includes('/read')) ? $route.path : ($route.path.includes('/search') ? `${$route.query.mode}${$route.query.keyword}` : undefined))" />
   </Suspense>
-  <Popup position="center" round  v-model:show="showUpdatePopup" class="w-[70%] h-[80vw] p-3">
+  <Popup position="center" round v-model:show="showUpdatePopup" class="w-[70%] h-[80vw] p-3">
     <div class="text-[--p-color] font-bold text-xl">发现新版本</div>
     <Text :text="'v' + ver" />
     <Text text="强烈建议更新，否则可能会因为服务器协议更新而产生冲突。因冲突引发的后果用户自行承担。" class="w-full" />

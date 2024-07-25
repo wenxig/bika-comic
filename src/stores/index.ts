@@ -33,7 +33,7 @@ export const useAppStore = defineStore('app', () => {
   watch(searchHistory, v => localforage.setItem(symbol.searchHistory, v))
 
   const readHistory = shallowRef<ReadHistory>(_readHistory)
-  localforage.getItem<ReadHistory>(symbol.searchHistory).then(v => readHistory.value = v ?? {})
+  localforage.getItem<ReadHistory>(symbol.readHistory).then(v => readHistory.value = v ?? {})
   watch(readHistory, v => localforage.setItem(symbol.readHistory, v))
   const $reloadReadHistory = async (config: AxiosRequestConfig = {}) => {
     const data = await getWatchHitory(config)

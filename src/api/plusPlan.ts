@@ -81,6 +81,11 @@ export class WatchHistory extends Array {
   public get [1](): ProPlusMaxComic {
     return this.comic
   }
+  public toJSON() {
+    const v = [...this]
+    v[1] = this[1]
+    return v
+  }
   /** @description 漫画信息 */ public set [1](v: RawProPlusMaxComic) {
     this.comic = new ProPlusMaxComic(v)
   }
@@ -90,7 +95,7 @@ export class WatchHistory extends Array {
     super(4)
     this[0] = v[0]
     this[1] = v[1]
-    this[2] = v[2]
+    this[2] = v[2] + 1
     this[3] = v[3]
   }
 }

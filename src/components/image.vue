@@ -41,10 +41,17 @@ const reload = async () => {
 }
 const images = $props.useList ?? useImagesStore()
 const show = shallowRef(true)
-watch(() => src.value, () => {
+// let reloadTimeoutTimer = NaN
+// const stopTimer = () => isNaN(reloadTimeoutTimer) || clearInterval(reloadTimeoutTimer)
+const beginReload = () => {
   reloadTime = 0
+  // reloadTimeoutTimer = setInterval(() => {
+  //   if (reloadTime > 6) stopTimer()
+  //   reload()
+  // }, 5000)
   reload()
-})
+}
+watch(src, beginReload)
 defineSlots<{
   loading(): any
   fail(): any
@@ -58,6 +65,7 @@ defineSlots<{
     v-show="!images.error.has(src) && images.loaded.has(src)" v-if="show" @load="(...e) => {
       $emit('load', ...e)
       images.loaded.add(src)
+      // stopTimer()
     }" @click="(e: Event) => {
       $emit('click')
       if (previewable) {
@@ -74,9 +82,8 @@ defineSlots<{
     <VanLoading v-else />
   </div>
   <div class="justify-center items-center flex-col" @click.stop="() => {
-    reloadTime = 0
     images.error.delete(src)
-    reload()
+    beginReload()
   }" v-if="images.error.has(src) && !hideError"
     :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]">
     <slot name="loading" v-if="$slots.loading"></slot>

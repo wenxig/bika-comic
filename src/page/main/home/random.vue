@@ -65,7 +65,8 @@ const topComics = useMainPageLevelComicShows()
         <div
           class="bg-[--van-background-2] h-[--swipe] flex items-center text-xl font-bold text-[--p-color] rounded-t-lg">
           &nbsp;今日排行榜</div>
-        <van-swipe lazy-render class="!rounded-b-lg" :style="{ height: `${height - swipe}px` }" autoplay="3000">
+        <van-swipe lazy-render class="!rounded-b-lg bg-[--van-background-2]" :style="{ height: `${height - swipe}px` }"
+          autoplay="3000">
           <van-swipe-item v-for="{ comic, level } of topComics" class="!rounded-lg h-auto bg-[--van-background-2]"
             :style="{ height: `${height - swipe}px` }">
             <ComicCard v-if="comic" :comic :height="height - swipe" type="big" class="!rounded-b-lg">

@@ -44,7 +44,8 @@ defineSlots<{
     @click="$props.whenClick ? $props.whenClick() : (() => { comic instanceof ProPlusMaxComic ? comicStore.$setupComic(comic) : comicStore.$setupPreload(comic); $router.force[mode](`/comic/${comic._id}/info`) })()"
     :disabled>
     <Image :src="comic.thumb" v-if="type == 'big'" class="blur-lg absolute top-0 left-0 w-full h-full" fit="cover" />
-    <Image :src="comic.thumb" v-if="type != 'small' && !$slots.cover" class="ml-[2%] w-[30%] h-full" fit="contain" />
+    <Image :src="comic.thumb" v-if="type != 'small' && !$slots.cover" class="ml-[2%] w-[30%] h-full z-[2]"
+      fit="contain" />
     <slot name="cover" :src="comic.thumb.getUrl()" v-else-if="$slots.cover" class="ml-[2%] w-[30%] h-full" />
     <div class="w-full h-[80%] flex items-center relative" v-else>
       <Image v-if="!$slots.cover" :src="comic.thumb" class="rounded-t-lg h-full w-full" fit="cover" />

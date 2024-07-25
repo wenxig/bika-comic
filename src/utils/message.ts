@@ -113,6 +113,7 @@ export const createDialog = (options: DialogOptions & { style?: CSSProperties })
   const failStop = () => {
     fail()
     stop()
+    return false
   }
   const stop = () => {
     stopStyleWatch()

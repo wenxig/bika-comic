@@ -56,12 +56,13 @@ export const api = (() => {
     }
     if (!v.data.data) {
       if (["/", ''].includes(v.config.url ?? '')) return v
-      if (v.config.__retryCount && v.config.retry && v.config.__retryCount >= v.config.retry) return Promise.reject('no data error')
-      v.config.__retryCount = v.config?.__retryCount ?? 0
-      v.config.__retryCount++
-      await delay(1000)
-      for (const value of getBikaApiHeaders(v.config.url ?? '/', v.config.method!.toUpperCase())) v.config.headers.set(...value)
-      return await api(v.config)
+      if (v.config.method == 'get') {
+        window.$message?.error('网络错误:异常数据返回')
+        await delay(1000)
+        location.reload()
+        return v
+      }
+      else return errorReturn(new Error('no data error'), '异常数据返回')
     }
     return v
   }, async err => {
@@ -271,8 +272,9 @@ export class ProPlusMaxComic extends Comic {
   public title!: string
   public description!: string
   private _$thumb?: Image
+  private _thumb?: Image
   public get thumb() {
-    return this._$thumb!
+    return this._$thumb ?? this._thumb!
   }
   public set thumb(v) {
     this._$thumb = new Image(v)
