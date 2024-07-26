@@ -37,8 +37,11 @@ export default defineConfig(({ command }) => ({
         }],
         theme_color: '#000000',
         display: 'standalone',
+        // shortcuts:[{
+        //   name:''
+        // }]
       },
-      injectRegister: 'auto',
+      injectRegister: 'script',
       registerType: 'autoUpdate',
       workbox: command == 'build' ? {
         runtimeCaching: [
@@ -74,7 +77,6 @@ export default defineConfig(({ command }) => ({
         enabled: true,
         type: 'module'
       },
-
     }),
     legacyPlugin({
       targets: ['defaults', 'ie >= 11', 'chrome 52'],

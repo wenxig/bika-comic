@@ -57,9 +57,10 @@ export const api = (() => {
     if (!v.data.data) {
       if (["/", ''].includes(v.config.url ?? '')) return v
       if (v.config.method == 'get') {
+        console.error(v)
         window.$message?.error('网络错误:异常数据返回')
         await delay(1000)
-        location.reload()
+        if (!import.meta.env.DEV) location.reload()
         return v
       }
       else return errorReturn(new Error('no data error'), '异常数据返回')

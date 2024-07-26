@@ -1,20 +1,29 @@
 <script setup lang='tsx'>
 import config, { fullscreen } from '@/config'
-import { computedWithControl } from '@vueuse/core'
+import { computedWithControl, reactiveComputed } from '@vueuse/core'
 import { ImagePreviewInstance } from 'vant'
 import { watch, shallowRef, FunctionalComponent, reactive } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores'
+import { inRange, uniq } from 'lodash-es'
 const showMenu = shallowRef(false)
 const app = useAppStore()
 const $route = useRoute()
-const $props = defineProps<{
+interface Setting {
+
+}
+const $props = withDefaults(defineProps<{
   images: string[],
   startPosition?: number,
   comicTitle?: string,
   epTitle?: string,
-  show?: boolean
-}>()
+  show?: boolean,
+  moreSetting?: Setting[]
+}>(), {
+  moreSetting: [] as any,
+  show: true,
+  startPosition: 0
+})
 defineEmits<{
   lastEp: []
   nextEp: []
@@ -23,11 +32,7 @@ defineEmits<{
   removeFavourtImage: [src: string]
 }>()
 
-
-const isInSpace = (value: number, min: number, max: number) => value >= min && value < max
-
-
-const page = shallowRef($props.startPosition ?? 0)
+const page = shallowRef($props.startPosition)
 const selectPage = shallowRef(Number($route.hash.substring(1)) - 1)
 watch(page, page => selectPage.value = page)
 const showSliderButtonNumber = shallowRef(false)
@@ -36,8 +41,9 @@ const LoaingMask: FunctionalComponent<{ index: number }> = ({ index }) => (<div 
 
 const imagePreview = shallowRef<ImagePreviewInstance>()
 const setPage = (iv: number) => page.value = iv + page.value
-const getValue = (iv: number = 0) => $props.images[page.value + iv]
-const showImages = computedWithControl(() => [page.value, $props.images], () => {
+const getValue = (iv: number = 0) => rawImages[page.value + iv]
+const rawImages = reactiveComputed(() => $props.images)
+const showImages = computedWithControl(() => [page.value, rawImages, config.value['bika.read.twoImage.unsortImage']], () => {
   const newValue = new Array<string>()
   if (!!getValue(-1)) {
     newValue.push(getValue(-1))
@@ -82,13 +88,13 @@ const settingShow = shallowRef(false)
       overlay-class="!z-[0]">
       <template #cover>
         <div class="fixed top-0 left-0 w-[--aside-width] h-[100vh] flex items-center"
-          @click="isInSpace(page - 1, 0, images.length) ? page-- : $emit('lastEp')">
+          @click="inRange(page - 1, 0, images.length) ? page-- : $emit('lastEp')">
           <div class="use-bg w-full flex-col flex *:text-white" v-if="showMenu" @click.stop>
             <slot name="left" width="var(--aside-width)" />
           </div>
         </div>
         <div class="fixed top-0 right-0 w-[--aside-width] h-[100vh] flex items-center"
-          @click="isInSpace(page + 1, 0, images.length) ? page++ : $emit('nextEp')">
+          @click="inRange(page + 1, 0, images.length) ? page++ : $emit('nextEp')">
           <div class="use-bg w-full flex-col flex *:text-white" v-if="showMenu" @click.stop>
             <slot name="right" width="var(--aside-width)" />
           </div>
@@ -146,9 +152,10 @@ const settingShow = shallowRef(false)
           </div>
         </div>
       </template>
-      <template #image="{ src, style, onLoad }">
-        <div :style>
-          <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full" @load="onLoad">
+      <template #image="{ src: _src, style, onLoad }">
+        <div :style class="flex flex-nowrap flex-shrink-0 flex-grow-0">
+          <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full" @load="onLoad"
+            v-for="src of (config.value['bika.read.twoImage'] ? (config.value['bika.read.twoImage.unsortImage'] ? [showImages[showImages.indexOf(_src) + 1], _src] : [_src, showImages[showImages.indexOf(_src) + 1]]) : [_src]).filter(Boolean)">
             <template #loading>
               <LoaingMask :index="page + 1" />
             </template>
@@ -156,10 +163,11 @@ const settingShow = shallowRef(false)
               <LoaingMask :index="page + 1" />
             </template>
           </Image>
+
         </div>
       </template>
     </VanImagePreview>
-    <div v-else class="w-full h-full overflow-y-auto">
+    <!-- <div v-else class="w-full h-full overflow-y-auto">
       <Image infiniteRetry fit="contain" :use-list="imageStore" v-for="(src, index) of images" :src class="w-full">
         <template #loading>
           <LoaingMask :index="index + 1" />
@@ -168,7 +176,7 @@ const settingShow = shallowRef(false)
           <LoaingMask :index="index + 1" />
         </template>
       </Image>
-    </div>
+    </div> -->
 
     <!-- 设置 -->
     <Popup v-model:show="settingShow" class="h-1/2" position="bottom" round>
@@ -186,6 +194,17 @@ const settingShow = shallowRef(false)
         <van-cell center title="垂直阅读">
           <template #right-icon>
             <van-switch v-model="config.value['bika.read.vertical']" disabled />
+          </template>
+        </van-cell>
+        <van-cell center title="单页显示两张">
+          <template #right-icon>
+            <van-switch v-model="config.value['bika.read.twoImage']" />
+          </template>
+        </van-cell>
+        <van-cell center title="交换页面图片" v-if="config.value['bika.read.twoImage']">
+          <template #right-icon>
+            <span class="!text-xs text-[--van-text-color-3] mr-1">仅双页阅读模式</span>
+            <van-switch v-model="config.value['bika.read.twoImage.unsortImage']" />
           </template>
         </van-cell>
       </van-cell-group>

@@ -88,7 +88,7 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
     </VanButton>
   </Popup>
   <template>
-    <VanImagePreview :show="false" />
+    <VanImagePreview :show="false" v-once />
   </template>
   <Dev />
 </template>

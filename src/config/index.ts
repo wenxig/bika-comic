@@ -16,6 +16,8 @@ export const baseConfig = {
   'bika.read.preloadIamgeNumbers': 2,
   'bika.read.watchFullscreen': true,
   'bika.read.vertical': false,
+  'bika.read.twoImage': false,
+  'bika.read.twoImage.unsortImage': false,
   'bika.read.imageQuality': <ImageQuality>'original',
   'bika.search.sort': 'dd' as SortType,
   'bika.search.fillerTags': new Array<FillerTag>(),

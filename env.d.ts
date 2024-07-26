@@ -7,3 +7,6 @@ type GenericComponentExports<D extends (...p: any[]) => any> =
   Parameters<NonNullable<NonNullable<ReturnType<D>['__ctx']>['expose']>>[0]
 
 type PromiseWith<T = any, O> = Promise<T> & D
+declare module "virtual:pwa-register" {
+  const registerSW: () => Promise<void>
+}
