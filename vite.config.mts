@@ -13,7 +13,14 @@ import legacyPlugin from '@vitejs/plugin-legacy'
 import _package from './package.json'
 import tailwindConfig from './tailwind.config.ts'
 
-export default defineConfig(({ command }) => ({
+enum BuildFlag {
+  production,
+  preview
+}
+
+const BUILD_FALG = BuildFlag.production as BuildFlag
+
+export default defineConfig(({ }) => ({
   plugins: [
     vue(),
     vueJsx(),
@@ -24,7 +31,7 @@ export default defineConfig(({ command }) => ({
       ],
     }),
     VitePWA({
-      includeAssets: ['favicon.png'],
+      includeAssets: [],
       manifest: {
         name: _package.name,
         start_url: './',
@@ -36,43 +43,42 @@ export default defineConfig(({ command }) => ({
           purpose: "any",
         }],
         theme_color: '#000000',
-        display: 'standalone',
-        // shortcuts:[{
-        //   name:''
-        // }]
+        display: 'standalone'
       },
       injectRegister: 'script',
       registerType: 'autoUpdate',
-      workbox: command == 'build' ? {
+      workbox: {
         runtimeCaching: [
           {
-            urlPattern: /(.*?)\.(js|css)/, // js /css /ts静态资源缓存
+            urlPattern: /\.(js|css)/ig, // js /css /ts静态资源缓存
             handler: 'CacheFirst',
             options: {
               cacheName: 'script-cache',
             },
           }, {
-            urlPattern: /(.*?)\.(html)/, // html缓存
+            urlPattern: /\.(html)/ig, // html缓存
             handler: 'NetworkFirst',
             options: {
               cacheName: 'html-cache',
               networkTimeoutSeconds: 5000
             },
           }, {
-            urlPattern: /(.*?)\.(png|jpg|jpeg|webp|ico)/, // 静态资源缓存
+            urlPattern: /\.(png|jpg|jpeg|webp|ico)/ig, // 静态资源缓存
             handler: 'CacheFirst',
             options: {
               cacheName: 'assets-cache'
             },
           }
         ],
-      } : {},
+
+      },
       devOptions: {
         enabled: true,
-        type: 'module'
+        type: 'module',
+        suppressWarnings: true,
       },
     }),
-    legacyPlugin({
+    BUILD_FALG == BuildFlag.production && legacyPlugin({
       targets: ['defaults', 'ie >= 11', 'chrome 52'],
       additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
       renderLegacyChunks: true,
@@ -110,7 +116,8 @@ export default defineConfig(({ command }) => ({
         drop_debugger: true,
         drop_console: true
       },
-    }
+    },
+    target: ['ESNext']
   },
   base: "/"
 }))

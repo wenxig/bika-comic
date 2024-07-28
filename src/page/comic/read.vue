@@ -1,6 +1,6 @@
-<script setup lang='ts'>
+<script setup lang='tsx'>
 import { getComicPages, Image as RawImageData } from '@/api'
-import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
+import { ButtonHTMLAttributes, computed, FunctionalComponent, onMounted, onUnmounted, ReservedProps, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { toNumber, clone, isEmpty, remove } from 'lodash-es'
 import { useAppStore } from '@/stores'
@@ -17,6 +17,8 @@ import Uploader from '@/components/comic/info/uploader.vue'
 import Likes from '@/components/comic/info/likes.vue'
 import FloatPopup from '@/components/floatPopup.vue'
 import Popup from '@/components/popup.vue'
+import { Icon as VanIcon, IconProps as VanIconProps } from 'vant'
+
 const $route = useRoute()
 const $router = useRouter()
 const epId = toNumber($route.params.ep)
@@ -79,6 +81,14 @@ const lastPagesLength = shallowRef<number>();
   .catch(loading => loading.fail())
 
 
+
+const MenuButton: FunctionalComponent<{ baseIcon?: string, icon?: string, primary?: boolean, size?: 'big' | 'small', width?: string | number } & ReservedProps, { click: [any] }, { default: any }> = ({ width = "auto", baseIcon, size = 'big', primary, icon, onClick, ...props }, ctx) => (
+  <div onClick={onClick} {...props} class="w-full flex justify-center items-center flex-col *:block" style={{ width, height: width }}>
+    <VanIcon size={size == 'big' ? '2rem' : '1rem'} name={baseIcon ? (primary ? baseIcon : `${baseIcon}-o`) : icon} class={[size == 'big' && "-mb-1"]} color={primary ? 'var(--p-color)' : 'white'} />
+    <span>{ctx.slots.default()}</span>
+  </div >
+)
+
 //选集
 const epSelectShow = shallowRef(false)
 const _eps = reactiveComputed(() => config.value['bika.info.unsortComic'] ? clone(comicStore.comic.eps).reverse() : comicStore.comic.eps)
@@ -92,52 +102,49 @@ const showComicInfo = shallowRef(false)
 
 // 推荐
 const showComicLike = shallowRef(false)
+
+// 导航
+const toNextEp = () => (epId + 1 <= _eps.length) ? (!isEmpty(images.value) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)) : showInLast()
+const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.replace(`/comic/${comicId}/read/${epId - 1}#${lastPagesLength.value}`)) : showInFirst()
 </script>
 
 <template>
   <ComicView :images show :comic-title="comicStore.comic.comic ? comicStore.comic.comic.title : ''"
     :startPosition="page" :ep-title="epInfo?.title" ref="comicView" @back="$router.back()"
     @add-favourt-image="(src, time) => comic && app.favourtImages.value.push(new FavourtImage({ src, time, comic }))"
-    @remove-favourt-image="src => remove(app.favourtImages.value, { src })"
-    @last-ep="epId - 1 > 0 ? (lastPagesLength && $router.force.replace(`/comic/${comicId}/read/${epId - 1}#${lastPagesLength}`)) : showInFirst()"
-    @next-ep="(epId + 1 <= _eps.length) ? (!isEmpty(images) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)) : showInLast()">
+    @remove-favourt-image="src => remove(app.favourtImages.value, { src })" @last-ep="toLastEp" @next-ep="toNextEp">
     <template #menu>
-      <div @click="epSelectShow = true">
-        <van-icon name="list-switch" size="2rem" class="-mb-1" />
+      <MenuButton icon="list-switch" @click="epSelectShow = true">
         章节
-      </div>
+      </MenuButton>
       <template v-if="comicStore.comic.comic">
-        <div @click="comicStore.comic.comic?.like()">
-          <van-icon name="like" size="2rem" class="-mb-1" color="var(--van-primary-color)"
-            v-if="comicStore.comic.comic && comicStore.comic.comic.isLiked" />
-          <van-icon name="like-o" size="2rem" class="-mb-1" v-else />
+        <MenuButton baseIcon="like" :primary="comicStore.comic.comic.isLiked" @click="comicStore.comic.comic?.like()">
           点赞
-        </div>
-        <div @click="comicStore.comic.comic?.favourt()">
-          <van-icon name="star" size="2rem" class="-mb-1" color="var(--van-primary-color)"
-            v-if="comicStore.comic.comic && comicStore.comic.comic.isFavourite" />
-          <van-icon name="star-o" size="2rem" class="-mb-1" v-else />
-          收藏
-        </div>
+        </MenuButton>
+        <MenuButton baseIcon="star" :primary="comicStore.comic.comic.isFavourite"
+          @click="comicStore.comic.comic?.favourt()">
+          点赞
+        </MenuButton>
       </template>
-      <div>
-        <van-icon name="chat-o" size="2rem" class="-mb-1" @click="comment?.show()" />
+      <MenuButton icon="chat-o" @click="comment?.show()">
         评论
-      </div>
+      </MenuButton>
     </template>
     <template #left="{ width }">
-      <div class="w-full flex justify-center items-center flex-col *:block" :style="{ height: width }"
-        @click="showComicInfo = true">
-        <VanIcon size="1rem" name="notes-o" />
-        <span>关于</span>
-      </div>
+      <MenuButton size="small" icon="notes-o" @click="showComicInfo = true" :width>
+        关于
+      </MenuButton>
+      <MenuButton size="small" icon="arrow-double-left" @click="toLastEp" :width>
+        上一章
+      </MenuButton>
     </template>
     <template #right="{ width }">
-      <div class="w-full flex justify-center items-center flex-col *:block" :style="{ height: width }"
-        @click="showComicLike = true">
-        <van-icon size="1rem" name="list-switch" />
-        <span>推荐</span>
-      </div>
+      <MenuButton size="small" icon="list-switch" @click="showComicLike = true" :width>
+        推荐
+      </MenuButton>
+      <MenuButton size="small" icon="arrow-double-right" @click="toNextEp" :width>
+        下一章
+      </MenuButton>
     </template>
   </ComicView>
 

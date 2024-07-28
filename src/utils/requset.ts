@@ -1,6 +1,6 @@
 import { useAppStore } from "@/stores"
 import { reactiveComputed } from "@vueuse/core"
-import { flatten, remove, uniqBy, } from "lodash-es"
+import { flatten, uniqBy, } from "lodash-es"
 import config from "@/config"
 import symbol from "@/symbol"
 import { HmacSHA256, enc } from "crypto-js"

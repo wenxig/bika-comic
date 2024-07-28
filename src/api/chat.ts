@@ -7,7 +7,7 @@ import { errorReturn, setValue, uuid } from "@/utils/requset"
 import { until, useLocalStorage, useWebSocket } from "@vueuse/core"
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from "axios"
 import localforage from "localforage"
-import { noop, random } from "lodash-es"
+import { noop } from "lodash-es"
 import mitt from 'mitt'
 import type { UserSex } from "."
 import { shallowReactive, shallowRef, watch, type Ref } from "vue"
@@ -220,7 +220,7 @@ export class RoomConnection {
     formData.append('caption', '')
     formData.append('referenceId', uuid())
     formData.append('userMentions', JSON.stringify(mentions))
-    formData.append('medias', img, img.name);
+    formData.append('medias', img, img.name)
     chat.post('/message/send-image', formData)
   }
   public sendAudio(audio: File, mentions: string[]) {
