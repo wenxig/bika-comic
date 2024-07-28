@@ -1,11 +1,11 @@
 <script setup lang='tsx'>
 import config, { fullscreen } from '@/config'
-import { computedWithControl, reactiveComputed } from '@vueuse/core'
+import { computedWithControl } from '@vueuse/core'
 import { ImagePreviewInstance } from 'vant'
 import { watch, shallowRef, FunctionalComponent, reactive } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores'
-import { inRange, uniq } from 'lodash-es'
+import { inRange } from 'lodash-es'
 const showMenu = shallowRef(false)
 const app = useAppStore()
 const $route = useRoute()
@@ -38,12 +38,10 @@ watch(page, page => selectPage.value = page)
 const showSliderButtonNumber = shallowRef(false)
 const LoaingMask: FunctionalComponent<{ index: number }> = ({ index }) => (<div class="w-[100vw] h-[100vh] text-center flex justify-center items-center"><span class="text-3xl text-white">{index}</span></div>)
 
-
 const imagePreview = shallowRef<ImagePreviewInstance>()
 const setPage = (iv: number) => page.value = iv + page.value
-const getValue = (iv: number = 0) => rawImages[page.value + iv]
-const rawImages = reactiveComputed(() => $props.images)
-const showImages = computedWithControl(() => [page.value, rawImages, config.value['bika.read.twoImage.unsortImage']], () => {
+const getValue = (iv: number = 0) => $props.images[page.value + iv]
+const showImages = computedWithControl(() => [page.value, $props.images], () => {
   const newValue = new Array<string>()
   if (!!getValue(-1)) {
     newValue.push(getValue(-1))
@@ -154,8 +152,19 @@ const settingShow = shallowRef(false)
       </template>
       <template #image="{ src: _src, style, onLoad }">
         <div :style class="flex flex-nowrap flex-shrink-0 flex-grow-0">
-          <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full" @load="onLoad"
-            v-for="src of (config.value['bika.read.twoImage'] ? (config.value['bika.read.twoImage.unsortImage'] ? [showImages[showImages.indexOf(_src) + 1], _src] : [_src, showImages[showImages.indexOf(_src) + 1]]) : [_src]).filter(Boolean)">
+          <template v-if="config.value['bika.read.twoImage']">
+            <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full" @load="onLoad"
+              v-for="src of (config.value['bika.read.twoImage.unsortImage'] ? [showImages[showImages.indexOf(_src) + 1], _src] : [_src, showImages[showImages.indexOf(_src) + 1]]).filter(Boolean)">
+              <template #loading>
+                <LoaingMask :index="page + 1" />
+              </template>
+              <template #fail>
+                <LoaingMask :index="page + 1" />
+              </template>
+            </Image>
+          </template>
+          <Image infiniteRetry fit="contain" :use-list="imageStore" :src="_src" class="w-full h-full" @load="onLoad"
+            v-else>
             <template #loading>
               <LoaingMask :index="page + 1" />
             </template>
@@ -163,7 +172,6 @@ const settingShow = shallowRef(false)
               <LoaingMask :index="page + 1" />
             </template>
           </Image>
-
         </div>
       </template>
     </VanImagePreview>
