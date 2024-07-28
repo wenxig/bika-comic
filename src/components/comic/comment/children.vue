@@ -68,7 +68,7 @@ const showComment = shallowRef(false)
 </script>
 
 <template>
-  <FloatPopup class="overflow-hidden" ref="floatPopup" :anchors>
+  <FloatPopup ref="floatPopup" :anchors>
     <div ref="topCommentEl">
       <CommentRow v-if="_father" :comment="_father" :height="ITEM_HEIGHT" show-children-comment
         @comment="$emit('comment', _father!)" class="!border-none" @show-user="$emit('showUser', _father?._user!)"

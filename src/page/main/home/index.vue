@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { useAppStore } from '@/stores'
-import { inject, nextTick, provide, shallowRef, watch } from 'vue'
+import { nextTick, provide, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { toReactive, useCycleList } from '@vueuse/core'
 import Alert from './alert.vue'
@@ -34,11 +34,9 @@ const selectPage = shallowRef($route.path.substring($route.path.lastIndexOf('/')
 await $router.force.replace(`/main/home/${selectPage.value}`)
 const showAlert = shallowRef(false)
 
-const showTabber = inject(symbol.showTabbar)
-
 const beforeChange = async (t: string) => {
   const loading = createLoadingMessage()
-  showNavBar.value = showTabber!.value = true
+  showNavBar.value = true
   try {
     await $router.force.replace(`/main/home/${t}`)
     loading.success()
@@ -47,16 +45,14 @@ const beforeChange = async (t: string) => {
   }
   return true
 }
-const showTabbar = inject(symbol.showTabbar)!
 const showNavBar = shallowRef(true)
 provide(symbol.showNavBar, showNavBar)
 watch(showNavBar, showNavBar => {
   baseHeaderSearchHeight.value = (showNavBar ? 54 : 0)
 })
-
 const inputEl = shallowRef<HTMLInputElement>()
 const toSearchInHideMode = async () => {
-  showNavBar.value = showTabbar.value = true
+  showNavBar.value = true
   await nextTick()
   inputEl.value?.focus()
 }
@@ -72,8 +68,7 @@ const toSearchInHideMode = async () => {
       <VanIcon name="search" color="rgb(156 163 175)" size="1.5rem" @click="handleSearch(searchText || cl.state)" />
       <form action="/" @submit.prevent="handleSearch(searchText)" class="h-full w-full">
         <input type="search" class="h-full w-full border-none bg-transparent text-black" spellcheck="false"
-          @blur="showTabbar = true" @focus="isSearching = true; showTabbar = false" v-model="searchText"
-          :placeholder="cl.state" ref="inputEl" />
+          @focus="isSearching = true" v-model="searchText" :placeholder="cl.state" ref="inputEl" />
       </form>
     </div>
     <div class="flex justify-evenly w-[calc(50%-63px)]" v-if="!isSearching">

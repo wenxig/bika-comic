@@ -2,21 +2,18 @@
 import { useAppStore } from '@/stores'
 import Image from '@/components/image.vue'
 import { inject, ref, watch } from 'vue'
-import { toReactive, useScroll } from '@vueuse/core'
+import { useScroll } from '@vueuse/core'
 import symbol from '@/symbol'
 const app = useAppStore()
 document.title = '发现 | bika'
 
 const list = ref<HTMLDivElement>()
-const shows = toReactive({
-  nav: inject(symbol.showNavBar),
-  tab: inject(symbol.showTabbar),
-})
+const showNavBar = inject(symbol.showNavBar)!
 const { isScrolling, directions } = useScroll(list)
 watch(isScrolling, async isScrolling => {
   if (!isScrolling) return
-  if (directions.bottom) shows.nav = shows.tab = false
-  else shows.nav = shows.tab = true
+  if (directions.bottom) showNavBar.value = false
+  else showNavBar.value = true
 }, { immediate: true })
 </script>
 

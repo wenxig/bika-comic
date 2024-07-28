@@ -133,6 +133,11 @@ const router = createRouter({
     }
   ]
 })
+const stopSetup = router.beforeEach(to => {
+  stopSetup()
+  return { path: '/', query: { from: encodeURIComponent(to.fullPath) }, replace: true }
+})
+
 
 let toFullPath: string
 router.beforeEach((to, from) => {
@@ -166,7 +171,7 @@ router.beforeEach(async (to, from) => {
     // if (isEmpty(comicStore.comic.preload)) comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
     if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.lastsComics.get(id) ? comicStore.$load(comicStore.lastsComics.get(id)!) : comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
     if (comicStore.comic.preload?._id != id) comicStore.$clear()
-     if (isEmpty(comicStore.comic.comic)) getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)).catch(noop)
+    if (isEmpty(comicStore.comic.comic)) getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)).catch(noop)
     if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
     if (isEmpty(comicStore.comic.eps)) getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps).catch(noop)
     if (isEmpty(comicStore.comic.likeComic)) getComicLikeOthers(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes).catch(noop)

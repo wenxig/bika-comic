@@ -64,12 +64,6 @@ export default defineConfig(({ command }) => ({
             options: {
               cacheName: 'assets-cache'
             },
-          }, {
-            urlPattern: /(\/comic\/.+pages\?page=\d{1,}$)/g, // 接口缓存
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'api-cache'
-            },
           }
         ],
       } : {},

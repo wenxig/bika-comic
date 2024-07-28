@@ -56,11 +56,11 @@ export const api = (() => {
     }
     if (!v.data.data) {
       if (["/", ''].includes(v.config.url ?? '')) return v
-      if (v.config.method == 'get') {
+      if (/get/ig.test(v.config.method ?? '')) {
         console.error(v)
         window.$message?.error('网络错误:异常数据返回')
         await delay(1000)
-        if (!import.meta.env.DEV) location.reload()
+        location.reload()
         return v
       }
       else return errorReturn(new Error('no data error'), '异常数据返回')
@@ -114,7 +114,7 @@ export abstract class Comic {
   }
   public async like(config: AxiosRequestConfig = {}, message = true) {
     console.log('change comic like', this.isLiked, this.likesCount, this)
-    if (message) var loading = createLoadingMessage(this.isFavourite ? '点赞中' : '取消中')
+    if (message) var loading = createLoadingMessage(this.isFavourite ? '取消中' : '点赞中')
     try {
       const ret = await likeComic(this._id, config)
       if ('isLiked' in this) this.isLiked = !this.isLiked
@@ -127,7 +127,7 @@ export abstract class Comic {
   }
   public async favourt(config: AxiosRequestConfig = {}, message = true) {
     console.log('change comic favourt', this.isFavourite, this)
-    if (message) var loading = createLoadingMessage(this.isFavourite ? '收藏中' : '删除中')
+    if (message) var loading = createLoadingMessage(this.isFavourite ? '删除中' : '收藏中')
     try {
       await favouriteComic(this._id, config)
       if ('isFavourite' in this) this.isFavourite = !this.isFavourite

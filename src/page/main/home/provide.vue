@@ -11,18 +11,14 @@ const space = computed(() => app.collections_list.find(v => v.title == name))
 
 import { shallowRef, inject, watch, computed } from 'vue'
 import List from '@/components/list.vue'
-import { toReactive } from '@vueuse/core'
 import symbol from '@/symbol'
 const list = shallowRef<GenericComponentExports<typeof List>>()
-const shows = toReactive({
-  nav: inject(symbol.showNavBar),
-  tab: inject(symbol.showTabbar),
-})
+const showNavBar = inject(symbol.showNavBar)!
 watch(() => list.value?.scrollTop, async (scrollTop, old) => {
   if ((space.value!.comics.length / 2) * 260 < window.innerHeight) return
   if (!scrollTop || !old) return
-  if (scrollTop - old > 0) shows.nav = shows.tab = false
-  else shows.nav = shows.tab = true
+  if (scrollTop - old > 0) showNavBar.value = false
+  else showNavBar.value = true
 }, { immediate: true })
 </script>
 

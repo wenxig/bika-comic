@@ -7,7 +7,6 @@ import List from '@/components/list.vue'
 const list = shallowRef<GenericComponentExports<typeof List>>()
 import { useRouter } from 'vue-router'
 import { RandomComicStream } from '@/api'
-import { toReactive } from '@vueuse/core'
 import symbol from '@/symbol'
 import { useMainPageLevelComicShows } from '@/utils/requset'
 const swipe = 50
@@ -43,14 +42,11 @@ const stop = $router.beforeEach(() => {
   random.scroll = list.value?.scrollTop!
 })
 
-const shows = toReactive({
-  nav: inject(symbol.showNavBar),
-  tab: inject(symbol.showTabbar),
-})
+const showNavBar = inject(symbol.showNavBar)!
 watch(() => list.value?.scrollTop, async (scrollTop, old) => {
   if (!scrollTop || !old) return
-  if (scrollTop - old > 0) shows.nav = shows.tab = false
-  else shows.nav = shows.tab = true
+  if (scrollTop - old > 0) showNavBar.value = false
+  else showNavBar.value = true
 }, { immediate: true })
 
 const topComics = useMainPageLevelComicShows()
