@@ -30,7 +30,7 @@ const previewUser = shallowRef<InstanceType<typeof PreviewUser>>()
   </div>
   <Transition name="van-slide-right">
     <div v-if="showBackToBottom" @click="scrollToBottom()"
-      class="fixed top-[50px] right-1 w-20 shadow-md text-[--p-color] rounded-full flex justify-center items-center h-6 bg-[--van-background-2] text-xs">
+      class="fixed top-[50px] right-1 w-20 shadow-md text-[--p-color] rounded-l-full flex justify-center items-center h-6 bg-[--van-background-2] text-xs">
       <van-icon name="arrow-double-right" class="rotate-90" />
       有新消息
     </div>
