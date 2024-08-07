@@ -26,22 +26,20 @@ const handleScroll: VirtualListProps['onScroll'] = debounce(async () => {
   const list = vList.value?.virtualListInstRef?.itemsElRef?.querySelector(' .v-vl-visible-items')
   if (!list) return
   // 能用
-  console.log('list has mounted')
-  console.log('list next condition:', $props.itemHeight * ($props.data.length - 2), list?.children?.length, listScrollTop.value + (list?.children?.length ?? window.innerHeight) * $props.itemHeight, ($props.itemHeight * ($props.data.length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight) * $props.itemHeight), $props.isRequesting, (!$props.end && !$props.isRequesting))
-  if (($props.itemHeight * ($props.data.length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight) * $props.itemHeight) && (!$props.end && !$props.isRequesting)) {
-    console.log('list load next')
+  const { itemHeight, data, end: isEnd, isRequesting } = $props
+  if ((itemHeight * (data.length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight / itemHeight) * itemHeight) && !isEnd && !isRequesting) {
     $emit('next')
   }
-}, 100)
+}, 200)
 defineExpose({
   scrollTop: listScrollTop,
-  listInstanse: vList
+  listInstanse: vList,
 })
 defineSlots<{
   default(props: { height: number, data: { item: T, index: number } }): any
 }>()
 const isRefreshing = shallowRef(false)
-const refreshingDistance = shallowRef(0)
+const isPullRereshHold = shallowRef(false)
 const refreshing = () => $emit('reload', () => isRefreshing.value = false)
 
 const isReq = shallowRef(false)
@@ -54,9 +52,9 @@ watch([() => $props.data, isReq], ([data]) => {
 </script>
 
 <template>
-  <van-pull-refresh v-model="isRefreshing" :class="[$props.class]"
-    :disabled="!reloadable || (((!!listScrollTop && listScrollTop != 0) && !isRequesting && (refreshingDistance == 0))) || isRequesting"
-    @refresh="refreshing" @change="({ distance }) => refreshingDistance = distance" :style>
+  <van-pull-refresh v-model="isRefreshing" :class="[$props.class]" @refresh="refreshing"
+    :disabled="!reloadable || isRequesting || Boolean(listScrollTop && !isRequesting && !isPullRereshHold)"
+    @change="({ distance }) => isPullRereshHold = !!distance" :style>
     <template v-if="isRequesting && !isRefreshing && isEmpty(data)">
       <div class="w-full flex mt-2 justify-center items-center !h-[24px]" :style>
         <van-loading size="24px">加载中...</van-loading>
@@ -65,10 +63,9 @@ watch([() => $props.data, isReq], ([data]) => {
     <NEmpty v-if="!(reloadable && isRefreshing) && !isRequesting && isEmpty(data)" description="无结果"
       class="w-full !justify-center !h-full" :class="$props.class" :style />
     <NVirtualList :="listProp" :item-resizable :item-size="itemHeight" @scroll="handleScroll"
-      class="overflow-y-auto overflow-x-hidden h-full" :items="data" v-if="!isEmpty(data)"
-      v-slot="item: { item: T, index: number }" ref="vList">
+      class="overflow-x-hidden h-full" :items="data" v-if="!isEmpty(data)" v-slot="item: { item: T, index: number }"
+      ref="vList" :class="[isPullRereshHold ? 'overflow-y-hidden' : 'overflow-y-auto']">
       <slot :height="itemHeight" :data="{ item: item.item, index: data.indexOf(item.item) }"></slot>
     </NVirtualList>
   </van-pull-refresh>
-
 </template>

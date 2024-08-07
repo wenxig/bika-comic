@@ -137,7 +137,7 @@ const settingShow = shallowRef(false)
         </div>
         <div v-if="!showMenu" @click="showMenu = true" class="!fixed bottom-0 left-0 w-[100vw] h-[3rem]">
           <div
-            class="h-4 w-auto items-center flex flex-nowrap use-bg text-white absolute bottom-0 pb-1 pl-1 left-0 text-xs"
+            class="h-4 w-auto items-center flex flex-nowrap use-bg text-white absolute bottom-0 px-1 left-0 text-xs"
             @click.stop="app.showDevPupop = true">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"
               class="w-3 block text-white" v-if="config.value['bika.devMode']">

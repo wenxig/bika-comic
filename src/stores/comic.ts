@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
-import { type ProComic, type ProPlusComic, type ProPlusMaxComic, type Ep } from '@/api'
+import { type ProComic, type ProPlusComic, type ProPlusMaxComic, type getComicLikeOthers, type getComicEps } from '@/api'
 import { ref } from 'vue'
 import { last } from 'lodash-es'
 
 export type ComicPreload = {
   comic?: ProPlusMaxComic | false
   preload?: ProComic | ProPlusComic | ProPlusMaxComic
-  likeComic?: ProComic[]
-  eps: Ep[]
+  likeComic?: Awaited<ReturnType<typeof getComicLikeOthers>>
+  eps: Awaited<ReturnType<typeof getComicEps>>
 }
 
 export const useComicStore = defineStore('comic', () => {
@@ -84,5 +84,6 @@ export const useComicStore = defineStore('comic', () => {
     return comic.value.comic
   }
   const $load = (v: ComicPreload) => comic.value = v
+
   return { lastsComics, $clear, comic, $setupPreload, $setupComic, $getLatest, $setComic, $load }
 })

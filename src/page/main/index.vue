@@ -4,7 +4,7 @@ import { useAppStore } from '@/stores'
 import dayjs from 'dayjs'
 import { isEmpty } from 'lodash-es'
 import { computed } from 'vue'
-import {  useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 const route = useRoute()
 const name = computed(() => route.path.match(/(?<=\/main\/)\w+(?=\/)?/g)?.[0])
 const app = useAppStore()

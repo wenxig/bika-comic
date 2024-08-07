@@ -54,10 +54,10 @@ const topCommentEl = ref<HTMLDivElement>()
 const { height: topCommentElHeight } = useElementSize(topCommentEl)
 
 const nextLoad = async () => {
-  if (isEmpty(commitStream.value.docs.value)) return await commitStream.value.next()
+  if (isEmpty(commitStream.value.docs.value) && !commitStream.value.done.value) return await commitStream.value.next()
   const loading = createLoadingMessage()
   try {
-    await commitStream.value.next()
+    if (!commitStream.value.done.value) await commitStream.value.next()
     loading.success()
   } catch {
     loading.fail()

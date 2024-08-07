@@ -76,8 +76,12 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
 <template>
   <SpeedInsights />
   <Suspense>
-    <router-view
-      :key="(($route.path.includes('/read')) ? $route.path : ($route.path.includes('/search') ? `${$route.query.mode}${$route.query.keyword}` : undefined))" />
+    <RouterView v-slot="{ Component, route }"
+      :key="(($route.path.includes('/read')) ? $route.path : ($route.path.includes('/search') ? `${$route.query.mode}${$route.query.keyword}` : undefined))">
+      <div class="h-full w-full" :key="route.path">
+        <component :is="Component" />
+      </div>
+    </RouterView>
   </Suspense>
   <Popup position="center" round v-model:show="showUpdatePopup" class="w-[70%] h-[80vw] p-3">
     <div class="text-[--p-color] font-bold text-xl">发现新版本</div>
@@ -87,8 +91,6 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
       class="absolute bottom-3 w-[calc(100%-24px)] left-3" size="small" block @click="update()" loading-text="加载中...">更新
     </VanButton>
   </Popup>
-  <template>
-    <VanImagePreview :show="false" v-once />
-  </template>
+  <VanImagePreview :show="false" v-once />
   <Dev />
 </template>

@@ -54,6 +54,7 @@
     "unplugin-vue-components": "latest",
     "vite": "latest",
     "vite-plugin-pwa": "latest",
+    "vue-component-type-helpers": "^2.0.29",
     "vue-tsc": "latest"
   }
 }

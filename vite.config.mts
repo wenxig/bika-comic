@@ -117,7 +117,7 @@ export default defineConfig(({ }) => ({
         drop_console: true
       },
     },
-    target: ['ESNext']
+    target: BUILD_FALG == BuildFlag.preview ? ['ESNext'] : undefined
   },
   base: "/"
 }))

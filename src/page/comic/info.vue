@@ -30,7 +30,7 @@ const stopPreloadWatch = watch([() => comicStore.comic.eps, preload], ([eps, pre
   preloadIds.add(eps[0].order) // 首个
   preloadIds.add(last(eps)!.order) // 最后一个
   preloadIds.add(Number(history[0])) // 历史记录
-  for (const id of preloadIds.values()) if (!isNaN(id)) getComicPages(preload._id, id)
+  for (const id of preloadIds.values()) if (!isNaN(id) && preload._id) getComicPages(preload._id, id)
 }, { immediate: true })
 onBeforeRouteLeave(stopPreloadWatch)
 </script>

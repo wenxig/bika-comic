@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
+import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError, AxiosError } from 'axios'
 import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
@@ -44,6 +44,28 @@ export const api = (() => {
     for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
     return requestConfig
   })
+  const handleError = async (err: any) => {
+    if (isCancel(err)) return Promise.reject(err)
+    if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
+    if (err?.response?.status == 401 && userLoginData.value.email) {
+      localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
+      return api(err.config ?? {})
+    }
+    else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
+      localStorage.removeItem(symbol.loginToken)
+      await router.force.replace('/auth/login')
+      return Promise.reject(err)
+    }
+    if (location.pathname.startsWith('/auth')) return Promise.reject(err)
+    if (err?.response && err.response.data.error == '1014') return Promise.resolve((<AxiosResponse>{ data: false, config: err.config, headers: err.response?.headers, status: 200, statusText: '200', request: err.request })) // only /comic/:id
+    if (!err.config) return errorReturn(err, err.message)
+    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
+    err.config.__retryCount = err.config?.__retryCount ?? 0
+    err.config.__retryCount++
+    await delay(1000)
+    for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
+    return api(err.config)
+  }
   api.interceptors.response.use(async v => {
     if (config.value['bika.devMode']) {
       const app = useAppStore()
@@ -59,36 +81,12 @@ export const api = (() => {
       if (/get/ig.test(v.config.method ?? '')) {
         console.error(v)
         window.$message?.error('网络错误:异常数据返回')
-        await delay(1000)
-        location.reload()
-        return v
+        return handleError(new AxiosError('no data error', '500', v.config, v.request, v))
       }
-      else return errorReturn(new Error('no data error'), '异常数据返回')
+      else return errorReturn(new AxiosError('no data error', '500', v.config, v.request, v), '异常数据返回')
     }
     return v
-  }, async err => {
-    if (isCancel(err)) return Promise.reject(err)
-    if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
-    if (err?.response?.status == 401 && userLoginData.value.email) {
-      localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
-      return api(err.config ?? {})
-    }
-    else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
-      localStorage.removeItem(symbol.loginToken)
-      await router.force.replace('/auth/login')
-      return Promise.reject(err)
-    }
-    if (location.pathname.startsWith('/auth')) return Promise.reject(err)
-    if (err?.response)
-      if (err.response.data.error == '1014') return Promise.resolve({ data: false }) // only /comic/:id
-    if (!err.config) return errorReturn(err, err.message)
-    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
-    err.config.__retryCount = err.config?.__retryCount ?? 0
-    err.config.__retryCount++
-    await delay(1000)
-    for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
-    return api(err.config)
-  })
+  }, handleError)
   api.defaults.retry = 10 //重试次数
   return api
 })()
@@ -645,10 +643,16 @@ export const getComicEps = (async (id: string, config: AxiosRequestConfig = {}) 
   const baseEps = (await api.get<RawData<{ eps: Eps }>>(`/comics/${id}/eps?page=1`)).data.data.eps
   ep.push(baseEps)
   await Promise.all(times(baseEps.pages - 1, async i => ep.push((await api.get<RawData<{ eps: Eps }>>(`/comics/${id}/eps?page=${i + 2}`, config)).data.data.eps)))
-  return flatten(sortBy(ep, 'page').map(v => v.docs.map(v => new Ep(v))))
+  const result = flatten(sortBy(ep, 'page').map(v => v.docs.map(v => new Ep(v)))) as Ep[] & { id?: string }
+  result.id = id
+  return result
 })
 
-export const getComicLikeOthers = async (id: string, config: AxiosRequestConfig = {}) => (await api.get<RawData<{ comics: RawProComic[] }>>(`/comics/${id}/recommendation`, config)).data.data.comics.map(v => new ProComic(v))
+export const getComicLikeOthers = async (id: string, config: AxiosRequestConfig = {}) => {
+  const result = (await api.get<RawData<{ comics: RawProComic[] }>>(`/comics/${id}/recommendation`, config)).data.data.comics.map(v => new ProComic(v)) as ProComic[] & { id?: string }
+  result.id = id
+  return result
+}
 
 interface RawPage {
   id: string
@@ -675,7 +679,7 @@ const comicsPagesDB = localforage.createInstance({ name: 'comic-page' })
 await comicsPagesDB.ready()
 const comicPageRequesting = new Map<string, Promise<Page[]>>()
 export const getComicPages = async (id: string, index: number, config: AxiosRequestConfig = {}) => {
-  const key = id + index
+  const key = id + '|' + index
   const pageDB = await comicsPagesDB.getItem<Pages[]>(key)
   if (pageDB) return flatten(pageDB.map(v => v.docs.map(v => new Page(v))))
   if (comicPageRequesting.has(key)) return comicPageRequesting.get(key)!

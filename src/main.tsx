@@ -9,6 +9,20 @@ import { NConfigProvider, GlobalThemeOverrides, NMessageProvider, NDialogProvide
 import { isDark } from "./config"
 import { ConfigProviderThemeVars, ConfigProvider as VanConfigProvider } from 'vant'
 import { reactiveComputed, useCssVar } from '@vueuse/core'
+const rawDecodeURIComponent = window.decodeURIComponent
+window.decodeURIComponent = (url: string) => {
+  do {
+    url = rawDecodeURIComponent(url)
+  } while (url.includes('%'))
+  return url
+}
+const rawDecodeURI = window.decodeURI
+window.decodeURI = (url: string) => {
+  do {
+    url = rawDecodeURI(url)
+  } while (url.includes('%'))
+  return url
+}
 
 const app = createApp(
   defineComponent(() => {

@@ -135,6 +135,9 @@ importers:
       vite-plugin-pwa:
         specifier: latest
         version: 0.20.0(vite@5.3.3(@types/node@20.14.10)(sass@1.77.8)(terser@5.31.2))(workbox-build@7.1.0)(workbox-window@7.1.0)
+      vue-component-type-helpers:
+        specifier: ^2.0.29
+        version: 2.0.29
       vue-tsc:
         specifier: latest
         version: 2.0.26(typescript@5.5.3)
@@ -2899,6 +2902,9 @@ packages:
 
   vscode-uri@3.0.8:
     resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
+
+  vue-component-type-helpers@2.0.29:
+    resolution: {integrity: sha512-58i+ZhUAUpwQ+9h5Hck0D+jr1qbYl4voRt5KffBx8qzELViQ4XdT/Tuo+mzq8u63teAG8K0lLaOiL5ofqW38rg==}
 
   vue-demi@0.14.7:
     resolution: {integrity: sha512-EOG8KXDQNwkJILkx/gPcoL/7vH+hORoBaKgGe+6W7VFMvCYJfmF2dGbvgDroVnI8LU7/kTu8mbjRZGBU1z9NTA==}
@@ -6052,6 +6058,8 @@ snapshots:
       vue: 3.4.33(typescript@5.5.3)
 
   vscode-uri@3.0.8: {}
+
+  vue-component-type-helpers@2.0.29: {}
 
   vue-demi@0.14.7(vue@3.4.33(typescript@5.5.3)):
     dependencies:

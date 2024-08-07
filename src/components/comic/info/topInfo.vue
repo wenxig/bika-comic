@@ -41,14 +41,14 @@ const app = useAppStore()
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
         </template>
-        <div class="text-[--van-primary-color] flex flex-wrap *:text-nowrap">
+        <div class="text-[--van-primary-color] *:text-nowrap">
           <span>作者：</span>
-          <span v-for="author of spiltAnthors(comic?.author)" class="mr-2 van-haptics-feedback underline"
+          <span v-for="author of spiltAnthors(comic?.author)" class="inline mr-2 van-haptics-feedback underline"
             @click="comic && $router.force[mode](`/search?keyword=${author}&mode=anthor`)">{{ author }}</span>
         </div>
       </VanSkeleton>
-      <VanSkeleton class="!px-0 !pb-1" :loading="comic?.chineseTeam == undefined"
-        v-if="(comic?.chineseTeam == undefined) || (!isEmpty(comic?.chineseTeam) && comic?.chineseTeam != 'null')">
+      <VanSkeleton class="!px-0 !pb-1" :loading="!comic"
+        v-if="(comic?.chineseTeam != undefined) && !isEmpty(comic?.chineseTeam) && comic?.chineseTeam != 'null'">
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
         </template>
@@ -98,7 +98,7 @@ const app = useAppStore()
     </VanSkeleton>
   </VanRow>
   <VanRow class="*:text-xs p-1 text-[--van-text-color-2]">
-    <VanSkeleton class="!p-0 !pb-1 w-full" :row="2" :loading="!comic?.description">
+    <VanSkeleton class="!p-0 !pb-1 w-full" :row="2" :loading="!comic">
       <template v-if="comic?.description">
         <div class="w-[98%] bg-red-500 bg-opacity-20 rounded-lg px-2 text-[--van-text-color]" style="margin: 0 auto;"
           v-if="comic?.description.includes(symbol.hardToReadText)">

@@ -34,6 +34,7 @@
       "./components.d.ts",
       "./env.d.ts",
       "./src/global.d.ts",
+      "vue-component-type-helpers"
     ],
     "allowSyntheticDefaultImports": true,
   },
