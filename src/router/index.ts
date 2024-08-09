@@ -133,10 +133,10 @@ const router = createRouter({
     }
   ]
 })
-const stopSetup = router.beforeEach(to => {
-  stopSetup()
-  return { path: '/', query: { from: encodeURIComponent(to.fullPath) }, replace: true }
-})
+// const stopSetup = router.beforeEach(to => {
+//   stopSetup()
+//   return { path: '/', query: { from: encodeURIComponent(to.fullPath) }, replace: true }
+// })
 
 
 let toFullPath: string
