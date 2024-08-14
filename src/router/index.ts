@@ -7,13 +7,13 @@ import { AxiosError, isCancel } from "axios"
 import { useGameStore } from "@/stores/game"
 import { getGameInfo } from "@/api/game"
 import { useAppStore } from "@/stores"
-import Setup from './setup.vue'
+import symbol from "@/symbol"
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: "/",
-      component: Setup
+      redirect: localStorage.getItem(symbol.loginToken) ? '/main/home' : '/auth/login'
     }, {
       path: '/auth/login',
       component: () => import('@/page/auth/login.vue'),
