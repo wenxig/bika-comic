@@ -49,6 +49,7 @@ export const api = (() => {
     if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
     if (err?.response?.status == 401 && userLoginData.value.email) {
       localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
+      if (err.config) for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
       return api(err.config ?? {})
     }
     else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
@@ -78,12 +79,13 @@ export const api = (() => {
     }
     if (!v.data.data) {
       if (["/", ''].includes(v.config.url ?? '')) return v
-      if (/get/ig.test(v.config.method ?? '')) {
-        console.error(v)
-        window.$message?.error('网络错误:异常数据返回')
-        return handleError(new AxiosError('no data error', '500', v.config, v.request, v))
-      }
-      else return errorReturn(new AxiosError('no data error', '500', v.config, v.request, v), '异常数据返回')
+      if (!import.meta.env.DEV)return Promise.reject('空数据')
+      v.config.__retryCount = (v.config.__retryCount ?? 0) + 1
+      if (v.config.__retryCount && v.config.retry && v.config.__retryCount >= v.config.retry) return errorReturn(v.data, '异常数据返回')
+      return await api({
+        ...v.config,
+        headers: {}
+      })
     }
     return v
   }, handleError)

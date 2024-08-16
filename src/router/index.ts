@@ -14,6 +14,9 @@ const router = createRouter({
     {
       path: "/",
       redirect: localStorage.getItem(symbol.loginToken) ? '/main/home' : '/auth/login'
+    },{
+      path: '/apihelper',
+      component: () => import('@/page/apiHelper.vue'),
     }, {
       path: '/auth/login',
       component: () => import('@/page/auth/login.vue'),

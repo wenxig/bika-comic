@@ -3,7 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/vue"
 import config, { baseConfig, isOnline } from './config'
 import { getConfig, putConfig } from "./api/plusPlan"
 import { defaultsDeep } from "lodash-es"
-import { nextTick, watch, shallowRef } from "vue"
+import { nextTick, watch, shallowRef, provide } from "vue"
 import { SmartAbortController } from "./utils/requset"
 import symbol from "./symbol"
 import { MessageReactive, useDialog, useLoadingBar, useMessage } from 'naive-ui'
@@ -71,6 +71,8 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
   if (config['bika.darkMode'] != oldConfig['bika.darkMode']) loadTheme()
   localStorage.setItem(symbol.config, JSON.stringify(config))
 })
+const ifr = shallowRef<HTMLIFrameElement>()
+provide(symbol.iframeEl, ifr)
 </script>
 
 <template>
@@ -88,9 +90,11 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
     <Text :text="'v' + ver" />
     <Text text="强烈建议更新，否则可能会因为服务器协议更新而产生冲突。因冲突引发的后果用户自行承担。" class="w-full" />
     <VanButton type="primary" :disabled="isUpdateing" :loading="isUpdateing"
-      class="absolute bottom-3 w-[calc(100%-24px)] left-3" size="small" block @click="update()" loading-text="加载中...">更新
+      class="absolute bottom-3 w-[calc(100%-24px)] left-3" size="small" block @click="update()" loading-text="加载中...">
+      更新
     </VanButton>
   </Popup>
   <VanImagePreview :show="false" v-once />
   <Dev />
+  <!-- <iframe src="/apihelper" ref="ifr" hidden></iframe> -->
 </template>
