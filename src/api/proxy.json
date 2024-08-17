@@ -1,6 +1,6 @@
 {
   "interface": [
-    "https://api.go2778.com"
+    "http://api.go2778.com"
   ],
   "image": [
     "https://s3.picacomic.com/static",

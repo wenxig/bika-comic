@@ -14,7 +14,7 @@ const router = createRouter({
     {
       path: "/",
       redirect: localStorage.getItem(symbol.loginToken) ? '/main/home' : '/auth/login'
-    },{
+    }, {
       path: '/apihelper',
       component: () => import('@/page/apiHelper.vue'),
     }, {
@@ -165,37 +165,19 @@ router.onError(err => {
 
 
 const comicAbort = new SmartAbortController()
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
   comicAbort.abort()
   if (!(to.path.startsWith('/comic') && !isEmpty(to.params.id))) return true
   try {
     const comicStore = useComicStore()
     const id = to.params.id.toString()
-    const setupOthers = () => {
-      if (comicStore.comic.preload?._id != id) comicStore.$clear()
-      if (isEmpty(comicStore.comic.comic)) getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)).catch(noop)
-      if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
-      if (comicStore.comic.eps.id != id) getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps).catch(noop)
-      if (comicStore.comic.likeComic?.id != id) getComicLikeOthers(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes).catch(noop)
-    }
-    console.log('comic load worker', to.path, to.path.startsWith('/comic') && to.path.endsWith('/info'))
-
-    if (to.path.startsWith('/comic') && to.path.endsWith('/info')) {
-      console.log('load comic')
-      if (comicStore.lastsComics.get(id)) {
-        console.log('load comic sync')
-        comicStore.$load(comicStore.lastsComics.get(id)!)
-        setupOthers()
-      }
-      else {
-        console.log('load comic async')
-        getComicInfo(id, { signal: comicAbort.signal }).then(comic => {
-          comicStore.$setupComic(comic)
-          setupOthers()
-          console.log('load comic async done')
-        })
-      }
-    }
+    // if (isEmpty(comicStore.comic.preload)) comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
+    if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.lastsComics.get(id) ? comicStore.$load(comicStore.lastsComics.get(id)!) : comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
+    if (comicStore.comic.preload?._id != id) comicStore.$clear()
+    if (isEmpty(comicStore.comic.comic)) getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)).catch(noop)
+    if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
+    if (isEmpty(comicStore.comic.eps)) getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps).catch(noop)
+    if (isEmpty(comicStore.comic.likeComic)) getComicLikeOthers(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes).catch(noop)
   } catch (error) {
     console.error(error)
     if (!isCancel(error)) throw error

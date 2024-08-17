@@ -67,7 +67,6 @@ export const useAppStore = defineStore('app', () => {
     for (const data of subscribes) {
       if (searchResult.has(data.id)) {
         var s: SubscribesData = searchResult.get(data.id)!
-        s.next()
         obj[data.id] = s
         continue
       }
@@ -86,7 +85,6 @@ export const useAppStore = defineStore('app', () => {
         }
       }
       searchResult.set(data.id, s)
-      s.next()
       obj[data.id] = s
     }
     subscribesData.value = obj

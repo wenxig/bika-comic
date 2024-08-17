@@ -79,7 +79,7 @@ export const api = (() => {
     }
     if (!v.data.data) {
       if (["/", ''].includes(v.config.url ?? '')) return v
-      if (!import.meta.env.DEV)return Promise.reject('空数据')
+      if (!import.meta.env.DEV) return errorReturn(v.data, '异常数据返回')
       v.config.__retryCount = (v.config.__retryCount ?? 0) + 1
       if (v.config.__retryCount && v.config.retry && v.config.__retryCount >= v.config.retry) return errorReturn(v.data, '异常数据返回')
       return await api({

@@ -37,7 +37,8 @@ const app = useAppStore()
           {{ comic?.title }}
         </VanSkeleton>
       </div>
-      <VanSkeleton class="!px-0 !pb-1" :loading="!comic?.author">
+      <VanSkeleton class="!px-0 !pb-1" :loading="!comic"
+        v-if="(comic?.author != undefined) && !isEmpty(comic?.author)">
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
         </template>
