@@ -42,7 +42,7 @@ export const api = (() => {
     err.config.__retryCount = err.config?.__retryCount ?? 0
     err.config.__retryCount++
     // 重新发起请求
-    await delay(1000)
+    await delay(3000)
     return api(err.config)
   })
   api.defaults.retry = 10 //重试次数
@@ -239,7 +239,7 @@ const newUpdates = (() => {
     err.config.__retryCount = err.config.__retryCount ?? 0
     err.config.__retryCount++
     if (err.response?.status == 404) err.config.url = `/${dayjs().add(-err.config.__retryCount, 'day').format(`YYYY-MM-DD`)}.data`
-    await delay(1000)
+    await delay(3000)
     return newUpdates(err.config)
   })
   newUpdates.defaults.retry = 10 //重试次数

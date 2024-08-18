@@ -30,11 +30,13 @@ const handleSearch = (value: string) => {
   isSearching.value = false
 }
 
-const selectPage = shallowRef($route.path.substring($route.path.lastIndexOf('/') + 1))
-await $router.force.replace(`/main/home/${selectPage.value}`)
+const selectPage = shallowRef($route.path.split('/')[3])
+// await $router.force.replace(`/main/home/${selectPage.value}`)
 const showAlert = shallowRef(false)
 
 const beforeChange = async (t: string) => {
+  console.log('home index', t)
+
   const loading = createLoadingMessage()
   showNavBar.value = true
   try {
@@ -91,11 +93,11 @@ const toSearchInHideMode = async () => {
   </header>
   <div class="h-[44px] relative duration-200 transition-transform"
     :class="[showNavBar ? 'translate-y-0' : '-translate-y-[54px]']">
-    <VanTabs shrink class="w-full" v-model:active="selectPage" :beforeChange>
-      <VanTab title="推荐" name="random" />
-      <VanTab title="排行榜" name="level" />
-      <VanTab title="分区" name="find" />
-      <VanTab v-for="p of app.collections_list" :title="toCn(p.title)" :name="p.title" />
+    <VanTabs shrink class="w-full" :active="selectPage" :beforeChange>
+      <VanTab title="推荐" name="random" @click="selectPage = 'random'" />
+      <VanTab title="排行榜" name="level" @click="selectPage = 'level'" />
+      <VanTab title="分区" name="find" @click="selectPage = 'find'" />
+      <VanTab v-for="p of app.collections_list" :title="toCn(p.title)" :name="p.title" @click="selectPage = p.title" />
     </VanTabs>
     <VanIcon name="search" class="absolute top-1/2 duration-200 transition-transform right-0 -translate-y-1/2"
       :class="[showNavBar ? 'translate-x-full' : '-translate-x-2']" size="25px" color="var(--van-text-color-2)"

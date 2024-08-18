@@ -15,9 +15,6 @@ const router = createRouter({
       path: "/",
       redirect: localStorage.getItem(symbol.loginToken) ? '/main/home' : '/auth/login'
     }, {
-      path: '/apihelper',
-      component: () => import('@/page/apiHelper.vue'),
-    }, {
       path: '/auth/login',
       component: () => import('@/page/auth/login.vue'),
     }, {
@@ -130,7 +127,8 @@ const router = createRouter({
     }, {
       path: '/comic/:id/read/:ep',
       component: () => import('@/page/comic/read.vue')
-    }, {
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }
@@ -151,6 +149,9 @@ router.beforeEach((to, from) => {
 })
 router.beforeEach(to => {
   const app = useAppStore()
+  console.trace(to.path);
+  
+  if (to.path.includes('/main/home/level')) return true
   if (to.path.includes('/main/home') && !!to.params.name && !app.collections_list.find(v => v.title == to.params.name as string)) return '/'
 })
 

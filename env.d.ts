@@ -5,3 +5,5 @@ type SearchMode = "id" | "uploader" | "translater" | "anthor" | "keyword" | 'cat
 type GenericComponentExports<T> = import('vue-component-type-helpers').ComponentExposed<T>
 
 type PromiseWith<T = any, O> = Promise<T> & D
+
+declare const __VAN_CELL_HEIGHT__ = 44

@@ -56,7 +56,7 @@ const chat = (() => {
     err.config.__retryCount = err.config?.__retryCount ?? 0
     err.config.__retryCount++
     // 重新发起请求
-    await delay(1000)
+    await delay(3000)
     return chat(err.config)
   })
   chat.defaults.retry = 10 //重试次数
@@ -105,7 +105,7 @@ const messageChat = (() => {
     err.config.__retryCount = err.config?.__retryCount ?? 0
     err.config.__retryCount++
     // 重新发起请求
-    await delay(1000)
+    await delay(3000)
     return chat(err.config)
   })
   chat.defaults.retry = 10 //重试次数

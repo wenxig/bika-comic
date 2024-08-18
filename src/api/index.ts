@@ -45,7 +45,7 @@ export const api = (() => {
     return requestConfig
   })
   const handleError = async (err: any) => {
-    await delay(1000)
+    await delay(3000)
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
     if (err?.response?.status == 401 && userLoginData.value.email) {
@@ -78,7 +78,7 @@ export const api = (() => {
       app.devData.set('defaultApi', base)
     }
     if (!v.data.data) {
-      await delay(1000)
+      await delay(3000)
       if (["/", ''].includes(v.config.url ?? '')) return v
       if (!import.meta.env.DEV) return errorReturn(v.data, '异常数据返回')
       v.config.__retryCount = (v.config.__retryCount ?? 0) + 1

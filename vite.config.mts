@@ -83,7 +83,7 @@ export default defineConfig(({ }) => ({
       additionalLegacyPolyfills: ['regenerator-runtime/runtime'],
       renderLegacyChunks: true,
       renderModernChunks: false,
-    })
+    }),
   ],
   resolve: {
     alias: {
@@ -118,6 +118,9 @@ export default defineConfig(({ }) => ({
       },
     },
     target: BUILD_FALG == BuildFlag.preview ? ['ESNext'] : undefined
+  },
+  define: {
+    __VAN_CELL_HEIGHT__: 44
   },
   base: "/"
 }))

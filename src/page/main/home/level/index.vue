@@ -6,6 +6,8 @@ import { useRoute, useRouter } from 'vue-router'
 const $route = useRoute()
 const $router = useRouter()
 document.title = '排行榜 | bika'
+console.log('in level page');
+
 const selectPage = shallowRef($route.path.substring($route.path.lastIndexOf('/') + 1))
 const beforeChange: Interceptor = async (t: string) => {
   const loading = createLoadingMessage()

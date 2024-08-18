@@ -16,7 +16,7 @@ const height = shallowRef(0)
 const show = shallowRef(false)
 const [zIndex, isLast] = useZIndex(() => height.value > 0)
 const { height: windowHeight } = useWindowSize()
-const anchors = computed(() => isArray($props.anchors) ? $props.anchors.toSorted() : $props.anchors == 'high' ? [
+const anchors = computed(() => isArray($props.anchors) ? $props.anchors : ($props.anchors == 'high' ? [
   0,
   Math.round(0.4 * windowHeight.value),
   Math.round(0.7 * windowHeight.value),
@@ -26,7 +26,7 @@ const anchors = computed(() => isArray($props.anchors) ? $props.anchors.toSorted
   Math.round(0.3 * windowHeight.value),
   Math.round(0.6 * windowHeight.value),
   Math.round(0.9 * windowHeight.value),
-])
+]))
 
 
 

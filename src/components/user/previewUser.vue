@@ -1,31 +1,36 @@
 <script setup lang='ts'>
 import { User } from '@/api'
-import { readonly, shallowRef } from 'vue'
-import Popup from '@/components/popup.vue'
+import { computed, shallowRef } from 'vue'
+import FloatPopup from '@/components/floatPopup.vue'
 import { ChatUserProfile } from '@/api/chat'
+import { useElementSize } from '@vueuse/core'
 
-const show = shallowRef(false)
+const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
+const contentBox = shallowRef<HTMLDivElement>()
+const { height: contentBoxHeight } = useElementSize(contentBox)
 const user = shallowRef<User | ChatUserProfile>()
 
 defineExpose({
   show(u: User | ChatUserProfile) {
+    floatPopup.value?.show(1)
     user.value = u
-    show.value = true
   },
-  isShowing: readonly(show),
+  isShowing: computed(() => floatPopup.value?.isShowing),
   close() {
-    show.value = false
+    floatPopup.value?.close()
   }
 })
+const anchors = computed(() => [0, (contentBoxHeight.value || Math.floor(window.innerHeight * 0.33)) + 30, __VAN_CELL_HEIGHT__ + 30 + (contentBoxHeight.value || Math.floor(window.innerHeight * 0.33)), window.innerHeight])
 </script>
 
 <template>
-  <Popup v-model:show="show" round closeable position="bottom" no-border>
-    <div class="min-h-[33vh] w-full h-full flex justify-center items-start backdrop-blur-lg">
-      <UserInfo :user />
+  <FloatPopup ref="floatPopup" :anchors class="overflow-hidden">
+    <div class="overflow-hidden">
+      <div ref="contentBox" class="w-full flex justify-center items-start backdrop-blur-lg van-hairline--bottom">
+        <UserInfo :user />
+      </div>
+      <VanCell title="查看该上传者作品" icon="search-o" is-link
+        @click="user && $router.force.push(`/search?mode=uploader&keyword=${user._id}`)" />
     </div>
-    <VanDivider />
-    <VanCell title="查看该上传者作品" icon="search-o" is-link
-      @click="user && $router.force.push(`/search?mode=mode&keyword=${user._id}`)" />
-  </Popup>
+  </FloatPopup>
 </template>
