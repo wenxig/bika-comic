@@ -24,5 +24,8 @@ defineExpose({
     <div class="min-h-[33vh] w-full h-full flex justify-center items-start backdrop-blur-lg">
       <UserInfo :user />
     </div>
+    <VanDivider />
+    <VanCell title="查看该上传者作品" icon="search-o" is-link
+      @click="user && $router.force.push(`/search?mode=mode&keyword=${user._id}`)" />
   </Popup>
 </template>

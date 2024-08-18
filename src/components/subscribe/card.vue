@@ -3,10 +3,8 @@ import { ProComic, ProPlusComic } from '@/api'
 import { Subscribe, removeSubscribe } from '@/api/plusPlan'
 import userIcon from '@/assets/images/userIcon.png?url'
 import { createLoadingMessage } from '@/utils/message'
-import { SmartAbortController } from '@/utils/requset'
-import { noop } from 'lodash-es'
 import { shallowRef } from 'vue'
-import { onBeforeRouteLeave, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import SubscribeButton from '@/components/subscribe/sButton.vue'
 const $router = useRouter()
 const $props = defineProps<{
@@ -17,28 +15,20 @@ const $props = defineProps<{
 defineEmits<{
   userSelect: []
 }>()
-const sac = new SmartAbortController()
 const isRequesting = shallowRef(false)
-let dl = noop
 const deleteSubscribe = async () => {
-  sac.abort()
   isRequesting.value = true
   const loading = createLoadingMessage('订阅中')
-  dl = loading.destroy
   try {
-    await removeSubscribe([$props.subscribe.id], { signal: sac.signal })
+    await removeSubscribe([$props.subscribe.id])
     loading.success()
-    $router.force.replace('/main/subscribe')
+    await $router.force.replace('/main/subscribe')
     isRequesting.value = false
   } catch {
     loading.fail()
     isRequesting.value = false
   }
 }
-onBeforeRouteLeave(() => {
-  dl()
-  sac.abort()
-})
 
 const goSearch = () => $router.force.push(`/search?keyword=${$props.subscribe.type == 'uploader' ? encodeURIComponent($props.subscribe.name) : $props.subscribe.id}&mode=${$props.subscribe.type}`)
 </script>

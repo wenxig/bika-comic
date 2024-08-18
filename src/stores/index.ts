@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getUserProfile } from '@/api'
+import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getProfile } from '@/api'
 import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
 import { markRaw, reactive, shallowRef, watch } from 'vue'
 import { getSearchHitory, getWatchHitory, getSubscribe, type Subscribe, isInPlusPlan, getFavourtImages, putFavourtImages, WatchHistory } from '@/api/plusPlan'
@@ -47,7 +47,7 @@ export const useAppStore = defineStore('app', () => {
       user.value.favourite.reload()
       user.value.comments.reload()
       await Promise.all([
-        getUserProfile(config).then(v => user.value!.data = v),
+        getProfile(config).then(v => user.value!.data = v),
         user.value.favourite.next(),
         user.value.comments.next()
       ])

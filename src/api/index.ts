@@ -45,6 +45,7 @@ export const api = (() => {
     return requestConfig
   })
   const handleError = async (err: any) => {
+    await delay(1000)
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
     if (err?.response?.status == 401 && userLoginData.value.email) {
@@ -63,7 +64,6 @@ export const api = (() => {
     if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
     err.config.__retryCount = err.config?.__retryCount ?? 0
     err.config.__retryCount++
-    await delay(1000)
     for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
     return api(err.config)
   }
@@ -78,6 +78,7 @@ export const api = (() => {
       app.devData.set('defaultApi', base)
     }
     if (!v.data.data) {
+      await delay(1000)
       if (["/", ''].includes(v.config.url ?? '')) return v
       if (!import.meta.env.DEV) return errorReturn(v.data, '异常数据返回')
       v.config.__retryCount = (v.config.__retryCount ?? 0) + 1
@@ -370,7 +371,7 @@ export interface Stream<T> {
   done: Ref<boolean>
   isRequesting: Ref<boolean>
   next(): Promise<void>
-  reload(text: string, sort: SortType): void
+  reload(text?: string, sort?: SortType): void
   stop(): void
 }
 
@@ -390,9 +391,9 @@ export abstract class PlusComicStream<T = ProPlusComic> implements ComicStream<T
   public page = shallowRef(0)
   public done = computed(() => this.page.value >= this.pages.value)
   public isRequesting = shallowRef(false)
-  public reload(tag: string, sort: SortType) {
-    this.tag = tag
-    this.sort = sort
+  public reload(tag?: string, sort?: SortType) {
+    this.tag = tag || this.tag
+    this.sort = sort || this.sort
     this.pages.value = NaN
     this.page.value = 0
     this.docs.value = []
@@ -503,9 +504,9 @@ export class ComicStreamWithKeyword extends PlusComicStream {
     } catch { }
     this.isRequesting.value = false
   }
-  public reload(tag: string, sort: SortType) {
-    this.tag = tag
-    this.sort = sort
+  public reload(tag?: string, sort?: SortType) {
+    this.tag = tag || this.tag
+    this.sort = sort || this.sort
     this.page.value = 0
     this.cnPages.value = this.twPages.value = NaN
     this.docs.value = []
@@ -597,6 +598,9 @@ export class User {
   public characters!: string[]
   public role?: string
   private _avatar?: Image
+  public get id() {
+    return this._id
+  }
   public get avatar() {
     return this._avatar!
   }
@@ -940,7 +944,7 @@ export const getMe = async (config: AxiosRequestConfig = {}): Promise<Me> => {
     favourite: new MyFavourtComicStream()
   }
   const [profile] = await Promise.all([
-    getUserProfile(config),
+    getProfile(config),
     data.comments.next(),
     data.favourite.next()
   ])
@@ -948,7 +952,7 @@ export const getMe = async (config: AxiosRequestConfig = {}): Promise<Me> => {
   return <Me>data
 }
 
-export const getUserProfile = async (config: AxiosRequestConfig = {}) => new UserProfile((await api.get<RawData<{ user: RawUserProfile }>>(`/users/profile`, config)).data.data.user)
+export const getProfile = async (config: AxiosRequestConfig = {}) => new UserProfile((await api.get<RawData<{ user: RawUserProfile }>>(`/users/profile`, config)).data.data.user)
 
 export class MyFavourtComicStream extends PlusComicStream<ProComic> {
   constructor() {
@@ -962,6 +966,8 @@ export class MyFavourtComicStream extends PlusComicStream<ProComic> {
     this.docs.value = []
   }
 }
+
+export const getUserProfile = async (id: string, config: AxiosRequestConfig = {}) => new UserProfile((await api.get<RawData<{ user: RawUserProfile }>>(`/users/${id}/profile`, config)).data.data.user)
 
 export class MyCommentsStream implements Stream<UserSentComment> {
   public docs = shallowRef<UserSentComment[]>([])

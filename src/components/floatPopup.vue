@@ -1,12 +1,12 @@
 <script setup lang='ts'>
 import { useZIndex } from '@/utils/layout'
 import { useWindowSize } from '@vueuse/core'
-import { noop } from 'lodash-es'
+import { isArray, noop } from 'lodash-es'
 import { computed, shallowReadonly, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 const $router = useRouter()
 const $props = withDefaults(defineProps<{
-  anchors?: 'high' | 'low',
+  anchors?: 'high' | 'low' | number[],
   lockScroll?: boolean
 }>(), {
   anchors: 'high',
@@ -16,7 +16,7 @@ const height = shallowRef(0)
 const show = shallowRef(false)
 const [zIndex, isLast] = useZIndex(() => height.value > 0)
 const { height: windowHeight } = useWindowSize()
-const anchors = computed(() => $props.anchors == 'high' ? [
+const anchors = computed(() => isArray($props.anchors) ? $props.anchors.toSorted() : $props.anchors == 'high' ? [
   0,
   Math.round(0.4 * windowHeight.value),
   Math.round(0.7 * windowHeight.value),

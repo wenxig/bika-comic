@@ -8,14 +8,11 @@ import { ProPlusComic } from '@/api'
 import { useRoute, useRouter } from 'vue-router'
 import { isEmpty } from 'lodash-es'
 import { isDark } from '@/config'
+import { until } from '@vueuse/core'
 const app = useAppStore()
 const route = useRoute()
 const router = useRouter()
 const select = shallowRef(decodeURI(route.hash.substring(1) as string) ?? '')
-watch(select, select => {
-  if (isEmpty(select)) router.force.replace(`/main/subscribe`)
-  else router.force.replace(`/main/subscribe#${encodeURIComponent(select)}`)
-})
 document.title = "订阅 | bika"
 const getComics = () => app.newUpdateComics?.map(v => {
   for (const user of app.subscribes) {
@@ -37,6 +34,20 @@ const getComics = () => app.newUpdateComics?.map(v => {
 
 const stream = computed(() => app.subscribesData[select.value])
 const subscribe = computed(() => app.subscribes.find(v => v.id == select.value)! as Subscribe)
+
+
+watch(select, select => {
+  if (select == '') router.force.replace(`/main/subscribe`)
+  else {
+    router.force.replace(`/main/subscribe#${encodeURIComponent(select)}`)
+    if (isEmpty(stream.value.docs.value)) stream.value.next()
+  }
+})
+until(stream).not.toBeUndefined().then(() => stream.value.next())
+const reload = () => {
+  stream.value.reload()
+  return stream.value.next()
+}
 </script>
 
 <template>
@@ -64,7 +75,7 @@ const subscribe = computed(() => app.subscribes.find(v => v.id == select.value)!
       v-slot="{ height, data: { item: { comic, subscribe } } }">
       <Card :height :comic :subscribe @user-select="select = subscribe.id" />
     </List>
-    <List :item-height="200" :data="stream?.docs.value ?? []" v-else
+    <List :item-height="200" :data="stream?.docs.value ?? []" v-else reloadable @reload="ok => reload().then(ok)"
       class="w-full van-hairline--top h-[calc(100%-2.5rem-94px)]" :isRequesting="stream?.isRequesting.value ?? true"
       :end="stream?.done.value ?? false" @next="stream?.next()" v-slot="{ height, data: { item: comic } }">
       <Card :height :comic :subscribe="subscribe" @user-select="select = subscribe.id" />

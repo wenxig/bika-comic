@@ -265,6 +265,9 @@ export class ChatUserProfile implements RawChatUserProfile {
   public role!: string
   public characters!: string[]
   public created_at!: string
+  public get _id() {
+    return this.id
+  }
   public get created_time() {
     return new Date(this.created_at)
   }
