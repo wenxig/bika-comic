@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { ImgHTMLAttributes, StyleValue, computed, nextTick, shallowRef, watch } from 'vue'
-import { ImageProps } from 'naive-ui'
+import { ImageProps, NImage } from 'naive-ui'
 import { useImagesStore } from '@/stores/images'
 import { Image, showImagePreview } from '@/utils/image'
 import { isString } from 'lodash-es'
@@ -41,14 +41,8 @@ const reload = async () => {
 }
 const images = $props.useList ?? useImagesStore()
 const show = shallowRef(true)
-// let reloadTimeoutTimer = NaN
-// const stopTimer = () => isNaN(reloadTimeoutTimer) || clearInterval(reloadTimeoutTimer)
 const beginReload = () => {
   reloadTime = 0
-  // reloadTimeoutTimer = setInterval(() => {
-  //   if (reloadTime > 6) stopTimer()
-  //   reload()
-  // }, 5000)
   reload()
 }
 watch(src, beginReload)
@@ -56,11 +50,15 @@ defineSlots<{
   loading(): any
   fail(): any
 }>()
+const imageComp = shallowRef<InstanceType<typeof NImage>>()
+defineExpose({
+  imageEl: computed(() => imageComp.value?.imageRef)
+})
 </script>
 
 <template>
   <NImage @error="reload" v-bind="$props" :object-fit="fit" preview-disabled
-    :img-props="{ ...(imgProp ?? {}), class: 'w-full' }"
+    :img-props="{ ...(imgProp ?? {}), class: 'w-full' }" ref="imageComp"
     :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]" :style
     v-show="!images.error.has(src) && images.loaded.has(src)" v-if="show" @load="(...e) => {
       $emit('load', ...e)

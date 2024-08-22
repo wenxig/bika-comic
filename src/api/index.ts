@@ -1,4 +1,4 @@
-import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError, AxiosError } from 'axios'
+import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
 import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
@@ -80,13 +80,15 @@ export const api = (() => {
     if (!v.data.data) {
       await delay(3000)
       if (["/", ''].includes(v.config.url ?? '')) return v
-      if (!import.meta.env.DEV) return errorReturn(v.data, '异常数据返回')
-      v.config.__retryCount = (v.config.__retryCount ?? 0) + 1
-      if (v.config.__retryCount && v.config.retry && v.config.__retryCount >= v.config.retry) return errorReturn(v.data, '异常数据返回')
-      return await api({
-        ...v.config,
-        headers: {}
-      })
+
+      if (/post/ig.test(v.config.method ?? '')) return v
+      if (true) return errorReturn(v.data, '异常数据返回')
+      // v.config.__retryCount = (v.config.__retryCount ?? 0) + 1
+      // if (v.config.__retryCount && v.config.retry && v.config.__retryCount >= v.config.retry) return errorReturn(v.data, '异常数据返回')
+      // return await api({
+      //   ...v.config,
+      //   headers: {}
+      // })
     }
     return v
   }, handleError)
@@ -370,9 +372,12 @@ export interface Stream<T> {
   page: Ref<number>
   done: Ref<boolean>
   isRequesting: Ref<boolean>
-  next(): Promise<void>
+  next(): Promise<void | undefined>
   reload(text?: string, sort?: SortType): void
   stop(): void
+  isErr: Ref<boolean>
+  errCause: Ref<string | undefined>
+  retry(): Promise<void | undefined>
 }
 
 export interface ComicStream<T = ProPlusComic> extends Stream<T> {
@@ -398,7 +403,8 @@ export abstract class PlusComicStream<T = ProPlusComic> implements ComicStream<T
     this.page.value = 0
     this.docs.value = []
   }
-  public async next(): Promise<void> {
+
+  public async next() {
     if (this.isRequesting.value) return
     this.isRequesting.value = true
     try {
@@ -407,19 +413,34 @@ export abstract class PlusComicStream<T = ProPlusComic> implements ComicStream<T
       const data = await this.getDataFunction(this.tag, this.page.value, this.sort, { signal: this.stopC.signal })
       this.pages.value = data.pages
       this.addValue(data.docs)
-    } catch { }
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
+  }
+  public isErr = shallowRef(false)
+  public errCause = shallowRef<string>()
+  public async retry() {
+    if (!this.isErr.value) return
+    this.page.value--
+    return this.next()
   }
   public stop() {
     this.stopC.abort()
   }
 }
-export class RandomComicStream {
+export class RandomComicStream extends PlusComicStream<ProComic> {
   protected stopC = new SmartAbortController()
   public docs = shallowRef<ProComic[]>([])
   protected addValue(value: ProComic[]) {
     this.docs.value.push(...value)
     triggerRef(this.docs)
+  }
+  constructor() {
+    super('')
   }
   public pages = shallowRef(NaN)
   public total = computed(() => this.docs.value.length)
@@ -431,7 +452,7 @@ export class RandomComicStream {
     this.page.value = 0
     this.docs.value = []
   }
-  public async next(): Promise<void> {
+  public async next(): Promise<undefined> {
     if (this.isRequesting.value) return
     this.isRequesting.value = true
     try {
@@ -439,7 +460,12 @@ export class RandomComicStream {
       const data = await getComicsIn('random', undefined, { signal: this.stopC.signal })
       this.pages.value = Infinity
       this.addValue(data)
-    } catch { }
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
   }
   public stop() {
@@ -481,7 +507,7 @@ export class ComicStreamWithKeyword extends PlusComicStream {
   public page = shallowRef(0)
   public done = computed(() => this.page.value >= this.pages.value)
   public isRequesting = shallowRef(false)
-  public async next() {
+  public async next(): Promise<undefined> {
     if (this.isRequesting.value) return
     this.page.value++
     const pl = new Array<Promise<any>>()
@@ -501,7 +527,12 @@ export class ComicStreamWithKeyword extends PlusComicStream {
     }
     try {
       await Promise.all(pl)
-    } catch { }
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
   }
   public reload(tag?: string, sort?: SortType) {
@@ -556,9 +587,13 @@ export class ComicStreamWithId extends PlusComicStream {
       if (!data) return void (this.isRequesting.value = false)
       this.pages.value = 1
       this.addValue([<any>data])
-    } catch {
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
       this.pages.value = 1
       this.docs.value = []
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
     }
     this.isRequesting.value = false
   }
@@ -567,7 +602,7 @@ export class ComicStreamWithId extends PlusComicStream {
 
 export class ComicStreamWithNoop extends PlusComicStream {
   constructor(id: string, sort: SortType = 'dd') { super(id, sort) }
-  public async next() {
+  public async next(): Promise<undefined> {
     this.docs.value = []
     this.pages.value = 1
   }
@@ -760,25 +795,26 @@ export class Comment {
     this.likesCount ??= 0
     const loading = createLoadingMessage('点赞中')
     try {
-      const ret = await likeComment(this._id)
+      const ret = await loading.bind(likeComment(this._id))
       this.isLiked = !this.isLiked
       if (ret == 'like') this.likesCount++
       else this.likesCount--
-      loading.success()
       return ret
     } catch (error) {
-      loading.fail()
       throw error
     }
   }
   public async report(askUser = true) {
+    const rp = () => {
+      const loading = createLoadingMessage('举报中')
+      return loading.bind(reportComment(this._id), false)
+    }
     if (askUser) await createDialog({
       content: '举报后会进行对该评论的审核',
-      title: '确定举报？'
+      title: '确定举报？',
+      onPositiveClick: rp
     })
-      .then(() => reportComment(this._id))
-      .catch(() => { })
-    else await reportComment(this._id)
+    else await rp()
   }
 }
 export class CommentsStream implements Stream<Comment> {
@@ -795,7 +831,7 @@ export class CommentsStream implements Stream<Comment> {
     this.page.value = 0
     this.pages.value = NaN
   }
-  protected async addTopValue(value: Comment[]) {
+  protected addTopValue(value: Comment[]) {
     this.top.value.push(...value.map(v => new Comment(v)))
     this.top.value = uniqBy(this.top.value, '_id')
 
@@ -808,16 +844,30 @@ export class CommentsStream implements Stream<Comment> {
   public isRequesting = shallowRef(false)
   public async next() {
     if (this.isRequesting.value) return
-    this.page.value++
-    this.isRequesting.value = true
-    const data = (await api.get<RawData<{
-      comments: Result<Comment>
-      topComments: Comment[]
-    }>>(`/${this.host}/${this.id}/comments?page=${this.page.value}`, { signal: this.sac.signal })).data.data
-    this.pages.value = data.comments.pages
-    if (!isEmpty(data.topComments)) await this.addTopValue(data.topComments)
-    this.addValue(data.comments.docs)
+    try {
+      this.page.value++
+      this.isRequesting.value = true
+      const data = (await api.get<RawData<{
+        comments: Result<Comment>
+        topComments: Comment[]
+      }>>(`/${this.host}/${this.id}/comments?page=${this.page.value}`, { signal: this.sac.signal })).data.data
+      this.pages.value = data.comments.pages
+      if (!isEmpty(data.topComments)) this.addTopValue(data.topComments)
+      this.addValue(data.comments.docs)
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
+  }
+  public isErr = shallowRef(false)
+  public errCause = shallowRef<string>()
+  public async retry() {
+    if (!this.isErr.value) return
+    this.page.value--
+    return this.next()
   }
   protected addValue(value: RawComment[]) {
     this.docs.value.push(...value.filter(v => !v.isTop).map(v => new Comment(v)))
@@ -829,11 +879,18 @@ export class ChildrenCommentsStream extends CommentsStream {
   constructor(id: string) { super(id) }
   public override async next() {
     if (this.isRequesting.value) return
-    this.page.value++
-    this.isRequesting.value = true
-    const data = (await api.get<RawData<{ comments: Result<RawComment> }>>(`/comments/${this.id}/childrens?page=${this.page.value}`, { signal: this.sac.signal })).data.data.comments
-    this.pages.value = data.pages
-    this.addValue(data.docs)
+    try {
+      this.page.value++
+      this.isRequesting.value = true
+      const data = (await api.get<RawData<{ comments: Result<RawComment> }>>(`/comments/${this.id}/childrens?page=${this.page.value}`, { signal: this.sac.signal })).data.data.comments
+      this.pages.value = data.pages
+      this.addValue(data.docs)
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
   }
   public load(id: string) {
@@ -979,12 +1036,26 @@ export class MyCommentsStream implements Stream<UserSentComment> {
   protected sac = new SmartAbortController()
   public async next() {
     if (this.isRequesting.value) return
-    this.page.value++
-    this.isRequesting.value = true
-    const data = (await api.get<RawData<{ comments: Result<RawUserSentComment> }>>(`/users/my-comments?page=${this.page.value}`, { signal: this.sac.signal })).data.data
-    this.pages.value = data.comments.pages
-    this.addValue(data.comments.docs)
+    try {
+      this.page.value++
+      this.isRequesting.value = true
+      const data = (await api.get<RawData<{ comments: Result<RawUserSentComment> }>>(`/users/my-comments?page=${this.page.value}`, { signal: this.sac.signal })).data.data
+      this.pages.value = data.comments.pages
+      this.addValue(data.comments.docs)
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
+  }
+  public isErr = shallowRef(false)
+  public errCause = shallowRef<string>()
+  public async retry() {
+    if (!this.isErr.value) return
+    this.page.value--
+    return this.next()
   }
   protected addValue(value: RawUserSentComment[]) {
     this.docs.value.push(...value.map(v => new UserSentComment(v)))
@@ -1062,13 +1133,27 @@ export class AnnouncementStream implements Stream<Announcement> {
   protected sac = new SmartAbortController()
   public async next() {
     if (this.isRequesting.value) return
-    this.page.value++
-    this.isRequesting.value = true
-    const data = (await api.get<RawData<{ announcements: Result<RawAnnouncement> }>>(`/announcements?page=${this.page.value}`, { signal: this.sac.signal })).data.data
-    this.pages.value = data.announcements.pages
-    if (this.page.value == 1) data.announcements.docs.splice(0, 3)
-    this.addValue(data.announcements.docs)
+    try {
+      this.page.value++
+      this.isRequesting.value = true
+      const data = (await api.get<RawData<{ announcements: Result<RawAnnouncement> }>>(`/announcements?page=${this.page.value}`, { signal: this.sac.signal })).data.data
+      this.pages.value = data.announcements.pages
+      this.addValue(data.announcements.docs)
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
+  }
+
+  public isErr = shallowRef(false)
+  public errCause = shallowRef<string>()
+  public async retry() {
+    if (!this.isErr.value) return
+    this.page.value--
+    return this.next()
   }
   protected addValue(value: RawAnnouncement[]) {
     this.docs.value.push(...value.map(v => new Announcement(v)))

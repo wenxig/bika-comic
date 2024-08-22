@@ -127,18 +127,15 @@ const router = createRouter({
     }, {
       path: '/comic/:id/read/:ep',
       component: () => import('@/page/comic/read.vue')
-    },
-    {
+    }, {
+      path: '/brush-comic/:pathMatch(.*)*',
+      component: () => import('@/page/brushComic.vue')
+    }, {
       path: '/:pathMatch(.*)*',
       redirect: '/'
     }
   ]
 })
-// const stopSetup = router.beforeEach(to => {
-//   stopSetup()
-//   return { path: '/', query: { from: encodeURIComponent(to.fullPath) }, replace: true }
-// })
-
 
 let toFullPath: string
 router.beforeEach((to, from) => {
@@ -149,8 +146,6 @@ router.beforeEach((to, from) => {
 })
 router.beforeEach(to => {
   const app = useAppStore()
-  console.trace(to.path);
-  
   if (to.path.includes('/main/home/level')) return true
   if (to.path.includes('/main/home') && !!to.params.name && !app.collections_list.find(v => v.title == to.params.name as string)) return '/'
 })

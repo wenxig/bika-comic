@@ -16,12 +16,7 @@ watch(alertData, () => {
 
 const nextLoad = async (ok?: VoidFunction) => {
   const loading = createLoadingMessage()
-  try {
-    await app.announcements().next()
-    loading.success()
-  } catch {
-    loading.fail()
-  }
+  await loading.bind(app.announcements().next(), false)
   if (ok) ok()
 }
 </script>
@@ -31,8 +26,9 @@ const nextLoad = async (ok?: VoidFunction) => {
     closeable>
     <div class="w-full h-[10%] text-[--p-color] text-lg font-bold flex items-center pl-3">公告</div>
     <List :item-height="160" :data="app.announcements().docs.value" class="h-[90%]" @next="nextLoad"
-      :end="app.announcements().done.value" :is-requesting="app.announcements().isRequesting.value"
-      v-slot="{ height, data: { item: announcement } }">
+      :is-err="app.announcements().isErr.value" :err-cause="app.announcements().errCause.value" retriable
+      @retry="app.announcements().retry()" :end="app.announcements().done.value"
+      :is-requesting="app.announcements().isRequesting.value" v-slot="{ height, data: { item: announcement } }">
       <div class="w-full van-hairline--bottom flex" :style="{ height: `${height}px` }" @click="() => {
         alertData = announcement
         showAlertPops = true

@@ -11,12 +11,7 @@ console.log('in level page');
 const selectPage = shallowRef($route.path.substring($route.path.lastIndexOf('/') + 1))
 const beforeChange: Interceptor = async (t: string) => {
   const loading = createLoadingMessage()
-  try {
-    await $router.force.replace(`/main/home/level/${t}`)
-    loading.success()
-  } catch {
-    loading.fail()
-  }
+  await loading.bind($router.force.replace(`/main/home/level/${t}`))
   return true
 }
 </script>

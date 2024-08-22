@@ -7,6 +7,8 @@ import { userCharactersTranslater } from '@/utils/translater'
 const $props = defineProps<{
   user: User | ChatUserProfile | UserProfile | undefined
   hideSlogan?: boolean
+  class?: any
+  small?: boolean
 }>()
 const exp = computed(() => $props.user?.exp ?? 0)
 const needExp = computed(() => {
@@ -26,8 +28,8 @@ const avatar = computed(() => (<any>$props.user)?.avatar || (<any>$props.user)?.
 </script>
 
 <template>
-  <NThing class="bg-[--van-background-2] overflow-hidden relative w-full">
-    <template #avatar>
+  <NThing :class class="bg-[--van-background-2] overflow-hidden relative w-full">
+    <template #avatar v-if="!small">
       <Image :src="avatar" fit="cover" class="w-[4rem] h-[4rem] mt-1 ml-1" round previewable />
     </template>
     <template #header>
@@ -75,7 +77,7 @@ const avatar = computed(() => (<any>$props.user)?.avatar || (<any>$props.user)?.
           :show-indicator="false" />
       </div>
     </template>
-    <Text :text="user?.slogan" v-if="!hideSlogan"
+    <Text :text="user?.slogan" v-if="!hideSlogan && !small"
       class="!text-[--van-text-color-2] !text-xs w-[calc(100%-8px*2)] p-2" />
     <slot />
   </NThing>

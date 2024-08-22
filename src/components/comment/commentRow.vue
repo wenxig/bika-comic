@@ -10,7 +10,6 @@ const $props = defineProps<{
   ellipsis?: number | undefined
 } & Partial<RowProps>>()
 defineEmits<{
-  comment: [c: Comment]
   click: [c: Comment]
   showUser: [user: User]
 }>()
@@ -55,8 +54,7 @@ defineSlots<{
         <VanIcon name="like-o" size="16px" v-else />
         <span class="ml-1 text-[13px]" v-if="comment.likesCount">{{ comment.likesCount }}</span>
       </span>
-      <button v-if="showChildrenComment" class="flex items-center bg-transparent border-none"
-        @click.stop="$emit('comment', comment)">
+      <button v-if="showChildrenComment" class="flex items-center bg-transparent border-none">
         <VanIcon name="chat-o" size="16px" />
         <span class="ml-1 text-[13px]" v-if="comment.commentsCount">{{ comment.commentsCount }}</span>
       </button>

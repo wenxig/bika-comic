@@ -41,6 +41,13 @@ export class GameStream implements Stream<Game> {
     this.docs.value.push(...value.map(v => new Game(v)))
     triggerRef(this.docs)
   }
+  public isErr = shallowRef(false)
+  public errCause = shallowRef<string>()
+  public async retry() {
+    if (!this.isErr.value) return
+    this.page.value--
+    return this.next()
+  }
   public pages = shallowRef(NaN)
   public total = computed(() => this.docs.value.length)
   public page = shallowRef(0)
@@ -59,7 +66,12 @@ export class GameStream implements Stream<Game> {
       const data = (await api.get<RawData<{ games: Result<Game> }>>(`/games?page=${this.page.value}`)).data.data.games
       this.pages.value = data.pages
       this.addValue(data.docs)
-    } catch { }
+      this.isErr.value = false
+      this.errCause.value = undefined
+    } catch (err) {
+      this.isErr.value = true
+      if (err instanceof Error) this.errCause.value = err.message || err.name
+    }
     this.isRequesting.value = false
   }
   public stop() {

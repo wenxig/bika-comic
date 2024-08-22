@@ -71,6 +71,7 @@ const reload = () => {
       {{ select == '' ? '今日更新' : '最近更新' }}
     </div>
     <List :item-height="200" :data="getComics() ?? []" v-if="select == ''" class="w-full van-hairline--top"
+      :is-err="stream.isErr.value" :err-cause="stream.errCause.value" retriable @retry="stream.retry()"
       :isRequesting="false" reload-box-class="h-[calc(100%-2.5rem-94px)]"
       v-slot="{ height, data: { item: { comic, subscribe } } }">
       <Card :height :comic :subscribe @user-select="select = subscribe.id" />

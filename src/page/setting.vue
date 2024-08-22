@@ -17,6 +17,9 @@ document.body.classList.add('setting-page')
 onBeforeRouteLeave(() => {
   document.body.classList.remove('setting-page')
 })
+defineProps<{
+  hideNavbar?: boolean
+}>()
 
 const clearDb = () => (createDialog({
   title: '清除本地数据库',
@@ -63,8 +66,8 @@ const quitLogin = () => {
 </script>
 
 <template>
-  <VanNavBar title="设置" left-arrow @click-left="$router.back()" />
-  <NScrollbar class="w-full h-[calc(100%-46px)]">
+  <VanNavBar title="设置" left-arrow @click-left="$router.back()" v-if="!hideNavbar" />
+  <NScrollbar class="w-full h-[calc(100%-46px)]" :class="[hideNavbar && '!h-full']">
     <VanCellGroup title="系统设置">
       <van-cell center title="深色模式">
         <template #right-icon>
@@ -108,7 +111,17 @@ const quitLogin = () => {
       </van-cell>
       <van-cell center title="垂直阅读">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.vertical']" disabled />
+          <van-switch v-model="config.value['bika.read.vertical']" />
+        </template>
+      </van-cell>
+      <van-cell center title="单页显示两张">
+        <template #right-icon>
+          <van-switch v-model="config.value['bika.read.twoImage']" />
+        </template>
+      </van-cell>
+      <van-cell center title="反向阅读">
+        <template #right-icon>
+          <van-switch v-model="config.value['bika.read.rtl']" disabled />
         </template>
       </van-cell>
       <VanCell clickable @click.stop="showSetPreloadImageNumbers = true" title="图片预加载数量">

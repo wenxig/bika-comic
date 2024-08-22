@@ -20,12 +20,10 @@ const deleteSubscribe = async () => {
   isRequesting.value = true
   const loading = createLoadingMessage('订阅中')
   try {
-    await removeSubscribe([$props.subscribe.id])
-    loading.success()
+    await loading.bind(removeSubscribe([$props.subscribe.id]))
     await $router.force.replace('/main/subscribe')
     isRequesting.value = false
   } catch {
-    loading.fail()
     isRequesting.value = false
   }
 }

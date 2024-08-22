@@ -41,12 +41,13 @@ export const useComicStore = defineStore('comic', () => {
       }
       case undefined: return
       default: {
+        const old = lastsComics.get(v._id)
         lastsComics.delete(v._id)
         lastsComics.set(v._id, comic.value = lastsComics.get(v._id) ?? {
           comic: undefined,
           preload: v,
-          eps: [],
-          likeComic: undefined
+          eps: old?.eps.id == v._id ? old?.eps : [],
+          likeComic: old?.likeComic?.id == v._id ? old?.likeComic : undefined
         })
       }
     }
@@ -56,7 +57,7 @@ export const useComicStore = defineStore('comic', () => {
       case false: {
         if (typeof cid !== 'string') return
         lastsComics.delete(cid)
-        lastsComics.set(cid, comic.value = lastsComics.get(cid) ?? {
+        lastsComics.set(cid, comic.value = {
           comic: false,
           preload: {} as any,
           eps: [],
@@ -66,12 +67,13 @@ export const useComicStore = defineStore('comic', () => {
       }
       case undefined: return
       default: {
+        const old = lastsComics.get(v._id)
         lastsComics.delete(v._id)
-        lastsComics.set(v._id, comic.value = lastsComics.get(v._id) ?? {
+        lastsComics.set(v._id, comic.value = {
           comic: v,
           preload: v,
-          eps: [],
-          likeComic: undefined
+          eps: old?.eps.id == v._id ? old?.eps : [],
+          likeComic: old?.likeComic?.id == v._id ? old?.likeComic : undefined
         })
       }
     }

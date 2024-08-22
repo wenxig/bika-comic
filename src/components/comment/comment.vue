@@ -4,9 +4,9 @@ import { createLoadingMessage } from '@/utils/message'
 import { onMounted, shallowRef, watch } from 'vue'
 import ChildrenComments from './children.vue'
 import PreviewUser from '@/components/user/previewUser.vue'
+import CommentSender from './commentSender.vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import CommentRow from './commentRow.vue'
-import emiter from './emiter'
 import { comments, commentsScroll } from '@/stores/temp'
 import { isEmpty } from 'lodash-es'
 import List from '@/components/list.vue'
@@ -40,22 +40,9 @@ const handleReloadCommit = () => {
   commitStream.reload()
   return commitStream.next()
 }
-emiter.on('commitReload', handleReloadCommit)
-emiter.on('childrenCommitReload', ([id]) => {
-  const dataIndex = data.value.findIndex(v => v._id == id)
-  const topIndex = top.value.findIndex(v => v._id == id)
-  let index: number
-  if (dataIndex == -1) index = topIndex
-  else index = dataIndex
-  if (data.value[index]._id == id) data.value[index].commentsCount++
-  else top.value[index].commentsCount++
-})
 onBeforeRouteLeave(() => {
   commentsScroll.set($props.id, list.value?.scrollTop ?? 0)
 })
-defineEmits<{
-  comment: [c: Comment]
-}>()
 defineSlots<{
   default(): void
 }>()
@@ -63,32 +50,33 @@ defineSlots<{
 const nextLoad = async () => {
   if (isEmpty(commitStream.docs.value)) return await commitStream.next()
   const loading = createLoadingMessage()
-  try {
-    await commitStream.next()
-    loading.success()
-  } catch {
-    loading.fail()
-  }
+  await loading.bind(commitStream.next(), false)
 }
+const commentSender = shallowRef<InstanceType<typeof CommentSender>>()
+defineExpose({
+  forceInput() {
+    commentSender.value?.force()
+  }
+})
 </script>
 
 <template>
   <div class="w-full h-full overflow-hidden bg-[--van-background]" :style="`--father-height: ${commentHeight}px;`">
-    <List :data="[...top, ...data]" ref="list" reloadable :item-height="120"
-      :class="['h-[calc(var(--father-height)-var(--van-floating-panel-header-height))]', $props.listClass]"
+    <List :data="[...top, ...data]" ref="list" reloadable :item-height="120" :is-err="commitStream.isErr.value"
+      :err-cause="commitStream.errCause.value" retriable @retry="commitStream.retry()"
+      :class="[commentHeight && 'h-[calc(var(--father-height)-var(--van-floating-panel-header-height)-40px)]', $props.listClass]"
       :is-requesting :end="searchDone" v-slot="{ data: { item }, height }" @next="nextLoad"
       @reload="then => handleReloadCommit().then(then)">
       <CommentRow :comment="item" :height show-children-comment @click="() => {
         console.log('click comment')
         _father = item
         childrenComments?.show(item._id)
-      }" @show-user="previewUser?.show" :ellipsis="3"
-        @comment="c => $emit('comment', c)">
+      }" @show-user="previewUser?.show" :ellipsis="3">
         <slot />
       </CommentRow>
     </List>
+    <CommentSender ref="commentSender" @afterSend="handleReloadCommit()" :defSendAddress="$props.id" isComic />
   </div>
-  <ChildrenComments ref="childrenComments" anchors="low" :_father
-    @show-user="previewUser?.show" @comment="c => $emit('comment', c)" />
+  <ChildrenComments ref="childrenComments" anchors="low" :_father @show-user="previewUser?.show" />
   <PreviewUser ref="previewUser" />
 </template>

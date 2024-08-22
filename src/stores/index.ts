@@ -22,6 +22,8 @@ const _searchHistory = await localforage.getItem<string[]>(symbol.searchHistory)
 type ReadHistory = Record<string, WatchHistory>
 const _readHistory = await localforage.getItem<ReadHistory>(symbol.searchHistory) ?? {}
 
+const _user = await localforage.getItem<Me>(symbol.userTemp) ?? undefined
+
 export const useAppStore = defineStore('app', () => {
   const categories = shallowRef<Categories[]>([])
 
@@ -41,7 +43,7 @@ export const useAppStore = defineStore('app', () => {
     readHistory.value = data
   }
 
-  const user = shallowRef<Me>()
+  const user = shallowRef<Me | undefined>(_user)
   const $reloadMe = async (config: AxiosRequestConfig = {}) => {
     if (user.value) {
       user.value.favourite.reload()

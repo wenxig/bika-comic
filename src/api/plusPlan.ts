@@ -83,7 +83,7 @@ export class WatchHistory extends Array {
   }
   public toJSON() {
     const v = [...this]
-    v[1] = this[1]
+    v[1] = this[1].toJSON()
     return v
   }
   /** @description 漫画信息 */ public set [1](v: RawProPlusMaxComic) {
@@ -317,7 +317,14 @@ class News {
 }
 export const getNewUpdatesComic = async (config?: AxiosRequestConfig) => {
   const news = await newUpdates.get<string>(`/${dayjs().format(`YYYY-MM-DD`)}.data`, config)
-  const processd = news.data.replaceAll('\r', '').split('\n').filter(Boolean).map(t => enc.Base64.parse(t).toString(enc.Utf8)).map(v => new News(JSON.parse(v)))
+  const processd = news.data.split('\r\n').filter(Boolean).map(t => {
+    const decodedWords = enc.Base64.parse(t)
+    const decodedString = enc.Utf8.stringify(decodedWords)
+    const jsonObject = JSON.parse(decodedString)
+    return jsonObject
+  }).map(v => new News(v))
+  console.log(processd);
+  
   return processd.map(pdata => pdata.toProPlusComic())
 }
 

@@ -50,12 +50,7 @@ class BatchRemoveFavourt {
 
 const loadNext = async () => {
   const loading = createLoadingMessage()
-  try {
-    await app.user()?.favourite.next()
-    loading.success()
-  } catch {
-    loading.fail()
-  }
+  await loading.bind(app.user()?.favourite.next())
 }
 </script>
 

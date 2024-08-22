@@ -8,7 +8,7 @@ import { isEmpty, noop, uniqBy } from 'lodash-es'
 import config, { FillerTag } from '@/config'
 import { searchResult as lastSearchResult, searchListScroolPosition } from '@/stores/temp'
 import List from '@/components/list.vue'
-import { computedWithControl, useTitle,  watchOnce } from '@vueuse/core'
+import { computedWithControl, useTitle, watchOnce } from '@vueuse/core'
 import { patchSearchHitory } from '@/api/plusPlan'
 import { modeMap, sorterValue } from '@/utils/translater'
 import Sorter from '@/components/search/sorter.vue'
@@ -96,12 +96,7 @@ const nextSearch = async (then?: VoidFunction) => {
     return
   }
   const loading = createLoadingMessage(undefined, undefined, true)
-  try {
-    await comicStream.value.next()
-    await loading.success()
-  } catch {
-    await loading.fail()
-  }
+  await loading.bind(comicStream.value.next(), false)
   if (then) then()
 }
 
@@ -133,7 +128,7 @@ const toSearchInHideMode = async () => {
         <van-icon name="sort" size="1.5rem" class="sort-icon" />排序
         <span class="text-[--p-color] text-xs">-{{
           sorterValue.find(v => v.value == config.value['bika.search.sort'])?.text
-          }}</span>
+        }}</span>
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center">
         <VanSwitch v-model="config.value['bika.search.showAIProject']" size="1rem" />展示AI作品
@@ -171,7 +166,8 @@ const toSearchInHideMode = async () => {
   </Popup>
   <NResult status="info" title="未输入搜索字段" description="尝试输入一些吧" v-if="isEmpty($route.query.keyword)"></NResult>
   <List :itemHeight="160" :data="listData" reloadable @reload="then => reload().then(then)" v-else
-    :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value"
+    :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value" :is-err="comicStream.isErr.value"
+    :err-cause="comicStream.errCause.value" retriable @retry="comicStream.retry()"
     v-slot="{ data: { item: comic }, height }" class="duration-200 transition-[height,transform]"
     :end="comicStream.done.value" @next="nextSearch" ref="list"
     :class="[showSearch ? 'h-[calc(100vh-86px)] translate-y-0' : 'h-[calc(100vh-32px)] -translate-y-[54px]']">

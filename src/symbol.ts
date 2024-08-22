@@ -15,4 +15,5 @@ export default Object.freeze({
   chatRoomUselessSlogan: '#### **此APP為僅限成人**\n> [泡泡官网]()https://bubble.bidobido.xyz\n\n---\n\n',
   splitAuthorRegexp: /\,|，|\&|\||、|＆/ig,
   iframeEl: <InjectionKey<ShallowRef<HTMLIFrameElement | undefined>>>Symbol('iframeEl'),
+  userTemp:'temp.user'
 })

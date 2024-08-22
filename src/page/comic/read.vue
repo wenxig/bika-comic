@@ -1,6 +1,6 @@
 <script setup lang='tsx'>
 import { getComicPages, Image as RawImageData } from '@/api'
-import { ButtonHTMLAttributes, computed, FunctionalComponent, onMounted, onUnmounted, ReservedProps, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { toNumber, clone, isEmpty, remove } from 'lodash-es'
 import { useAppStore } from '@/stores'
@@ -10,14 +10,13 @@ import config from '@/config'
 import ComicView from '@/components/comic/comicView.vue'
 import { FavourtImage, patchWatchHitory, WatchHistory } from '@/api/plusPlan'
 import { useComicStore } from '@/stores/comic'
-import CommentVue from '@/components/comic/comment/comment.vue'
+import CommentVue from '@/components/comment/comment.vue'
 import Eps from '@/components/comic/info/eps.vue'
 import TopInfo from '@/components/comic/info/topInfo.vue'
 import Uploader from '@/components/comic/info/uploader.vue'
 import Likes from '@/components/comic/info/likes.vue'
 import FloatPopup from '@/components/floatPopup.vue'
 import Popup from '@/components/popup.vue'
-import { Icon as VanIcon, IconProps as VanIconProps } from 'vant'
 
 const $route = useRoute()
 const $router = useRouter()
@@ -38,7 +37,6 @@ const saveHistory = () => comicStore.comic.comic && patchWatchHitory({ [comicId]
 watch(() => comicView.value?.index, page => {
   if (page || page == 0) {
     if (comicStore.comic.comic) app.readHistory[comicId] = createHistory()
-    $router.force.replace($route.fullPath.includes('#') ? $route.fullPath.replace(/#.+/g, `#${page + 1}`) : `${$route.fullPath}#${page + 1}`)
   }
 }, { immediate: true })
 onBeforeRouteLeave((t, f) => { if (t.fullPath != f.fullPath) saveHistory() })
@@ -80,15 +78,6 @@ const lastPagesLength = shallowRef<number>();
   .then(loading => loading.success())
   .catch(loading => loading.fail())
 
-
-
-const MenuButton: FunctionalComponent<{ baseIcon?: string, icon?: string, primary?: boolean, size?: 'big' | 'small', width?: string | number } & ReservedProps, { click: [any] }, { default: any }> = ({ width = "auto", baseIcon, size = 'big', primary, icon, onClick, ...props }, ctx) => (
-  <div onClick={onClick} {...props} class="w-full flex justify-center items-center flex-col *:block" style={{ width, height: width }}>
-    <VanIcon size={size == 'big' ? '2rem' : '1rem'} name={baseIcon ? (primary ? baseIcon : `${baseIcon}-o`) : icon} class={[size == 'big' && "-mb-1"]} color={primary ? 'var(--p-color)' : 'white'} />
-    <span>{ctx.slots.default()}</span>
-  </div >
-)
-
 //选集
 const epSelectShow = shallowRef(false)
 const _eps = reactiveComputed(() => config.value['bika.info.unsortComic'] ? clone(comicStore.comic.eps).reverse() : comicStore.comic.eps)
@@ -105,46 +94,47 @@ const showComicLike = shallowRef(false)
 
 // 导航
 const toNextEp = () => (epId + 1 <= _eps.length) ? (!isEmpty(images.value) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)) : showInLast()
-const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.replace(`/comic/${comicId}/read/${epId - 1}#${lastPagesLength.value}`)) : showInFirst()
+const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.replace(`/comic/${comicId}/read/${epId - 1}`)) : showInFirst()
 </script>
 
 <template>
-  <ComicView :images show :comic-title="comicStore.comic.comic ? comicStore.comic.comic.title : ''"
-    :startPosition="page" :ep-title="epInfo?.title" ref="comicView" @back="$router.back()"
+  <ComicView :images :comic-title="comicStore.comic.comic ? comicStore.comic.comic.title : ''" :startPosition="page"
+    :ep-title="epInfo?.title" ref="comicView" @back="$router.back()"
     @add-favourt-image="(src, time) => comic && app.favourtImages.value.push(new FavourtImage({ src, time, comic }))"
     @remove-favourt-image="src => remove(app.favourtImages.value, { src })" @last-ep="toLastEp" @next-ep="toNextEp">
-    <template #menu>
-      <MenuButton icon="list-switch" @click="epSelectShow = true">
+    <template #menu="{ MenuButton }">
+      <component :is="MenuButton" icon="list-switch" @click="epSelectShow = true">
         章节
-      </MenuButton>
+      </component :is="MenuButton">
       <template v-if="comicStore.comic.comic">
-        <MenuButton baseIcon="like" :primary="comicStore.comic.comic.isLiked" @click="comicStore.comic.comic?.like()">
+        <component :is="MenuButton" baseIcon="like" :primary="comicStore.comic.comic.isLiked"
+          @click="comicStore.comic.comic?.like()">
           点赞
-        </MenuButton>
-        <MenuButton baseIcon="star" :primary="comicStore.comic.comic.isFavourite"
+        </component :is="MenuButton">
+        <component :is="MenuButton" baseIcon="star" :primary="comicStore.comic.comic.isFavourite"
           @click="comicStore.comic.comic?.favourt()">
           点赞
-        </MenuButton>
+        </component :is="MenuButton">
       </template>
-      <MenuButton icon="chat-o" @click="comment?.show()">
+      <component :is="MenuButton" icon="chat-o" @click="comment?.show()">
         评论
-      </MenuButton>
+      </component :is="MenuButton">
     </template>
-    <template #left="{ width }">
-      <MenuButton size="small" icon="notes-o" @click="showComicInfo = true" :width>
+    <template #left="{ width, MenuButton }">
+      <component :is="MenuButton" size="small" icon="notes-o" @click="showComicInfo = true" :width>
         关于
-      </MenuButton>
-      <MenuButton size="small" icon="arrow-double-left" @click="toLastEp" :width>
+      </component>
+      <component :is="MenuButton" size="small" icon="arrow-double-left" @click="toLastEp" :width>
         上一章
-      </MenuButton>
+      </component>
     </template>
-    <template #right="{ width }">
-      <MenuButton size="small" icon="list-switch" @click="showComicLike = true" :width>
+    <template #right="{ width, MenuButton }">
+      <component :is="MenuButton" size="small" icon="list-switch" @click="showComicLike = true" :width>
         推荐
-      </MenuButton>
-      <MenuButton size="small" icon="arrow-double-right" @click="toNextEp" :width>
+      </component>
+      <component :is="MenuButton" size="small" icon="arrow-double-right" @click="toNextEp" :width>
         下一章
-      </MenuButton>
+      </component>
     </template>
   </ComicView>
 

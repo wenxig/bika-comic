@@ -2,11 +2,13 @@
 import { useZIndex } from '@/utils/layout'
 import { noop } from 'lodash-es'
 import { PopupProps } from 'vant'
+import { computed } from 'vue'
 import { shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 const $router = useRouter()
-withDefaults(defineProps<Partial<PopupProps & {
-  noBorder?: boolean
+const $props = withDefaults(defineProps<Partial<PopupProps & {
+  noBorder?: boolean,
+  useTurlyShow: boolean
 }>>(), {
   position: 'center',
   noBorder: false
@@ -16,7 +18,7 @@ defineSlots<{
   default(): void
 }>()
 const turlyShow = shallowRef(show.value)
-const [zIndex, isLast] = useZIndex(show)
+const [zIndex, isLast] = useZIndex(computed(() => $props.useTurlyShow ? turlyShow.value : show.value))
 let stopRouter = noop
 watch(show, _show => {
   if (_show) stopRouter = $router.beforeEach(() => {
@@ -25,10 +27,10 @@ watch(show, _show => {
       if (show.value) {
         return show.value = false
       } else {
-        return 
+        return
       }
     } else {
-      return 
+      return
     }
   })
   else stopRouter()
@@ -36,11 +38,16 @@ watch(show, _show => {
 defineEmits<{
   closed: []
 }>()
+defineExpose({
+  zIndex,
+  turlyShow
+})
 </script>
 
 <template>
-  <VanPopup :position :round :closeable v-model:show="show" :z-index teleport="#popups" @open="turlyShow = true"
-    @closed="() => { turlyShow = false; $emit('closed') }" class="max-h-[100vh] !overflow-y-auto overflow-hidden"
+  <VanPopup :duration :position :round :closeable v-model:show="show" :z-index teleport="#popups"
+    @open="turlyShow = true" @closed="() => { turlyShow = false; $emit('closed') }"
+    class="max-h-[100vh] !overflow-y-auto overflow-hidden"
     :class="!noBorder && 'border-0 border-t border-solid border-[--van-border-color]'">
     <slot v-if="turlyShow"></slot>
   </VanPopup>

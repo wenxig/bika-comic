@@ -15,9 +15,8 @@ useTitle(title)
 
 const handleLike = async () => {
   const loading = createLoadingMessage()
-  await likeGame(preload?._id)
+  await loading.bind(likeGame(preload?._id))
   gameStore.game.game!.isLiked = !game.value?.isLiked
-  loading.success()
 }
 
 const showDownload = shallowRef(false)
@@ -68,9 +67,9 @@ const preview = (index: number) => game.value && showImagePreview(game.value.scr
     <div class="w-full flex mt-2 justify-center items-center" v-if="!game">
       <van-loading size="24px">加载中...</van-loading>
     </div>
-    <van-swipe :autoplay="3000" lazy-render>
-      <van-swipe-item v-for="(image, index) in game?.screenshots" :key="index">
-        <Image :src="image" class="rounded-lg h-[260px] !w-full" fit="contain" @click="preview(index)" />
+    <van-swipe :autoplay="3000" lazy-render class="!rounded-lg">
+      <van-swipe-item v-for="(image, index) in game?.screenshots" :key="index" class="!rounded-lg">
+        <Image :src="image" class="!rounded-lg h-[260px] !w-full" fit="contain" @click="preview(index)" />
       </van-swipe-item>
     </van-swipe>
   </div>

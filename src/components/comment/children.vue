@@ -2,10 +2,10 @@
 import { computed, ref, shallowRef, watch } from 'vue'
 import { Comment, ChildrenCommentsStream, User } from '@/api'
 import CommentRow from './commentRow.vue'
-import emiter from './emiter'
 import { childrenComments } from '@/stores/temp'
 import { useElementSize } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
+import CommentSender from './commentSender.vue'
 import { isEmpty } from 'lodash-es'
 import FloatPopup from '@/components/floatPopup.vue'
 import Popup from '@/components/popup.vue'
@@ -32,14 +32,8 @@ watch(_id, _id => {
 })
 const reload = async () => {
   commitStream.value.reload()
-  console.log('children comment done:', commitStream.value.done.value)
-
   if (!commitStream.value.done.value) await commitStream.value.next()
 }
-emiter.on('childrenCommitReload', ([id]) => {
-  if (_id.value != id) return
-  return reload()
-})
 defineExpose({
   show(commentId: string) {
     _id.value = commentId
@@ -56,12 +50,7 @@ const { height: topCommentElHeight } = useElementSize(topCommentEl)
 const nextLoad = async () => {
   if (isEmpty(commitStream.value.docs.value) && !commitStream.value.done.value) return await commitStream.value.next()
   const loading = createLoadingMessage()
-  try {
-    if (!commitStream.value.done.value) await commitStream.value.next()
-    loading.success()
-  } catch {
-    loading.fail()
-  }
+  if (!commitStream.value.done.value) await loading.bind(commitStream.value.next(), false)
 }
 const fullComment = ref<Comment>()
 const showComment = shallowRef(false)
@@ -76,11 +65,13 @@ const showComment = shallowRef(false)
     </div>
     <List :is-requesting="commitStream.isRequesting.value" :end="commitStream.done.value"
       :data="commitStream.docs.value" :item-height="ITEM_HEIGHT" @next="nextLoad" v-slot="{ data, height }"
-      item-resizable reloadable @reload="then => reload().then(then)"
-      :style="`height:calc(100% - ${topCommentElHeight}px);background-color:var(--van-background);`">
+      item-resizable reloadable @reload="then => reload().then(then)" :is-err="commitStream.isErr.value"
+      :err-cause="commitStream.errCause.value" retriable @retry="commitStream.retry()"
+      :style="`height:calc(100% - ${topCommentElHeight}px - 40px);background-color:var(--van-background);`">
       <CommentRow :comment="data.item" @show-user="$emit('showUser', data.item?._user!)" class="!border-none" :height
         :ellipsis="3" @click="showComment = !!(fullComment = data.item)" />
     </List>
+    <CommentSender :defSendAddress="_father" @afterSend="reload()" />
   </FloatPopup>
   <Popup class="overflow-hidden" v-model:show="showComment" position="bottom" round closeable
     @closed="fullComment = undefined">

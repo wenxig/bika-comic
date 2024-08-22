@@ -6,6 +6,7 @@ import { useZIndex } from "./layout"
 import { noop } from "@vueuse/core"
 import router from "@/router"
 
+export type LoadingInstance = ReturnType<typeof createLoadingMessage>
 export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中', api = window.$message as ReturnType<typeof useMessage>, wait = false) => {
   const data = computed(() => isRef(text) ? text.value : isFunction(text) ? text() : text)
   let loading: MessageReactive
@@ -21,7 +22,22 @@ export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中
     loading.content = text
   })
   let isDestroy = false
-  return {
+  async function bind<T extends Promise<any>>(promise?: T, throwError?: false, successText?: string, failText?: string): Promise<Awaited<T>>
+  async function bind<T extends Promise<any>>(promise?: T, throwError?: true, successText?: string, failText?: string): Promise<Awaited<T> | undefined>
+  async function bind<T extends Promise<any>>(promise?: T, throwError = true, successText?: string, failText?: string): Promise<Awaited<T> | undefined> {
+    try {
+      const res = await promise
+      ctx.success(successText)
+      return res
+    } catch (error) {
+      ctx.fail(failText)
+      if (throwError)
+        throw error
+      return <any>undefined
+    }
+  }
+  const ctx = {
+    bind,
     async success(text = "成功！", delayTime = 500) {
       stop()
       if (isDestroy || !loading) return
@@ -61,8 +77,10 @@ export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中
     },
     [Symbol.dispose]() {
       this.destroy()
-    }
+    },
+
   }
+  return ctx
 }
 
 export const createDialog = (options: DialogOptions & { style?: CSSProperties }) => {
@@ -80,7 +98,7 @@ export const createDialog = (options: DialogOptions & { style?: CSSProperties })
       zIndex: zIndex.value
     },
     async onClose() {
-      if ((await (options.onClose ?? noop)()) === false) return false
+      if ((await options.onClose?.()) === false) return false
       else show.value = false; failStop()
     },
     async onPositiveClick(e) {
@@ -93,15 +111,15 @@ export const createDialog = (options: DialogOptions & { style?: CSSProperties })
       else failStop()
     },
     onEsc() {
-      (options.onEsc ?? noop)()
+      options.onEsc?.()
       failStop()
     },
     onMaskClick(e) {
-      (options.onMaskClick ?? noop)(e)
+      options.onMaskClick?.(e)
       failStop()
     },
     onAfterLeave() {
-      (options.onAfterLeave ?? noop)()
+      options.onAfterLeave?.()
       stop()
     }
   })

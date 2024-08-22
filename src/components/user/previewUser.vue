@@ -20,14 +20,14 @@ defineExpose({
     floatPopup.value?.close()
   }
 })
-const anchors = computed(() => [0, (contentBoxHeight.value || Math.floor(window.innerHeight * 0.33)) + 30, __VAN_CELL_HEIGHT__ + 30 + (contentBoxHeight.value || Math.floor(window.innerHeight * 0.33)), window.innerHeight])
+const anchors = computed(() => [0, (contentBoxHeight.value || Math.floor(window.innerHeight * 0.20)) + 30, __VAN_CELL_HEIGHT__ + 30 + (contentBoxHeight.value || Math.floor(window.innerHeight * 0.20)), window.innerHeight])
 </script>
 
 <template>
-  <FloatPopup ref="floatPopup" :anchors class="overflow-hidden">
+  <FloatPopup ref="floatPopup" :anchors overlay class="overflow-hidden">
     <div class="overflow-hidden">
       <div ref="contentBox" class="w-full flex justify-center items-start backdrop-blur-lg van-hairline--bottom">
-        <UserInfo :user />
+        <UserInfo :user class="min-h-[20vh]" />
       </div>
       <VanCell title="查看该上传者作品" icon="search-o" is-link
         @click="user && $router.force.push(`/search?mode=uploader&keyword=${user._id}`)" />

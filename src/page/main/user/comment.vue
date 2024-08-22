@@ -3,20 +3,19 @@ import { isEmpty } from 'lodash-es'
 import { likeComment, Comment } from '@/api'
 import { createLoadingMessage } from '@/utils/message'
 import { onMounted, ref, shallowRef } from 'vue'
-import Children from '@/components/comic/comment/children.vue'
+import Children from '@/components/comment/children.vue'
 import { useAppStore } from '@/stores'
 import PreviewUser from '@/components/user/previewUser.vue'
-import CommentRow from '@/components/comic/comment/commentRow.vue'
+import CommentRow from '@/components/comment/commentRow.vue'
 document.title = '我的评论 | bika'
 const app = useAppStore()
 const _father = ref<Comment>()
 const handleLike = async (comment: Comment) => {
   const loading = createLoadingMessage('点赞中')
-  const ret = await likeComment(comment._id)
+  const ret = await loading.bind(likeComment(comment._id))
   comment.isLiked = !comment.isLiked
   if (ret == 'like') comment.likesCount++
   else comment.likesCount--
-  loading.success()
   return ret
 }
 const children = shallowRef<InstanceType<typeof Children>>()
@@ -35,18 +34,13 @@ onBeforeRouteLeave(() => {
 
 const loadNext = async () => {
   const loading = createLoadingMessage()
-  try {
-    await app.user()?.comments.next()
-    loading.success()
-  } catch {
-    loading.fail()
-  }
+  await loading.bind(app.user()?.comments.next())
 }
 </script>
 
 <template>
   <VanNavBar title="我的评论" left-text="返回" left-arrow @click-left="$router.back()" />
-  <List :item-height="120" item-resizable reloadable
+  <List :item-height="120" item-resizable reloadable 
     @reload="then => { app.user()?.comments.reload(); app.user()?.comments.next().then(then) }"
     class="h-[calc(100%-46px)] w-full" :data="app.user()?.comments.docs.value ?? []" ref="list"
     :is-requesting="isEmpty(app.user()) || !!app.user()?.comments.isRequesting.value"

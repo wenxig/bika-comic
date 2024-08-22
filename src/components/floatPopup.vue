@@ -2,12 +2,15 @@
 import { useZIndex } from '@/utils/layout'
 import { useWindowSize } from '@vueuse/core'
 import { isArray, noop } from 'lodash-es'
-import { computed, shallowReadonly, shallowRef, watch } from 'vue'
+import { computed, shallowReadonly, shallowRef, StyleValue, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 const $router = useRouter()
 const $props = withDefaults(defineProps<{
   anchors?: 'high' | 'low' | number[],
-  lockScroll?: boolean
+  lockScroll?: boolean,
+  class?: any,
+  style?: StyleValue,
+  overlay?: boolean
 }>(), {
   anchors: 'high',
   lockScroll: false
@@ -59,9 +62,10 @@ defineSlots<{
 
 <template>
   <Teleport to="#popups">
+    <VanOverlay :zIndex :show @click="show = false" v-if="overlay" />
     <Transition @after-leave="height = 0" name="van-slide-up">
-      <VanFloatingPanel v-show="show" @height-change="(height == 0) && (show = false)" :anchors v-model:height="height"
-        :content-draggable="false" :lock-scroll :style="{ zIndex }"
+      <VanFloatingPanel v-show="show" @height-change="({ height }) => (height <= 0) && (show = false)" :anchors
+        v-model:height="height" :content-draggable="false" :lock-scroll :style="[style, { zIndex }]" :class
         class="overflow-hidden border-0 border-t border-solid border-[--van-border-color]">
         <div class="bg-[--van-background] w-full"
           :style="{ height: `calc(${height!}px - var(--van-floating-panel-header-height))` }">

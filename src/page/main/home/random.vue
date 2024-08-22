@@ -11,8 +11,8 @@ import symbol from '@/symbol'
 import { useMainPageLevelComicShows } from '@/utils/requset'
 const swipe = 50
 const $router = useRouter()
-const stream = random.stream ?? (random.stream = new RandomComicStream())
-const { docs, isRequesting, done } = stream
+const stream = random.stream ??= new RandomComicStream()
+const { docs, isRequesting, done, isErr, errCause } = stream
 onMounted(async () => {
   if (!isEmpty(docs.value)) {
     console.log(random.scroll)
@@ -29,12 +29,7 @@ const nextLoad = async () => {
     stop()
     loading.destroy()
   })
-  try {
-    await stream.next()
-    loading.success()
-  } catch {
-    loading.fail()
-  }
+  await loading.bind(stream.next(), false)
   stop()
 }
 const stop = $router.beforeEach(() => {
@@ -55,7 +50,7 @@ const topComics = useMainPageLevelComicShows()
 <template>
   <List :item-height="260" :data="chunk(docs, 2)" class="h-full w-full" :is-requesting :end="done" reloadable
     @reload="then => { stream.reload(); stream.next().then(then) }" v-slot="{ height, data: { item: comics, index } }"
-    @next="nextLoad()" ref="list">
+    @next="nextLoad()" @retry="stream.retry()" ref="list" :isErr :errCause retriable>
     <div :style="{ height: `${height}px` }" class="w-full mt-1 flex justify-center *:w-[98%]">
       <div v-if="index == 0" class="h-full">
         <div

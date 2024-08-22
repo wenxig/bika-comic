@@ -19,13 +19,9 @@ document.title = '用户 | bika'
 if (isEmpty(app.user())) {
   const loading = createLoadingMessage()
   watch(() => app.user(), async user => {
-    if (user) {
-      loading.success()
-    }
+    if (user) loading.success()
   }, { immediate: true })
-  onUnmounted(() => {
-    loading.destroy()
-  })
+  onUnmounted(() => loading.destroy())
 }
 
 const $message = useMessage()

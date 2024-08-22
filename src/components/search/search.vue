@@ -14,6 +14,7 @@ import { SearchInstance } from 'vant'
 import SubscribeButton from '@/components/subscribe/sButton.vue'
 import { modeMap, useSearchMode } from '@/utils/translater'
 import { useZIndex } from '@/utils/layout'
+import SearchTag from './searchTag.vue'
 const $props = defineProps<{
   baseText?: string
   baseMode?: SearchMode
@@ -142,21 +143,7 @@ const [zIndex] = useZIndex(isShowSearchPop)
       <template #left-icon>
         <div class="inline-flex items-center justify-center h-full translate-y-[1]">
           <VanIcon name="search" size="1.2rem" />
-          <VanTag type="primary" v-if="searchMode != 'keyword'">
-            <VanIcon :name="searchMode == 'anthor' ? 'user-o' :
-              searchMode == 'tag' ? 'apps-o' :
-                searchMode == 'categories' ? 'apps-o' :
-                  searchMode == 'translater' ? 'user-o' :
-                    searchMode == 'uploader' ? 'user-o' :
-                      searchMode == 'id' ? 'description-o' : ''" size="0.8rem" />
-            {{ searchMode == 'anthor' ? '作者' :
-              searchMode == 'tag' ? '标签' :
-                searchMode == 'categories' ? '分类' :
-                  searchMode == 'translater' ? '汉化' :
-                    searchMode == 'uploader' ? '骑士' :
-                      searchMode == 'id' ? 'ID' : ''
-            }}
-          </VanTag>
+          <SearchTag :text="searchText" />
         </div>
       </template>
       <template #left>

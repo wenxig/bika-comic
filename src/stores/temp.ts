@@ -26,3 +26,8 @@ export const userPageScroll = {
   comment: 0
 }
 export const isShowSetupPage = shallowRef(false)
+
+export const brushComic = {
+  comicID: '',
+  page: 0
+}
