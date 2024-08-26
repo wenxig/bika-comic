@@ -13,7 +13,7 @@ const listScroll = useScroll(list, { behavior: 'smooth' })
 const showBackToBottom = shallowRef(false)
 const scrollToBottom = () => listScroll.y.value = (list.value?.scrollHeight ?? Infinity) + 8
 watch(() => listScroll.arrivedState.bottom, v => v && (showBackToBottom.value = false))
-watch($props, () => {
+watch(() => $props.messages, () => {
   if (listScroll.y.value == 0 || (list.value!.scrollHeight - listScroll.y.value < 1000)) scrollToBottom()
   else {
     console.log('not in bottom, do not scroll')

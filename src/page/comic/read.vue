@@ -2,7 +2,7 @@
 import { getComicPages, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { toNumber, clone, isEmpty, remove } from 'lodash-es'
+import { toNumber, clone, isEmpty, remove, isNumber } from 'lodash-es'
 import { useAppStore } from '@/stores'
 import { useTitle, reactiveComputed } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
@@ -30,13 +30,13 @@ const comicView = shallowRef<InstanceType<typeof ComicView>>()
 
 // 历史记录
 const createHistory = () => {
-  if (comicStore.comic.comic) return new WatchHistory([epId.toString(), comicStore.comic.comic, Number($route.hash.substring(1)) - 1, new Date().getTime()])
+  if (comicStore.comic.comic) return new WatchHistory([epId.toString(), comicStore.comic.comic, (comicView.value?.index ?? 0) - 1, new Date().getTime()])
   throw new Error('comic is not have value!!!')
 }
 const saveHistory = () => comicStore.comic.comic && patchWatchHitory({ [comicId]: createHistory() }).catch(() => window.$message.error('历史记录同步失败'))
 watch(() => comicView.value?.index, page => {
-  if (page || page == 0) {
-    if (comicStore.comic.comic) app.readHistory[comicId] = createHistory()
+  if (isNumber(page)) {
+    if (comicStore.comic.comic) console.log('history: ', app.readHistory[comicId] = createHistory())
   }
 }, { immediate: true })
 onBeforeRouteLeave((t, f) => { if (t.fullPath != f.fullPath) saveHistory() })
@@ -99,9 +99,9 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
 
 <template>
   <ComicView :images :comic-title="comicStore.comic.comic ? comicStore.comic.comic.title : ''" :startPosition="page"
-    :ep-title="epInfo?.title" ref="comicView" @back="$router.back()"
-    @add-favourt-image="(src, time) => comic && app.favourtImages.value.push(new FavourtImage({ src, time, comic }))"
-    @remove-favourt-image="src => remove(app.favourtImages.value, { src })" @last-ep="toLastEp" @next-ep="toNextEp">
+    :ep-title="epInfo?.title" ref="comicView" @back="$router.back()" v-if="!isEmpty(images)"
+    @add-favourt-image="(src, time) => comic && app.favourtImages.push(new FavourtImage({ src, time, comic }))"
+    @remove-favourt-image="src => remove(app.favourtImages, { src })" @last-ep="toLastEp" @next-ep="toNextEp">
     <template #menu="{ MenuButton }">
       <component :is="MenuButton" icon="list-switch" @click="epSelectShow = true">
         章节

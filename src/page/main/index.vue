@@ -39,9 +39,9 @@ const newDateString = dayjs().format("YYYY-MM-DD")
   <VanTabbar class="fixed bottom-0 transition-[opacity] opacity-100 w-full" :model-value="name"
     @change="v => $router.force.replace(`/main/${v}`)">
     <van-tabbar-item name="home" icon="home-o">主页</van-tabbar-item>
-    <van-tabbar-item name="subscribe" icon="eye-o" v-if="config.value['bika.plusPlan']"
-      :dot="!isEmpty(getComics()) && (config.value['bika.subscribe.updateTime'] != newDateString)"
-      @click="config.value['bika.subscribe.updateTime'] = newDateString">关注</van-tabbar-item>
+    <van-tabbar-item name="subscribe" icon="eye-o" v-if="config['bika.plusPlan']"
+      :dot="!isEmpty(getComics()) && (config['bika.subscribe.updateTime'] != newDateString)"
+      @click="config['bika.subscribe.updateTime'] = newDateString">关注</van-tabbar-item>
     <van-tabbar-item name="chat" icon="chat-o">泡泡</van-tabbar-item>
     <van-tabbar-item name="user" icon="user-o">我的</van-tabbar-item>
   </VanTabbar>

@@ -22,7 +22,7 @@ const $props = withDefaults(defineProps<{
 }>(), {
   moreSetting: [] as any,
   show: true,
-  startPosition: 0
+  startPosition: NaN
 })
 const $route = useRoute()
 const showMenu = shallowRef(false)
@@ -61,11 +61,15 @@ const MenuButton: FunctionalComponent<{ baseIcon?: string, icon?: string, primar
   </div >
 )
 window.$api.swiper = swiper
-onMounted(() => {
-  if (!$props.startPosition) return
-  const to = () => swiper.value?.slideTo($props.startPosition, 0)
-  if (!to()) var iv = setInterval(() => to() && clearInterval(iv), 100)
-})
+const initialSlide = isNaN($props.startPosition) ? 0 : $props.startPosition
+console.log(`initialSlide:`, initialSlide)
+const onInit = async () => {
+  const id = setInterval(async () => {
+    swiper.value?.slideTo(initialSlide, 0)
+    console.log('init', initialSlide)
+    if (page.value == initialSlide) clearInterval(id)
+  }, 0)
+}
 defineExpose({
   index: page,
   toIndex(index: number) {
@@ -78,19 +82,23 @@ watch(() => config.value, () => {
 }, { flush: 'post' })
 
 const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
+const scale = shallowRef(1)
+watch(() => scale.value != 1, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
+
 </script>
 
 <template>
   <Teleport to="#comic-views">
-    <Swiper :modules="[Virtual, Zoom, HashNavigation]" @swiper="sw => swiper = sw"
-      :slidesPerView="config.value['bika.read.twoImage'] ? 2 : 1" @slideChange="sw => page = sw.activeIndex"
-      class="w-[100vw] h-[100vh] !fixed !top-0 bg-black" virtual zoom
-      :direction="config.value['bika.read.vertical'] ? 'vertical' : 'horizontal'"
-      :hashNavigation="{ replaceState: true, watchState: true }" :dir="config.value['bika.read.rtl'] ? 'rtl' : 'ltr'">
+    <Swiper :modules="[Virtual, Zoom, HashNavigation]" @swiper="sw => swiper = sw" :initialSlide
+      :slidesPerView="config['bika.read.twoImage'] ? 2 : 1" @slideChange="sw => page = sw.activeIndex"
+      class="w-[100vw] h-[100vh] !fixed !top-0 bg-black" virtual zoom @init="onInit"
+      :direction="config['bika.read.vertical'] ? 'vertical' : 'horizontal'" :hashNavigation="{ replaceState: true }"
+      :dir="config['bika.read.rtl'] ? 'rtl' : 'ltr'" @zoomChange="(_sw, sc) => { scale = sc }">
       <SwiperSlide v-for="(src, index) of images" :key="index" :virtualIndex="index" :data-hash="index + 1"
         class="overflow-hidden">
         <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full swiper-zoom-container">
           <template #loading>
+
             <LoaingMask :index="index + 1" />
           </template>
           <template #fail>
@@ -155,7 +163,7 @@ const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
       <div class="h-4 w-auto items-center flex flex-nowrap use-bg text-white absolute bottom-0 px-1 left-0 text-xs"
         @click.stop="app.showDevPupop = true">
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"
-          class="w-3 block text-white" v-if="config.value['bika.devMode']">
+          class="w-3 block text-white" v-if="config['bika.devMode']">
           <path d="M31 16l-7 7l-1.41-1.41L28.17 16l-5.58-5.59L24 9l7 7z" fill="currentColor"></path>
           <path d="M1 16l7-7l1.41 1.41L3.83 16l5.58 5.59L8 23l-7-7z" fill="currentColor"></path>
           <path d="M12.419 25.484L17.639 6l1.932.518L14.35 26z" fill="currentColor"></path>
@@ -169,28 +177,28 @@ const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
   <Popup v-model:show="settingShow" class="h-1/2" position="bottom" round>
     <van-cell-group>
       <div class="van-cell van-haptics-feedback" @click="() => {
-        app.favourtImages.value.find(v => v.src == images[page])
+        app.favourtImages.find(v => v.src == images[page])
           ? $emit('removeFavourtImage', images[page])
           : $emit('addFavourtImage', images[page], Date.now())
       }">
-        <van-icon :name="app.favourtImages.value.find(v => v.src == images[page]) ? 'minus' : 'plus'"
+        <van-icon :name="app.favourtImages.find(v => v.src == images[page]) ? 'minus' : 'plus'"
           class="van-cell__left-icon" />
-        {{ app.favourtImages.value.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
+        {{ app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
       </div>
       <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
       <van-cell center title="垂直阅读">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.vertical']" />
+          <van-switch v-model="config['bika.read.vertical']" />
         </template>
       </van-cell>
       <van-cell center title="单页显示两张">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.twoImage']" />
+          <van-switch v-model="config['bika.read.twoImage']" />
         </template>
       </van-cell>
       <van-cell center title="反向阅读">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.rtl']" disabled />
+          <van-switch v-model="config['bika.read.rtl']" disabled />
         </template>
       </van-cell>
       <VanCell title="更多" icon="more-o" clickable @click="floatPopup?.show()"></VanCell>
@@ -199,7 +207,7 @@ const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
   <FloatPopup overlay anchors="high" ref="floatPopup">
     <SettingPage hideNavbar />
   </FloatPopup>
-  <template v-for="index in config.value['bika.read.preloadIamgeNumbers']">
+  <template v-for="index in config['bika.read.preloadIamgeNumbers']">
     <Image :use-list="imageStore" :src="images[page - index]" v-if="images[page - index]" class="hidden" />
     <Image :use-list="imageStore" :src="images[page + index]" v-if="images[page + index]" class="hidden" />
   </template>

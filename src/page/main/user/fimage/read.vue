@@ -15,10 +15,10 @@ const app = useAppStore()
 </script>
 
 <template>
-  <ComicView show :images="app.favourtImages.value.map(v => v.src)" comic-title="图片收藏" ref="comicView"
+  <ComicView show :images="app.favourtImages.map(v => v.src)" comic-title="图片收藏" ref="comicView"
     @remove-favourt-image="src => {
-      remove(app.favourtImages.value, { src })
-      if (app.favourtImages.value.length == 0) $router.force.replace('/user/image')
+      remove(app.favourtImages, { src })
+      if (app.favourtImages.length == 0) $router.force.replace('/user/image')
     }" @back="$router.back()" :startPosition>
   </ComicView>
 </template>

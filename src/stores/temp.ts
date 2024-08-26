@@ -1,6 +1,6 @@
-import { type ChildrenCommentsStream, type ComicStream, type CommentsStream, type ProComic, type ProPlusComic, type RandomComicStream } from "@/api"
+import { type ChildrenCommentsStream, type ComicStream, type CommentsStream, type Ep, type Page, type ProComic, type ProPlusComic, type ProPlusMaxComic, type RandomComicStream } from "@/api"
 import { GameStream, } from "@/api/game"
-import { shallowRef } from "vue"
+import { reactive, shallowRef } from "vue"
 export const searchResult = new Map<string, ComicStream<ProPlusComic | ProComic>>()
 export const searchListScroolPosition = new Map<string, number>()
 
@@ -28,6 +28,11 @@ export const userPageScroll = {
 export const isShowSetupPage = shallowRef(false)
 
 export const brushComic = {
-  comicID: '',
+  comicIndex: 0,
   page: 0
 }
+
+export const preloadEps = reactive(new Map<string, Promise<Ep[]>>())
+export const preloadPages = reactive(new Map<string, Promise<Page[]>>())
+export const preloaInfo = reactive(new Map<string, Promise<ProPlusMaxComic | false>>())
+export const preloadLikes = reactive(new Map<string, Promise<ProComic[]>>())

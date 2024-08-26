@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadTheme()
 })
 const stop = new SmartAbortController()
-watch(config, ({ value: config }, { value: oldConfig }) => {
+watch(config, (config, oldConfig) => {
   console.log('change config')
   if (isSetup) return
   if (config['bika.plusPlan']) {
@@ -70,7 +70,7 @@ watch(config, ({ value: config }, { value: oldConfig }) => {
   }
   if (config['bika.darkMode'] != oldConfig['bika.darkMode']) loadTheme()
   localStorage.setItem(symbol.config, JSON.stringify(config))
-})
+}, { deep: true })
 const ifr = shallowRef<HTMLIFrameElement>()
 provide(symbol.iframeEl, ifr)
 </script>
@@ -96,5 +96,4 @@ provide(symbol.iframeEl, ifr)
   </Popup>
   <VanImagePreview :show="false" v-once />
   <Dev />
-  <!-- <iframe src="/apihelper" ref="ifr" hidden></iframe> -->
 </template>

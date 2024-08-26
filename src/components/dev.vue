@@ -31,7 +31,7 @@ if (!import.meta.env.DEV) watch(() => config.value['bika.devMode'], devMode => {
 </script>
 
 <template>
-  <template v-if="config.value['bika.devMode']">
+  <template v-if="config['bika.devMode']">
     <VanFloatingBubble axis="xy" v-if="!$route.path.includes('/read')" id="dev-button" @click="app.showDevPupop = true"
       style="z-index: 114514;color: #fff;">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"

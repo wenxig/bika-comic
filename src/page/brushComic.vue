@@ -5,15 +5,17 @@ import 'swiper/css/virtual'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Pagination, Keyboard } from 'swiper/modules'
 import 'swiper/css/pagination'
-import { computed, nextTick, onMounted, reactive, shallowRef, watch } from 'vue'
-import { brushComic, random } from '@/stores/temp'
-import { Ep, getComicEps, getComicInfo, getComicLikeOthers, getComicPages, Page, ProComic, ProPlusMaxComic, RandomComicStream } from '@/api'
+import { computed, nextTick, reactive, shallowRef, watch } from 'vue'
+import { brushComic, preloadEps, preloadLikes, preloadPages, preloaInfo, random } from '@/stores/temp'
+import { getComicEps, getComicInfo, getComicLikeOthers, getComicPages, ProPlusMaxComic, RandomComicStream } from '@/api'
 import BrushView from '@/components/comic/brush/brushView.vue'
 import { createLoadingMessage, type LoadingInstance } from '@/utils/message'
 import CommentVue from '@/components/comment/comment.vue'
 import FloatPopup from '@/components/floatPopup.vue'
-import { findLastIndex, isEmpty } from 'lodash-es'
+import { findLastIndex } from 'lodash-es'
 import Await from '@/components/await.vue'
+import { onBeforeRouteLeave } from 'vue-router'
+document.title = '刷漫画 | bika'
 const swiper = shallowRef<SwiperClass>()
 const stream = random.stream ??= new RandomComicStream()
 stream.next()
@@ -36,10 +38,6 @@ watch(stream.isRequesting, isRequesting => {
   }
 })
 
-const preloadEps = reactive(new Map<string, Promise<Ep[]>>())
-const preloadPages = reactive(new Map<string, Promise<Page[]>>())
-const preloaInfo = reactive(new Map<string, Promise<ProPlusMaxComic | false>>())
-const preloadLikes = reactive(new Map<string, Promise<ProComic[]>>())
 watch(() => [index.value, stream.docs.value] as const, ([index, docs]) => {
   for (const comic of docs.slice(index, index + 3)) {
     if (!preloadEps.has(comic._id)) preloadEps.set(comic._id, getComicEps(comic._id))
@@ -72,13 +70,16 @@ const showComicInfo = (info: Promise<ProPlusMaxComic | false>) => {
 }
 
 
-onMounted(() => {
-  if (isEmpty(brushComic.comicID)) return
-  const index = findLastIndex(random.stream?.docs.value ?? [], { _id: brushComic.comicID })
-  if (!index) return
-  const to = () => swiper.value?.slideTo(index - 1, 0)
-  if (!to()) var iv = setInterval(() => to() && clearInterval(iv), 100)
-})
+const initialSlide = brushComic.comicIndex
+const onInit = async () => {
+  setTimeout(async () => {
+    do {
+      swiper.value?.slideTo(initialSlide, 0)
+      console.log('init', initialSlide)
+    } while (index.value != initialSlide)
+  }, 0)
+}
+onBeforeRouteLeave(() => void (brushComic.comicIndex = index.value))
 
 const isShowSubAn = shallowRef(false)
 const ans = shallowRef<string[]>()
@@ -86,20 +87,20 @@ const showSubAnBar = (an: string[]) => {
   isShowSubAn.value = true
   ans.value = an
 }
-
-
+const instanceOfView = reactive<Record<string, InstanceType<typeof BrushView>>>({})
+watch(() => instanceOfView[activeComic.value?._id ?? '']?.isScale, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
 </script>
 
 <template>
   <!-- need pull reloader -->
-  <Swiper :modules="[Virtual, Pagination, Keyboard]" @swiper="sw => swiper = sw"
-    @slideChange="sw => index = sw.realIndex" class="w-full h-full bg-black relative" virtual direction="vertical"
+  <Swiper :modules="[Virtual, Pagination, Keyboard]" @swiper="sw => swiper = sw" @init="onInit"
+    @slideChange="sw => index = sw.activeIndex" class="w-full h-full bg-black relative" virtual direction="vertical"
     keyboard>
     <SwiperSlide v-for="(comic, index) of stream.docs.value" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full" :data-history="comic._id">
       <BrushView :comic :eps="preloadEps.get(comic._id)" :firstPages="preloadPages.get(comic._id)" @sub="showSubAnBar"
         @comment="comment?.show()" :info="preloaInfo.get(comic._id)" @send-comment="sendCommnetShow"
-        @info="showComicInfo" />
+        @info="showComicInfo" :ref="(comp: any) => instanceOfView[comic._id] = comp" />
     </SwiperSlide>
     <div class="absolute top-0 left-0 w-full h-10 z-[2] pointer-events-none flex items-center">
       <VanIcon name="arrow-left" size="1.5rem" color="white" class="ml-2 pointer-events-auto" @click="$router.back()" />

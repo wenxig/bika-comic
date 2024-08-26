@@ -16,6 +16,7 @@ import { brushComic } from '@/stores/temp'
 import { useAppStore } from '@/stores'
 import { patchSubscribe, removeSubscribe } from '@/api/plusPlan'
 import { createLoadingMessage } from '@/utils/message'
+import { onMountedOrActivated } from '@vant/use'
 const $props = defineProps<{
   comic: ProComic
   eps?: Promise<Ep[]>
@@ -62,15 +63,8 @@ const toComicPage = async (url: string) => {
   else comicStore.$setupPreload($props.comic)
   return $router.force.push(url)
 }
-onBeforeRouteLeave(() => {
-  brushComic.comicID = $props.comic._id
-  brushComic.page = index.value
-})
-
-onMounted(() => {
-  const to = () => swiper.value?.slideTo(brushComic.page, 0)
-  if (!to()) var iv = setInterval(() => to() && clearInterval(iv), 100)
-})
+onBeforeRouteLeave(() => void (brushComic.page = index.value))
+const initialSlide = brushComic.page
 const app = useAppStore()
 const isChangingSb = shallowRef(false)
 const sb = async () => {
@@ -90,6 +84,12 @@ const sb = async () => {
     }]))
   }
 }
+const scale = shallowRef(1)
+const isScale = computed(() => scale.value != 1)
+watch(isScale, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
+defineExpose({
+  isScale
+})
 </script>
 
 <template>
@@ -98,8 +98,9 @@ const sb = async () => {
   <NSpin show v-else-if="isEmpty(pages)" class="!w-full !h-full *:!w-full *:!h-full swiper-zoom-container">
     <Image infiniteRetry fit="contain" :use-list="imageStore" :src="comic.thumb" class="w-full h-full" />
   </NSpin>
-  <Swiper :modules="[Virtual, Zoom, Keyboard]" @swiper="sw => { swiper = sw; index = sw.realIndex }" virtual zoom
-    keyboard @slideChange="sw => selectPage = index = sw.realIndex" v-else
+  <Swiper :modules="[Virtual, Zoom, Keyboard]" :initialSlide
+    @swiper="sw => { swiper = sw; index = sw.activeIndex; scale = sw.zoom.scale }" virtual zoom keyboard
+    @slideChange="sw => selectPage = index = sw.activeIndex" v-else @zoomChange="(_sw, sc) => { scale = sc }"
     class="w-full h-full !relative !top-0 bg-black">
     <SwiperSlide v-for="({ media: src }, index) of pages" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full">
@@ -116,6 +117,40 @@ const sb = async () => {
 
   <div class="absolute top-0 left-0 !text-white w-full h-full z-[2] pointer-events-none"
     style="--footer-height:50px;--aside-width:40px">
+    <div class="absolute left-0 bottom-0 w-full h-[--footer-height] flex flex-col bg-black bg-opacity-30">
+      <!-- footer -->
+      <VanSlider v-model="selectPage" @change="v => (index != v) && swiper?.slideTo(v, 0)" :min="0"
+        :max="((pages.length - 1) > 0) ? (pages.length - 1) : selectPage + 1"
+        @drag-start="showSliderButtonNumber = true" @drag-end="showSliderButtonNumber = false"
+        active-color="rgba(255,255,255,0.7)" inactive-color="rgba(120,120,120,0.7)" class="!w-[calc(100%-1rem)] !mx-2">
+        <template #button>
+          <button
+            class="flex justify-center relative border-none items-center size-3 rounded-full bg-[--van-background-2] shadow-md pointer-events-auto opacity-70 transition-[transform,width,height] force:opacity-100 active:size-6">
+            <div v-if="showSliderButtonNumber"
+              class="slider-button-number w-6 absolute text-center p-[2px] z-[200000] bottom-[34px] rounded-lg text-white h-5 before:content-[''] bg-black before:bg-black before:absolute before:left-1/2 before:bottom-0 before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:w-2 before:h-2">
+              {{ selectPage + 1 }}
+            </div>
+          </button>
+        </template>
+      </VanSlider>
+      <VanRow class="w-full h-full">
+        <VanCol span="1"></VanCol>
+        <VanCol span="17" class="!h-full !flex items-center">
+          <div @click="$emit('sendComment')"
+            class="bg-white text-gray-400 pointer-events-auto bg-opacity-30 w-full h-[65%] rounded-full px-2 flex items-center !text-xs van-ellipsis">
+            写下你的留言吧...
+          </div>
+        </VanCol>
+        <VanCol span="3" class="!h-full !flex items-center justify-center pointer-events-auto"
+          @click="toComicPage(`/comic/${comic._id}/info`)">
+          <VanIcon name="info-o" size="calc(var(--footer-height)/2)" />
+        </VanCol>
+        <VanCol span="3" class="!h-full !flex items-center justify-center pointer-events-auto"
+          @click="toComicPage(`/comic/${comic._id}/read/1#${index + 1}`)">
+          <VanIcon name="enlarge" size="calc(var(--footer-height)/2)" />
+        </VanCol>
+      </VanRow>
+    </div>
     <div
       class="absolute right-0 bottom-[--footer-height] w-[--aside-width] h-80 flex justify-end items-center flex-col *:pointer-events-auto *:flex *:flex-col *:items-center *:justify-center">
       <!-- aside -->
@@ -161,39 +196,9 @@ const sb = async () => {
         </div>
       </NThing>
     </div>
-    <div class="absolute left-0 bottom-0 w-full h-[--footer-height] flex flex-col">
-      <!-- footer -->
-      <VanSlider v-model="selectPage" @change="v => (index != v) && swiper?.slideTo(v, 0)" :min="0"
-        :max="((pages.length - 1) > 0) ? (pages.length - 1) : selectPage + 1"
-        @drag-start="showSliderButtonNumber = true" @drag-end="showSliderButtonNumber = false"
-        active-color="rgba(255,255,255,0.7)" inactive-color="rgba(120,120,120,0.7)" class="!w-[calc(100%-1rem)] !mx-2">
-        <template #button>
-          <button
-            class="flex justify-center relative border-none items-center size-3 rounded-full bg-[--van-background-2] shadow-md pointer-events-auto opacity-70 transition-[transform,width,height] force:opacity-100 active:size-6">
-            <div v-if="showSliderButtonNumber"
-              class="slider-button-number w-6 absolute text-center p-[2px] z-[200000] bottom-[34px] rounded-lg text-white h-5 before:content-[''] bg-black before:bg-black before:absolute before:left-1/2 before:bottom-0 before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:w-2 before:h-2">
-              {{ selectPage + 1 }}
-            </div>
-          </button>
-        </template>
-      </VanSlider>
-      <VanRow class="w-full h-full">
-        <VanCol span="1"></VanCol>
-        <VanCol span="17" class="!h-full !flex items-center">
-          <div @click="$emit('sendComment')"
-            class="bg-white text-gray-400 pointer-events-auto bg-opacity-30 w-full h-[65%] rounded-full px-2 flex items-center !text-xs van-ellipsis">
-            写下你的留言吧...
-          </div>
-        </VanCol>
-        <VanCol span="3" class="!h-full !flex items-center justify-center pointer-events-auto"
-          @click="toComicPage(`/comic/${comic._id}/info`)">
-          <VanIcon name="info-o" size="calc(var(--footer-height)/2)" />
-        </VanCol>
-        <VanCol span="3" class="!h-full !flex items-center justify-center pointer-events-auto"
-          @click="toComicPage(`/comic/${comic._id}/read/1#${index + 1}`)">
-          <VanIcon name="enlarge" size="calc(var(--footer-height)/2)" />
-        </VanCol>
-      </VanRow>
+    <div class="absolute w-full h-5 bottom-[--footer-height]"
+      style="background: linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0.3));">
+      <!-- effect -->
     </div>
   </div>
 

@@ -71,7 +71,7 @@ const quitLogin = () => {
     <VanCellGroup title="系统设置">
       <van-cell center title="深色模式">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.darkMode']" />
+          <van-switch v-model="config['bika.darkMode']" />
         </template>
       </van-cell>
       <van-cell title="重载serviceWorker" clickable @click="reloadServiceWorker"
@@ -84,7 +84,7 @@ const quitLogin = () => {
       </VanCell>
       <van-cell center title="开发者模式">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.devMode']" />
+          <van-switch v-model="config['bika.devMode']" />
         </template>
       </van-cell>
     </VanCellGroup>
@@ -92,49 +92,49 @@ const quitLogin = () => {
       <van-cell center title="展示AI作品">
         <span class="mr-1">不一定完全过滤</span>
         <template #right-icon>
-          <van-switch v-model="config.value['bika.search.showAIProject']" />
+          <van-switch v-model="config['bika.search.showAIProject']" />
         </template>
       </van-cell>
       <van-cell title="搜索排序" clickable
-        @click="sorter?.show()">{{ sorterValue.find(v => v.value == config.value['bika.search.sort'])?.text }}</van-cell>
+        @click="sorter?.show()">{{ sorterValue.find(v => v.value == config['bika.search.sort'])?.text }}</van-cell>
     </VanCellGroup>
     <VanCellGroup title="观看设置">
       <van-cell center title="漫画选择反向排序">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.info.unsortComic']" />
+          <van-switch v-model="config['bika.info.unsortComic']" />
         </template>
       </van-cell>
       <van-cell center title="阅读时全屏">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.watchFullscreen']" />
+          <van-switch v-model="config['bika.read.watchFullscreen']" />
         </template>
       </van-cell>
       <van-cell center title="垂直阅读">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.vertical']" />
+          <van-switch v-model="config['bika.read.vertical']" />
         </template>
       </van-cell>
       <van-cell center title="单页显示两张">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.twoImage']" />
+          <van-switch v-model="config['bika.read.twoImage']" />
         </template>
       </van-cell>
       <van-cell center title="反向阅读">
         <template #right-icon>
-          <van-switch v-model="config.value['bika.read.rtl']" disabled />
+          <van-switch v-model="config['bika.read.rtl']" disabled />
         </template>
       </van-cell>
       <VanCell clickable @click.stop="showSetPreloadImageNumbers = true" title="图片预加载数量">
-        {{ config.value['bika.read.preloadIamgeNumbers'] }}
+        {{ config['bika.read.preloadIamgeNumbers'] }}
       </VanCell>
     </VanCellGroup>
     <VanCellGroup title="分流设置">
       <van-cell title="接口分流" clickable
-        @click="showInterfaceProxySelect = true">{{ new Url(config.value['bika.proxy.interface']).host }}</van-cell>
+        @click="showInterfaceProxySelect = true">{{ new Url(config['bika.proxy.interface']).host }}</van-cell>
       <van-cell title="图片分流" clickable
-        @click="showImageProxySelect = true">{{ new Url(config.value['bika.proxy.image']).host }}</van-cell>
+        @click="showImageProxySelect = true">{{ new Url(config['bika.proxy.image']).host }}</van-cell>
       <van-cell title="订阅分流" clickable
-        @click="showDbProxySelect = true">{{ new Url(config.value['bika.proxy.db']).host }}</van-cell>
+        @click="showDbProxySelect = true">{{ new Url(config['bika.proxy.db']).host }}</van-cell>
     </VanCellGroup>
     <VanCellGroup title="关于">
       <VanCell title="版本">{{ version }}</VanCell>
@@ -145,23 +145,23 @@ const quitLogin = () => {
   <Popup v-model:show="showImageProxySelect" round position="bottom">
     <van-picker :columns="allProxies.image.map(v => ({ text: new Url(v).host, value: v }))"
       @cancel="showImageProxySelect = false"
-      @confirm="(v) => { config.value['bika.proxy.image'] = v.selectedValues[0]; showImageProxySelect = false }"
+      @confirm="(v) => { config['bika.proxy.image'] = v.selectedValues[0]; showImageProxySelect = false }"
       v-model="_ImageProxy" />
   </Popup>
   <Popup v-model:show="showInterfaceProxySelect" round position="bottom">
     <van-picker :columns="allProxies.interface.map(v => ({ text: new Url(v).host, value: v }))"
       @cancel="showInterfaceProxySelect = false"
-      @confirm="(v) => { config.value['bika.proxy.interface'] = v.selectedValues[0]; showInterfaceProxySelect = false }"
+      @confirm="(v) => { config['bika.proxy.interface'] = v.selectedValues[0]; showInterfaceProxySelect = false }"
       v-model="_InterfaceProxy" />
   </Popup>
   <Popup v-model:show="showDbProxySelect" round position="bottom">
     <van-picker :columns="allProxies.db.map(v => ({ text: new Url(v).host, value: v }))"
       @cancel="showDbProxySelect = false"
-      @confirm="(v) => { config.value['bika.proxy.db'] = v.selectedValues[0]; showDbProxySelect = false }"
+      @confirm="(v) => { config['bika.proxy.db'] = v.selectedValues[0]; showDbProxySelect = false }"
       v-model="_DbProxy" />
   </Popup>
   <Sorter ref="sorter" @reload="searchResult.clear()" />
-  <VanNumberKeyboard :model-value="config.value['bika.read.preloadIamgeNumbers'].toString()"
-    @update:model-value="value => config.value['bika.read.preloadIamgeNumbers'] = Number(value)"
+  <VanNumberKeyboard :model-value="config['bika.read.preloadIamgeNumbers'].toString()"
+    @update:model-value="value => config['bika.read.preloadIamgeNumbers'] = Number(value)"
     :show="showSetPreloadImageNumbers" @blur="showSetPreloadImageNumbers = false" />
 </template>

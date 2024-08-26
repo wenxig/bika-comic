@@ -1,4 +1,4 @@
-import { computed, reactive } from "vue"
+import { computed, ref } from "vue"
 import proxyData from '@/api/proxy.json'
 import { defaultsDeep } from "lodash-es"
 import { useFullscreen, usePreferredDark } from "@vueuse/core"
@@ -33,7 +33,7 @@ export const baseConfig = {
   'bika.darkMode': false,
   'bika.game.search.fillerTags': new Array<FillerTag>()
 }
-const config = reactive({ value: defaultsDeep(JSON.parse(localStorage.getItem(symbol.config) ?? '{}'), baseConfig) as typeof baseConfig })
+const config = ref<typeof baseConfig>(defaultsDeep(JSON.parse(localStorage.getItem(symbol.config) ?? '{}'), baseConfig))
 
 const isSystemDark = usePreferredDark()
 export const isDark = computed(() => config.value['bika.darkMode'] || isSystemDark.value)

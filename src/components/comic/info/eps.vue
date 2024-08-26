@@ -20,7 +20,7 @@ const eps = computed(() => config.value['bika.info.unsortComic'] ? $props.eps.to
     <template v-if="!isEmpty(eps)">
       <div class="w-full text-sm text-[--van-text-color-2] pl-2">
         <div class="h-5 flex items-center"
-          @click="config.value['bika.info.unsortComic'] = !config.value['bika.info.unsortComic']">
+          @click="config['bika.info.unsortComic'] = !config['bika.info.unsortComic']">
           反向排序<van-icon name="exchange" /></div>
       </div>
       <VanButton type="primary" plain class="!h-auto !min-h-[--van-button-default-height] w-[calc(25vw-8px)] !m-1"

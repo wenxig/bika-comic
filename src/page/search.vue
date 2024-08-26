@@ -122,16 +122,16 @@ const toSearchInHideMode = async () => {
     <div class="van-hairline--bottom h-8 w-full relative items-center bg-[--van-background-2] flex *:!text-nowrap">
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center" @click="showfifler = true">
         <van-icon name="filter-o" size="1.5rem"
-          :badge="config.value['bika.search.fillerTags'].filter(v => v.mode != 'auto').length || undefined" />过滤
+          :badge="config['bika.search.fillerTags'].filter(v => v.mode != 'auto').length || undefined" />过滤
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center" @click="sorter?.show()">
         <van-icon name="sort" size="1.5rem" class="sort-icon" />排序
         <span class="text-[--p-color] text-xs">-{{
-          sorterValue.find(v => v.value == config.value['bika.search.sort'])?.text
+          sorterValue.find(v => v.value == config['bika.search.sort'])?.text
         }}</span>
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center">
-        <VanSwitch v-model="config.value['bika.search.showAIProject']" size="1rem" />展示AI作品
+        <VanSwitch v-model="config['bika.search.showAIProject']" size="1rem" />展示AI作品
       </div>
       <VanIcon name="search" class="absolute top-1/2 duration-200 transition-transform right-0 -translate-y-1/2"
         :class="[showSearch ? 'translate-x-full' : '-translate-x-2']" size="25px" color="var(--van-text-color-2)"

@@ -20,7 +20,7 @@ const resyncSaveImages = () => new Promise<FavourtImage[]>((ok, fail) => {
     sac.abort()
     app.$reload.favourtImages({ signal: sac.signal })
       .then(() => {
-        ok(<FavourtImage[]>app.favourtImages.value)
+        ok(<FavourtImage[]>app.favourtImages)
       }).catch((err) => {
         fail(err)
       }).finally(() => {
@@ -28,7 +28,7 @@ const resyncSaveImages = () => new Promise<FavourtImage[]>((ok, fail) => {
       })
   } else {
     isRefreshing.value = false
-    ok(<FavourtImage[]>app.favourtImages.value)
+    ok(<FavourtImage[]>app.favourtImages)
   }
 })
 onBeforeRouteLeave(() => sac.abort())
@@ -46,12 +46,12 @@ const comicStore = useComicStore()
 <template>
   <VanNavBar title="图片收藏" left-text="返回" left-arrow @click-left="$router.back()" />
   <div class="w-full h-10 van-hairline--bottom items-center bg-[--van-background-2] flex"
-    v-if="app.favourtImages.value[0]">
+    v-if="app.favourtImages[0]">
     <div class="text-[--van-text-color-2] ml-2 van-haptics-feedback" @click="$router.force.push('/user/image/read')">
       开始阅读</div>
   </div>
   <List :is-requesting="isRefreshing" reloadable @reload="then => resyncSaveImages().then(then)"
-    class="h-[calc(100%-2.5rem-46px)]" :data="isRefreshing ? [] : app.favourtImages.value" :item-height="140"
+    class="h-[calc(100%-2.5rem-46px)]" :data="isRefreshing ? [] : app.favourtImages" :item-height="140"
     v-slot="{ height, data: { item, index } }" ref="list">
     <van-swipe-cell class="w-full relative" style="--van-checkbox-duration: 0s;" :style="{ height: `${height}px` }">
       <ComicCard :comic="item.comic" :height :when-click="() => $router.force.push(`/user/image/read#${index}`)"
@@ -64,7 +64,7 @@ const comicStore = useComicStore()
         <van-button square text="前往原漫画" type="primary" class="h-full"
           @click="comicStore.$setupPreload(item.comic); $router.force.push(`/comic/${item.comic._id}/info`)" />
         <van-button square text="删除" type="danger" class="h-full"
-          @click=" remove(app.favourtImages.value, { src: item.src })" />
+          @click=" remove(app.favourtImages, { src: item.src })" />
       </template>
     </van-swipe-cell>
   </List>

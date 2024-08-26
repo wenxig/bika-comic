@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getProfile } from '@/api'
 import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
-import { markRaw, reactive, shallowRef, watch } from 'vue'
+import { markRaw, reactive, ref, shallowRef, watch } from 'vue'
 import { getSearchHitory, getWatchHitory, getSubscribe, type Subscribe, isInPlusPlan, getFavourtImages, putFavourtImages, WatchHistory } from '@/api/plusPlan'
 import { SmartAbortController } from '@/utils/requset'
 import type { AxiosRequestConfig } from 'axios'
@@ -107,15 +107,15 @@ export const useAppStore = defineStore('app', () => {
   })
   const $reloadLevelBoard = async (c: AxiosRequestConfig = {}) => levelBoard.value = await getLevelboard(c)
 
-  const favourtImages = reactive<{ value: FavourtImage[] }>({ value: [] })
+  const favourtImages = ref<FavourtImage[]>([])
   const favourtIamgesSac = new SmartAbortController()
   let isFavourtImagesSetup = false
   watch(favourtImages, v => {
     console.log('change favourt images')
     if (!isFavourtImagesSetup) return isFavourtImagesSetup = true
     favourtIamgesSac.abort()
-    putFavourtImages(<FavourtImage[]>v.value, { signal: favourtIamgesSac.signal })
-  })
+    putFavourtImages(<FavourtImage[]>v, { signal: favourtIamgesSac.signal })
+  }, { deep: true })
   const $reloadFavourtIamges = (c: AxiosRequestConfig = {}) => getFavourtImages(c).then(v => v && (favourtImages.value = v))
 
 
