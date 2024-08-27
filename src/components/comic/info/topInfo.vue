@@ -42,9 +42,9 @@ const app = useAppStore()
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
         </template>
-        <div class="text-[--van-primary-color] *:text-nowrap">
+        <div class="text-[--van-primary-color] *:text-nowrap flex flex-wrap">
           <span>作者：</span>
-          <span v-for="author of spiltAnthors(comic?.author)" class="inline mr-2 van-haptics-feedback underline"
+          <span v-for="author of spiltAnthors(comic?.author)" class="mr-2 van-haptics-feedback underline"
             @click="comic && $router.force[mode](`/search?keyword=${author}&mode=anthor`)">{{ author }}</span>
         </div>
       </VanSkeleton>

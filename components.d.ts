@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AnthorSp: typeof import('./src/components/comic/anthorSp.vue')['default']
     Await: typeof import('./src/components/await.vue')['default']
     BrushView: typeof import('./src/components/comic/brush/brushView.vue')['default']
     Card: typeof import('./src/components/subscribe/card.vue')['default']
@@ -91,5 +92,6 @@ declare module 'vue' {
     VanTabbarItem: typeof import('vant/es')['TabbarItem']
     VanTabs: typeof import('vant/es')['Tabs']
     VanTag: typeof import('vant/es')['Tag']
+    Var: typeof import('./src/components/var.vue')['default']
   }
 }

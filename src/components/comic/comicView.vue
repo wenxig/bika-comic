@@ -87,7 +87,7 @@ watch(() => config.value, () => {
 
 const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
 const scale = shallowRef(1)
-watch(() => scale.value != 1, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
+// watch(() => scale.value != 1, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
 
 </script>
 
