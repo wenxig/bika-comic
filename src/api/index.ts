@@ -717,6 +717,7 @@ export class Page {
 type Pages = Result<RawPage>
 export const getComicPage = async (id: string, index: number, page: number, config: AxiosRequestConfig = {}) => (await api.get<RawData<{ pages: Pages }>>(`/comics/${id}/order/${index}/pages?page=${page}`, config)).data.data.pages
 const comicsPagesDB = localforage.createInstance({ name: 'comic-page' })
+export const clearComicPagesTemp = () => comicsPagesDB.clear()
 await comicsPagesDB.ready()
 const comicPageRequesting = new Map<string, Promise<Page[]>>()
 export const getComicPages = async (id: string, index: number, config: AxiosRequestConfig = {}) => {

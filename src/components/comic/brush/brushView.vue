@@ -6,7 +6,7 @@ import 'swiper/css/virtual'
 import 'swiper/css/zoom'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Zoom, Keyboard } from 'swiper/modules'
-import { computed, FunctionalComponent, onMounted, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, FunctionalComponent, reactive, ref, shallowRef, watch } from 'vue'
 import { isEmpty } from 'lodash-es'
 import { toReactive } from '@vueuse/core'
 import symbol from '@/symbol'
@@ -16,12 +16,15 @@ import { brushComic } from '@/stores/temp'
 import { useAppStore } from '@/stores'
 import { patchSubscribe, removeSubscribe } from '@/api/plusPlan'
 import { createLoadingMessage } from '@/utils/message'
-import { onMountedOrActivated } from '@vant/use'
+const swEl = shallowRef<InstanceType<typeof Swiper>>()
+const swiper = computed<SwiperClass | undefined>(() => swEl.value?.$el?.swiper)
+const index = computed(() => swiper.value?.realIndex || 0)
 const $props = defineProps<{
   comic: ProComic
   eps?: Promise<Ep[]>
   info?: Promise<ProPlusMaxComic | false>
   firstPages?: Promise<Page[]>
+  showCover?:boolean
 }>()
 const $router = useRouter()
 defineEmits<{
@@ -30,8 +33,6 @@ defineEmits<{
   sub: [authors: string[]]
   info: [info: Promise<ProPlusMaxComic | false>]
 }>()
-const swiper = shallowRef<SwiperClass>()
-
 const selectEp = shallowRef(1)
 
 const firstPages = shallowRef<Page[]>([])
@@ -53,8 +54,8 @@ const imageStore = reactive({
 })
 const comicReactive = toReactive($props.comic)
 const authors = computed(() => $props.comic.author.split(symbol.splitAuthorRegexp))
-const index = shallowRef(0)
-const selectPage = shallowRef(0)
+const selectPage = shallowRef(index.value)
+watch(index, index => selectPage.value = index)
 const showSliderButtonNumber = shallowRef(false)
 
 const comicStore = useComicStore()
@@ -84,8 +85,7 @@ const sb = async () => {
     }]))
   }
 }
-const scale = shallowRef(1)
-const isScale = computed(() => scale.value != 1)
+const isScale = computed(() => swiper.value?.zoom.scale != 1)
 watch(isScale, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
 defineExpose({
   isScale
@@ -95,12 +95,10 @@ defineExpose({
 <template>
   <NResult status="error" title="错误" description="审核中" v-if="info == false"
     class="!w-full !h-full bg-black !text-white !flex !flex-col !items-center !justify-center" />
-  <NSpin show v-else-if="isEmpty(pages)" class="!w-full !h-full *:!w-full *:!h-full swiper-zoom-container">
+  <NSpin show v-else-if="isEmpty(pages) || showCover" class="!w-full !h-full *:!w-full *:!h-full swiper-zoom-container">
     <Image infiniteRetry fit="contain" :use-list="imageStore" :src="comic.thumb" class="w-full h-full" />
   </NSpin>
-  <Swiper :modules="[Virtual, Zoom, Keyboard]" :initialSlide
-    @swiper="sw => { swiper = sw; index = sw.activeIndex; scale = sw.zoom.scale }" virtual zoom keyboard
-    @slideChange="sw => selectPage = index = sw.activeIndex" v-else @zoomChange="(_sw, sc) => { scale = sc }"
+  <Swiper :modules="[Virtual, Zoom, Keyboard]" :initialSlide virtual zoom keyboard v-else ref="swEl"
     class="w-full h-full !relative !top-0 bg-black">
     <SwiperSlide v-for="({ media: src }, index) of pages" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full">

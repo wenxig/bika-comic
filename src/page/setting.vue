@@ -11,6 +11,9 @@ import Popup from '@/components/popup.vue'
 import { NScrollbar } from 'naive-ui'
 import { version } from '../../package.json'
 import { onBeforeRouteLeave } from 'vue-router'
+import localforage from 'localforage'
+import { clearChatDb } from '@/api/chat'
+import { clearComicPagesTemp } from '@/api'
 const $window = window
 
 document.body.classList.add('setting-page')
@@ -27,7 +30,12 @@ const clearDb = () => (createDialog({
 }).then(async () => {
   localStorage.clear()
   document.cookie = ''
-  await Promise.all((await caches.keys()).map(key => caches.delete(key)))
+  await Promise.all([
+    ...(await caches.keys()).map(key => caches.delete(key)),
+    clearChatDb(),
+    localforage.clear(),
+    clearComicPagesTemp()
+  ])
   location.reload()
 }))
 
@@ -139,7 +147,6 @@ const quitLogin = () => {
     <VanCellGroup title="关于">
       <VanCell title="版本">{{ version }}</VanCell>
     </VanCellGroup>
-
   </NScrollbar>
 
   <Popup v-model:show="showImageProxySelect" round position="bottom">

@@ -63,8 +63,12 @@ const MenuButton: FunctionalComponent<{ baseIcon?: string, icon?: string, primar
 window.$api.swiper = swiper
 const initialSlide = isNaN($props.startPosition) ? 0 : $props.startPosition
 console.log(`initialSlide:`, initialSlide)
+let initTimes = 0
 const onInit = async () => {
+  if (!initialSlide) return
   const id = setInterval(async () => {
+    initTimes++
+    if (initTimes > 10) return clearInterval(id)
     swiper.value?.slideTo(initialSlide, 0)
     console.log('init', initialSlide)
     if (page.value == initialSlide) clearInterval(id)

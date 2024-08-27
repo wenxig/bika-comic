@@ -13,7 +13,7 @@ import type { UserSex } from "."
 import { shallowReactive, shallowRef, watch, type Ref } from "vue"
 const chatToken = useLocalStorage(symbol.chatToken, '')
 const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
-const chat = (() => {
+const chat = window.$api.chat = (() => {
   const chat = axios.create({
     baseURL: import.meta.env.DEV ? 'http://localhost:8787/chat' : 'https://bika.wenxig.workers.dev/chat',
     timeout: 20000,
@@ -158,6 +158,7 @@ export class Room implements RawRoom {
   }
 }
 const chatDB = localforage.createInstance({ name: 'chat' })
+export const clearChatDb = () => chatDB.clear()
 export const getChatRooms = async (config: AxiosRequestConfig = {}) => {
   let roomsTemp = await chatDB.getItem<GetRoomRes>(symbol.chatRoomTemp)
   if (!roomsTemp)
@@ -706,3 +707,9 @@ const createChatMessageData = (msg: RawChatMessageData): ChatMessageData => {
     }
   }
 }
+
+interface Blocked {
+
+}
+export const blockList = shallowRef<Blocked[]>([])
+export const getBlockList = (ofs = 0) => chat.get(`/blacklist/list?offset=${ofs}`)

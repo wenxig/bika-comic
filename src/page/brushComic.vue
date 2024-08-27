@@ -5,21 +5,21 @@ import 'swiper/css/virtual'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Pagination, Keyboard } from 'swiper/modules'
 import 'swiper/css/pagination'
-import { computed, nextTick, reactive, shallowRef, watch } from 'vue'
+import { computed, nextTick, reactive, ref, shallowRef, watch } from 'vue'
 import { brushComic, preloadEps, preloadLikes, preloadPages, preloaInfo, random } from '@/stores/temp'
 import { getComicEps, getComicInfo, getComicLikeOthers, getComicPages, ProPlusMaxComic, RandomComicStream } from '@/api'
 import BrushView from '@/components/comic/brush/brushView.vue'
 import { createLoadingMessage, type LoadingInstance } from '@/utils/message'
 import CommentVue from '@/components/comment/comment.vue'
 import FloatPopup from '@/components/floatPopup.vue'
-import { findLastIndex } from 'lodash-es'
 import Await from '@/components/await.vue'
 import { onBeforeRouteLeave } from 'vue-router'
 document.title = '刷漫画 | bika'
-const swiper = shallowRef<SwiperClass>()
+const swEl = shallowRef<InstanceType<typeof Swiper>>()
+const swiper = computed<SwiperClass | undefined>(() => swEl.value?.$el?.swiper)
+const index = computed(() => swiper.value?.realIndex || 0)
 const stream = random.stream ??= new RandomComicStream()
 stream.next()
-const index = shallowRef(0)
 let loading = {} as Partial<LoadingInstance>
 watch(index, index => {
   // preload comics data
@@ -89,21 +89,33 @@ const showSubAnBar = (an: string[]) => {
 }
 const instanceOfView = reactive<Record<string, InstanceType<typeof BrushView>>>({})
 watch(() => instanceOfView[activeComic.value?._id ?? '']?.isScale, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
+
+
+const isSliding = shallowRef(false)
+
+const onSlideChangeStart = () => {
+  // isSliding.value = true
+}
+
+const onSlideChangeEnd = () => {
+  // isSliding.value = false
+}
 </script>
 
 <template>
   <!-- need pull reloader -->
-  <Swiper :modules="[Virtual, Pagination, Keyboard]" @swiper="sw => swiper = sw" @init="onInit"
-    @slideChange="sw => index = sw.activeIndex" class="w-full h-full bg-black relative" virtual direction="vertical"
-    keyboard>
+  <Swiper :modules="[Virtual, Pagination, Keyboard]" @init="onInit" ref="swEl" class="w-full h-full bg-black relative"
+    virtual direction="vertical" keyboard @slideChangeTransitionStart="onSlideChangeStart"
+    @slideChangeTransitionEnd="onSlideChangeEnd">
     <SwiperSlide v-for="(comic, index) of stream.docs.value" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full" :data-history="comic._id">
       <BrushView :comic :eps="preloadEps.get(comic._id)" :firstPages="preloadPages.get(comic._id)" @sub="showSubAnBar"
         @comment="comment?.show()" :info="preloaInfo.get(comic._id)" @send-comment="sendCommnetShow"
         @info="showComicInfo" :ref="(comp: any) => instanceOfView[comic._id] = comp" />
     </SwiperSlide>
-    <div class="absolute top-0 left-0 w-full h-10 z-[2] pointer-events-none flex items-center">
+    <div class="absolute top-0 left-0 w-full h-10 z-[2] pointer-events-none flex items-center text-white">
       <VanIcon name="arrow-left" size="1.5rem" color="white" class="ml-2 pointer-events-auto" @click="$router.back()" />
+      <!-- {{ `realIndex: ${swiper?.realIndex} | snapIndex: ${swiper?.snapIndex} | activeIndex: ${swiper?.activeIndex} | clickedIndex: ${swiper?.clickedIndex} | previousIndex: ${swiper?.previousIndex} | animating: ${swiper?.animating}` }} -->
     </div>
   </Swiper>
 
@@ -114,7 +126,7 @@ watch(() => instanceOfView[activeComic.value?._id ?? '']?.isScale, isScale => is
 
   <!-- 关于 -->
   <Popup v-model:show="isShowComicInfo" position="bottom" round @closed="comicInfo = undefined"
-    class="w-full max-h-[70vh] pb-2 overflow-x-hidden overflow-y-auto">
+    class="w-full max-h-[70vh] !h-[calc(auto)] pb-2 overflow-x-hidden overflow-y-auto transition-[height]">
     <template v-if="comicInfo">
       <VanTabs v-if="(comicInfo[0] instanceof ProPlusMaxComic)" animated>
         <VanTab title="简介">

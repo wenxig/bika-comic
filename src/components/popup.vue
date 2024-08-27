@@ -2,13 +2,14 @@
 import { useZIndex } from '@/utils/layout'
 import { noop } from 'lodash-es'
 import { PopupProps } from 'vant'
-import { computed } from 'vue'
+import { computed, StyleValue } from 'vue'
 import { shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 const $router = useRouter()
 const $props = withDefaults(defineProps<Partial<PopupProps & {
   noBorder?: boolean,
   useTurlyShow: boolean
+  style?:StyleValue
 }>>(), {
   position: 'center',
   noBorder: false
@@ -47,7 +48,7 @@ defineExpose({
 <template>
   <VanPopup :duration :position :round :closeable v-model:show="show" :z-index teleport="#popups"
     @open="turlyShow = true" @closed="() => { turlyShow = false; $emit('closed') }"
-    class="max-h-[100vh] !overflow-y-auto overflow-hidden"
+    class="max-h-[100vh] !overflow-y-auto overflow-hidden" :style
     :class="!noBorder && 'border-0 border-t border-solid border-[--van-border-color]'">
     <slot v-if="turlyShow"></slot>
   </VanPopup>
