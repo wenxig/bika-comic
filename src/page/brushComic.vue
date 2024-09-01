@@ -14,6 +14,7 @@ import CommentVue from '@/components/comment/comment.vue'
 import FloatPopup from '@/components/floatPopup.vue'
 import Await from '@/components/await.vue'
 import { onBeforeRouteLeave } from 'vue-router'
+import { noop } from 'lodash-es'
 document.title = '刷漫画 | bika'
 const swEl = shallowRef<InstanceType<typeof Swiper>>()
 const swiper = computed<SwiperClass | undefined>(() => swEl.value?.$el?.swiper)
@@ -21,6 +22,18 @@ const index = computed(() => swiper.value?.realIndex || 0)
 const stream = random.stream ??= new RandomComicStream()
 stream.next()
 let loading = {} as Partial<LoadingInstance>
+
+let noDataLoadingStoper: VoidFunction | void
+const stopNoDataWatcher = watch(stream.docs, docs => {
+  if (docs.length == 0 && !noDataLoadingStoper) noDataLoadingStoper = createLoadingMessage().success
+  else {
+    noDataLoadingStoper?.()
+    try {
+      stopNoDataWatcher()
+    } catch { }
+  }
+}, { immediate: true })
+
 watch(index, index => {
   // preload comics data
   if (!stream.isRequesting.value && stream.docs.value.length - index < 3) { stream.next() }
@@ -88,18 +101,20 @@ const showSubAnBar = (an: string[]) => {
   ans.value = an
 }
 const instanceOfView = reactive<Record<string, InstanceType<typeof BrushView>>>({})
-watch(() => instanceOfView[activeComic.value?._id ?? '']?.isScale, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
 
+const showMenu = shallowRef(true)
+watch(() => [showMenu.value, instanceOfView[activeComic.value?._id ?? '']?.isScale] as const, ([showMenu, isScale]) => {
+  console.log('can enable swiper', showMenu && !isScale)
+
+  if (showMenu && !isScale) swiper.value?.enable()
+  else swiper.value?.disable()
+})
 
 const isSliding = shallowRef(false)
+const onSlideChangeStart = () => isSliding.value = true
+const onSlideChangeEnd = () => isSliding.value = false
 
-const onSlideChangeStart = () => {
-  // isSliding.value = true
-}
-
-const onSlideChangeEnd = () => {
-  // isSliding.value = false
-}
+window.$api.swiper = swiper
 </script>
 
 <template>
@@ -110,12 +125,12 @@ const onSlideChangeEnd = () => {
     <SwiperSlide v-for="(comic, index) of stream.docs.value" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full" :data-history="comic._id">
       <BrushView :comic :eps="preloadEps.get(comic._id)" :firstPages="preloadPages.get(comic._id)" @sub="showSubAnBar"
-        @comment="comment?.show()" :info="preloaInfo.get(comic._id)" @send-comment="sendCommnetShow"
-        @info="showComicInfo" :ref="(comp: any) => instanceOfView[comic._id] = comp" />
+        @comment="comment?.show()" :info="preloaInfo.get(comic._id)" @send-comment="sendCommnetShow" :showMenu
+        @info="showComicInfo" :ref="(comp: any) => instanceOfView[comic._id] = comp" @dbclick="activeComic.like()"
+        @click="isSliding || swiper?.animating || (showMenu = !showMenu)" />
     </SwiperSlide>
     <div class="absolute top-0 left-0 w-full h-10 z-[2] pointer-events-none flex items-center text-white">
       <VanIcon name="arrow-left" size="1.5rem" color="white" class="ml-2 pointer-events-auto" @click="$router.back()" />
-      <!-- {{ `realIndex: ${swiper?.realIndex} | snapIndex: ${swiper?.snapIndex} | activeIndex: ${swiper?.activeIndex} | clickedIndex: ${swiper?.clickedIndex} | previousIndex: ${swiper?.previousIndex} | animating: ${swiper?.animating}` }} -->
     </div>
   </Swiper>
 
@@ -126,7 +141,7 @@ const onSlideChangeEnd = () => {
 
   <!-- 关于 -->
   <Popup v-model:show="isShowComicInfo" position="bottom" round @closed="comicInfo = undefined"
-    class="w-full max-h-[70vh] !h-[calc(auto)] pb-2 overflow-x-hidden overflow-y-auto transition-[height]">
+    class="w-full h-[60vh] pb-2 overflow-x-hidden overflow-y-auto">
     <template v-if="comicInfo">
       <VanTabs v-if="(comicInfo[0] instanceof ProPlusMaxComic)" animated>
         <VanTab title="简介">

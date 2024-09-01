@@ -95,14 +95,13 @@ const scale = shallowRef(1)
   <Teleport to="#comic-views">
     <Swiper :modules="[Virtual, Zoom, HashNavigation]" @swiper="sw => swiper = sw" :initialSlide
       :slidesPerView="config['bika.read.twoImage'] ? 2 : 1" @slideChange="sw => page = sw.activeIndex"
-      class="w-[100vw] h-[100vh] !fixed !top-0 bg-black" virtual zoom @init="onInit"
+      class="w-[100vw] h-[100vh] !fixed !top-0 bg-black" virtual @init="onInit" :zoom="{ maxRatio: Infinity }"
       :direction="config['bika.read.vertical'] ? 'vertical' : 'horizontal'" :hashNavigation="{ replaceState: true }"
       :dir="config['bika.read.rtl'] ? 'rtl' : 'ltr'" @zoomChange="(_sw, sc) => { scale = sc }">
       <SwiperSlide v-for="(src, index) of images" :key="index" :virtualIndex="index" :data-hash="index + 1"
         class="overflow-hidden">
         <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full swiper-zoom-container">
           <template #loading>
-
             <LoaingMask :index="index + 1" />
           </template>
           <template #fail>

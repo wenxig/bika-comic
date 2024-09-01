@@ -1,4 +1,4 @@
-<script setup lang='tsx'>
+<script setup lang='ts'>
 import { Ep, Page, ProComic, ProPlusMaxComic } from '@/api'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import 'swiper/css'
@@ -6,9 +6,9 @@ import 'swiper/css/virtual'
 import 'swiper/css/zoom'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Zoom, Keyboard } from 'swiper/modules'
-import { computed, FunctionalComponent, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { isEmpty } from 'lodash-es'
-import { toReactive } from '@vueuse/core'
+import { toReactive, useTimeoutFn } from '@vueuse/core'
 import symbol from '@/symbol'
 import { useComicStore } from '@/stores/comic'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
@@ -19,19 +19,24 @@ import { createLoadingMessage } from '@/utils/message'
 const swEl = shallowRef<InstanceType<typeof Swiper>>()
 const swiper = computed<SwiperClass | undefined>(() => swEl.value?.$el?.swiper)
 const index = computed(() => swiper.value?.realIndex || 0)
-const $props = defineProps<{
+const $props = withDefaults(defineProps<{
   comic: ProComic
   eps?: Promise<Ep[]>
   info?: Promise<ProPlusMaxComic | false>
   firstPages?: Promise<Page[]>
-  showCover?:boolean
-}>()
+  showCover?: boolean
+  showMenu?: boolean
+}>(), {
+  showMenu: true
+})
 const $router = useRouter()
-defineEmits<{
+const $emit = defineEmits<{
   comment: []
   sendComment: []
   sub: [authors: string[]]
   info: [info: Promise<ProPlusMaxComic | false>]
+  click: []
+  dbclick: []
 }>()
 const selectEp = shallowRef(1)
 
@@ -46,7 +51,6 @@ const info = ref<ProPlusMaxComic | false>()
 watch(() => $props.info, v => v?.then(v => info.value = v), { immediate: true })
 
 const pages = computed(() => selectEp.value - 1 ? otherPages.value : firstPages.value)
-const LoaingMask: FunctionalComponent<{ index: number }> = ({ index }) => (<div class="w-[100vw] h-[100vh] text-center flex justify-center items-center"><span class="text-3xl text-white">{index}</span></div>)
 
 const imageStore = reactive({
   loaded: new Set<string>(),
@@ -87,6 +91,20 @@ const sb = async () => {
 }
 const isScale = computed(() => swiper.value?.zoom.scale != 1)
 watch(isScale, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
+
+const clickTimeout = useTimeoutFn(() => {
+  // c
+  $emit('click')
+}, 100, { immediate: false })
+const handleDbClick = () => {
+  clickTimeout.stop()
+  // dbc
+  $emit('dbclick')
+}
+const handleClick = () => {
+  clickTimeout.stop()
+  clickTimeout.start()
+}
 defineExpose({
   isScale
 })
@@ -98,22 +116,27 @@ defineExpose({
   <NSpin show v-else-if="isEmpty(pages) || showCover" class="!w-full !h-full *:!w-full *:!h-full swiper-zoom-container">
     <Image infiniteRetry fit="contain" :use-list="imageStore" :src="comic.thumb" class="w-full h-full" />
   </NSpin>
-  <Swiper :modules="[Virtual, Zoom, Keyboard]" :initialSlide virtual zoom keyboard v-else ref="swEl"
+  <Swiper :modules="[Virtual, Zoom, Keyboard]" :initialSlide virtual :zoom="{ maxRatio: Infinity, toggle: false }"
+    @double-click="handleDbClick" keyboard v-else ref="swEl" @click="handleClick"
     class="w-full h-full !relative !top-0 bg-black">
     <SwiperSlide v-for="({ media: src }, index) of pages" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full">
       <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full swiper-zoom-container">
         <template #loading>
-          <LoaingMask :index="index + 1" />
+          <div class="w-[100vw] h-[100vh] text-center flex justify-center items-center">
+            <span class="text-3xl text-white">{{ index + 1 }}</span>
+          </div>
         </template>
         <template #fail>
-          <LoaingMask :index="index + 1" />
+          <div class="w-[100vw] h-[100vh] text-center flex justify-center items-center">
+            <span class="text-3xl text-white">{{ index + 1 }}</span>
+          </div>
         </template>
       </Image>
     </SwiperSlide>
   </Swiper>
 
-  <div class="absolute top-0 left-0 !text-white w-full h-full z-[2] pointer-events-none"
+  <div class="absolute top-0 left-0 !text-white w-full h-full z-[2] pointer-events-none" v-if="showMenu"
     style="--footer-height:50px;--aside-width:40px">
     <div class="absolute left-0 bottom-0 w-full h-[--footer-height] flex flex-col bg-black bg-opacity-30">
       <!-- footer -->
