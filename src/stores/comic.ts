@@ -1,13 +1,17 @@
 import { defineStore } from 'pinia'
-import { type ProComic, type ProPlusComic, type ProPlusMaxComic, type getComicLikeOthers, type getComicEps } from '@/api'
+import { getComicEps, getComicLikeOthers, type ProComic, type ProPlusComic, type ProPlusMaxComic, type Ep, getComicInfo } from '@/api'
 import { ref } from 'vue'
 import { last } from 'lodash-es'
+import { createStateContentData, useStateContent, type UseStateContent } from '@/utils/requset'
 
-export type ComicPreload = {
+export interface ComicPreload {
   comic?: ProPlusMaxComic | false
   preload?: ProComic | ProPlusComic | ProPlusMaxComic
+  infoStateContent?: UseStateContent<this['comic']>
   likeComic?: Awaited<ReturnType<typeof getComicLikeOthers>>
-  eps: Awaited<ReturnType<typeof getComicEps>>
+  likeComicStateContent?: UseStateContent<this['likeComic']>
+  eps: Awaited<ReturnType<typeof getComicEps>>,
+  epsStateContent?: UseStateContent<this['eps']>
 }
 
 export const useComicStore = defineStore('comic', () => {
@@ -61,7 +65,8 @@ export const useComicStore = defineStore('comic', () => {
           comic: false,
           preload: {} as any,
           eps: [],
-          likeComic: undefined
+          likeComic: undefined,
+          infoStateContent: createStateContentData(false, false, false, true)
         })
         return
       }
@@ -73,7 +78,8 @@ export const useComicStore = defineStore('comic', () => {
           comic: v,
           preload: v,
           eps: old?.eps.id == v._id ? old?.eps : [],
-          likeComic: old?.likeComic?.id == v._id ? old?.likeComic : undefined
+          likeComic: old?.likeComic?.id == v._id ? old?.likeComic : undefined,
+          infoStateContent: createStateContentData(v, false, false, false)
         })
       }
     }
@@ -86,6 +92,20 @@ export const useComicStore = defineStore('comic', () => {
     return comic.value.comic
   }
   const $load = (v: ComicPreload) => comic.value = v
-
-  return { lastsComics, $clear, comic, $setupPreload, $setupComic, $getLatest, $setComic, $load }
+  const $retryEps = () => {
+    if (comic.value.preload?._id) {
+      comic.value.epsStateContent = useStateContent(getComicEps(comic.value.preload?._id).then(eps => comic.value.eps = eps))
+    }
+  }
+  const $retryLike = () => {
+    if (comic.value.preload?._id) {
+      comic.value.likeComicStateContent = useStateContent(getComicLikeOthers(comic.value.preload?._id).then(like => comic.value.likeComic = like))
+    }
+  }
+  const $retryInfo = () => {
+    if (comic.value.preload?._id) {
+      comic.value.epsStateContent = useStateContent(getComicInfo(comic.value.preload?._id).then(info => $setComic(info)))
+    }
+  }
+  return { lastsComics, $clear, comic, $setupPreload, $setupComic, $getLatest, $setComic, $load, $retryInfo, $retryLike, $retryEps }
 })

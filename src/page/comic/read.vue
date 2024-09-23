@@ -141,7 +141,8 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
   <!-- 章节选择 -->
   <Popup v-model:show="epSelectShow" class="max-h-[70%] min-h-[30%] pt-5 overflow-hidden overflow-y-auto" round
     position="bottom" closeable>
-    <Eps :eps="comicStore.comic.eps" :id="comicStore.comic.preload?._id ?? ''" :now="epId" mode="replace" />
+    <Eps :eps="comicStore.comic.eps" :state="comicStore.comic.epsStateContent" :id="comicStore.comic.preload?._id ?? ''"
+      :now="epId" mode="replace" />
   </Popup>
 
   <!-- 评论 -->
@@ -159,6 +160,6 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
   <!-- 推荐 -->
   <Popup v-model:show="showComicLike" position="right" round
     class="w-[90vw] max-h-[70vh] pb-2 overflow-x-hidden overflow-y-auto">
-    <Likes :likes="comicStore.comic.likeComic" mode="replace" />
+    <Likes :likes="comicStore.comic.likeComic" mode="replace" :state="comicStore.comic.likeComicStateContent" />
   </Popup>
 </template>

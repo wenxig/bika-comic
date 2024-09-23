@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouteLocationRaw, isNavigationFail
 import { isEmpty, noop } from "lodash-es"
 import { getComicEps, getComicInfo, getComicLikeOthers, } from '@/api'
 import { useComicStore } from "@/stores/comic"
-import { SmartAbortController } from "@/utils/requset"
+import { SmartAbortController, useStateContent } from "@/utils/requset"
 import { AxiosError, isCancel } from "axios"
 import { useGameStore } from "@/stores/game"
 import { getGameInfo } from "@/api/game"
@@ -169,10 +169,10 @@ router.beforeEach(async (to, from) => {
     const id = to.params.id.toString()
     if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.lastsComics.get(id) ? comicStore.$load(comicStore.lastsComics.get(id)!) : comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
     if (comicStore.comic.preload?._id != id) comicStore.$clear()
-    if (isEmpty(comicStore.comic.comic)) getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)).catch(noop)
+    if (isEmpty(comicStore.comic.comic)) comicStore.comic.infoStateContent = useStateContent(getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)))
     if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
-    if (isEmpty(comicStore.comic.eps)) getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps).catch(noop)
-    if (isEmpty(comicStore.comic.likeComic)) getComicLikeOthers(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes).catch(noop)
+    if (isEmpty(comicStore.comic.eps)) comicStore.comic.epsStateContent = useStateContent(getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps))
+    if (isEmpty(comicStore.comic.likeComic)) comicStore.comic.likeComicStateContent = useStateContent(getComicLikeOthers(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes), v => v[0] == undefined)
   } catch (error) {
     console.error(error)
     if (!isCancel(error)) throw error

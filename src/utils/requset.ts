@@ -92,7 +92,8 @@ export type StateContentData<T> = {
   data?: T
 }
 
-export const useState = <T extends Promise<any>>(promise: T, _isEmpty: (v: Awaited<T>) => boolean = isEmpty): ShallowReactive<StateContentData<Awaited<T>>> => {
+export type UseStateContent<T> = ShallowReactive<StateContentData<Awaited<T>>>
+export const useStateContent = <T extends Promise<any>>(promise: T, _isEmpty: (v: Awaited<T>) => boolean = isEmpty): UseStateContent<T> => {
   const v = shallowReactive<StateContentData<Awaited<T>>>({
     isError: false,
     isEmpty: false,
@@ -113,11 +114,11 @@ export const useState = <T extends Promise<any>>(promise: T, _isEmpty: (v: Await
   return v
 }
 
-export const createStateContentData = <T>(data: T, isEmpty = true, isError = false): StateContentData<T> => ({
+export const createStateContentData = <T>(data: T, isLoading = false, isEmpty = true, isError = false): StateContentData<T> => ({
   isError,
   isEmpty,
-  isLoading: false,
+  isLoading,
   data
 })
 
-export const coverFunctionToStateContentData = <T extends (...arg: any[]) => Promise<any>>(fn: T): (...arg: [...args: Parameters<T>, _isEmpty?: (v: any) => boolean]) => StateContentData<Awaited<ReturnType<T>>> => (...arg) => useState(fn(...arg))
+export const coverFunctionToStateContentData = <T extends (...arg: any[]) => Promise<any>>(fn: T, _isEmpty?: (v: Awaited<ReturnType<T>>) => boolean): (...args: Parameters<T>) => StateContentData<Awaited<ReturnType<T>>> => (...arg) => useStateContent(fn(...arg))

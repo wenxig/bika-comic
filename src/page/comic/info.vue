@@ -66,8 +66,8 @@ onBeforeRouteLeave(stopPreloadWatch)
       </VanCol>
     </VanRow>
     <Uploader :comic />
-    <Eps :id="preload?._id ?? ''" :eps="comicStore.comic.eps" />
-    <Likes :likes="comicStore.comic.likeComic" />
+    <Eps :id="preload?._id ?? ''" :state="comicStore.comic.epsStateContent" :eps="comicStore.comic.eps" />
+    <Likes :likes="comicStore.comic.likeComic" :state="comicStore.comic.likeComicStateContent" />
   </template>
   <NResult status="error" title="错误" description="审核中" v-else class="mb-1">
     <template #footer>

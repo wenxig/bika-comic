@@ -1,6 +1,6 @@
 {
   "name": "bika-comic",
-  "version": "4.1.1",
+  "version": "4.1.1+",
   "license": "LGPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
@@ -26,7 +26,7 @@
     "pinia": "latest",
     "swiper": "^11.1.9",
     "vant": "latest",
-    "vue": "^3.4.38",
+    "vue": "^3.5.8",
     "vue-json-pretty": "latest",
     "vue-picture-cropper": "latest",
     "vue-router": "latest"
@@ -49,9 +49,9 @@
     "sass": "latest",
     "tailwindcss": "latest",
     "terser": "latest",
-    "typescript": "^5.5.4",
+    "typescript": "^5.6.2",
     "unplugin-vue-components": "latest",
-    "vite": "^5.4.1",
+    "vite": "^5.4.7",
     "vite-plugin-pwa": "latest",
     "vue-component-type-helpers": "^2.0.29",
     "vue-tsc": "^2.0.26"
