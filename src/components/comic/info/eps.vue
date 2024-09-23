@@ -17,6 +17,9 @@ const eps = computed(() => config.value['bika.info.unsortComic'] ? $props.eps.to
 
 <template>
   <div class="w-full flex flex-wrap">
+    <StateContent >
+
+    </StateContent>
     <template v-if="!isEmpty(eps)">
       <div class="w-full text-sm text-[--van-text-color-2] pl-2">
         <div class="h-5 flex items-center"

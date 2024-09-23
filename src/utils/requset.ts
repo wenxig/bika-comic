@@ -1,10 +1,11 @@
 import { useAppStore } from "@/stores"
 import { reactiveComputed } from "@vueuse/core"
-import { flatten, uniqBy, } from "lodash-es"
+import { flatten, isEmpty, uniqBy, } from "lodash-es"
 import config from "@/config"
 import symbol from "@/symbol"
 import { HmacSHA256, enc } from "crypto-js"
 import mitt from "mitt"
+import { reactive, shallowReactive, type Reactive, type ShallowReactive } from "vue"
 export function getBikaApiHeaders(pathname: string, method: string) {
   type Headers = [name: string, value: string][]
   pathname = pathname.substring(1)
@@ -83,3 +84,40 @@ export const uuid = () => 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'.replace(/x/g, f
   const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8)
   return v.toString(16)
 })
+
+export type StateContentData<T> = {
+  isError?: boolean
+  isEmpty?: boolean
+  isLoading?: boolean
+  data?: T
+}
+
+export const useState = <T extends Promise<any>>(promise: T, _isEmpty: (v: Awaited<T>) => boolean = isEmpty): ShallowReactive<StateContentData<Awaited<T>>> => {
+  const v = shallowReactive<StateContentData<Awaited<T>>>({
+    isError: false,
+    isEmpty: false,
+    isLoading: true,
+    data: undefined
+  })
+  promise.then(val => {
+    v.data = val
+    v.isLoading = false
+    v.isError = false
+    v.isEmpty = _isEmpty(val)
+  }).catch(() => {
+    v.data = undefined
+    v.isLoading = false
+    v.isError = true
+    v.isEmpty = false
+  })
+  return v
+}
+
+export const createStateContentData = <T>(data: T, isEmpty = true, isError = false): StateContentData<T> => ({
+  isError,
+  isEmpty,
+  isLoading: false,
+  data
+})
+
+export const coverFunctionToStateContentData = <T extends (...arg: any[]) => Promise<any>>(fn: T): (...arg: [...args: Parameters<T>, _isEmpty?: (v: any) => boolean]) => StateContentData<Awaited<ReturnType<T>>> => (...arg) => useState(fn(...arg))

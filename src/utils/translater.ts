@@ -54,4 +54,4 @@ const translateMap: Record<string, string > = {
 }
 export const userCharactersTranslater = (character: string) => Object.hasOwn(translateMap, character) ? translateMap[character] : character
 
-export const spiltAnthors = (anthorsString = '') => anthorsString.split(symbol.splitAuthorRegexp).map(v => v.trim()).filter(Boolean)
+export const spiltAnthors = (anthorsString = '') => anthorsString.split(symbol.splitAuthorRegexp).filter(Boolean).map(v => v.trim()).filter(Boolean)
