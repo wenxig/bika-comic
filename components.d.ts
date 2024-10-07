@@ -47,6 +47,7 @@ declare module 'vue' {
     Search: typeof import('./src/components/search/search.vue')['default']
     SearchPop: typeof import('./src/components/search/searchPop.vue')['default']
     SearchTag: typeof import('./src/components/search/searchTag.vue')['default']
+    SmallWindow: typeof import('./src/components/comic/smallWindow.vue')['default']
     Sorter: typeof import('./src/components/search/sorter.vue')['default']
     StateContent: typeof import('./src/components/stateContent.vue')['default']
     Text: typeof import('./src/components/text.vue')['default']

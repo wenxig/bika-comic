@@ -197,6 +197,7 @@ router.beforeEach(async (to) => {
 })
 
 const $routerForceDo = async (mode: 'push' | 'replace', to: RouteLocationRaw) => { do var r = await router[mode](to); while (isNavigationFailure(r, NavigationFailureType.aborted)); return r }
+
 router.force = {
   push: to => $routerForceDo('push', to),
   replace: to => $routerForceDo('replace', to),

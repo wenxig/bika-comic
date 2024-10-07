@@ -31,7 +31,9 @@ export const baseConfig = {
   'bika.plusPlan': true,
   'bika.devMode': false,
   'bika.darkMode': false,
-  'bika.game.search.fillerTags': new Array<FillerTag>()
+  'bika.game.search.fillerTags': new Array<FillerTag>(),
+  'bika.smallWindow.enable': false,
+  'bika.smallWindow.openOnQuit': false,
 }
 const config = ref<typeof baseConfig>(defaultsDeep(JSON.parse(localStorage.getItem(symbol.config) ?? '{}'), baseConfig))
 

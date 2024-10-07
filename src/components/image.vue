@@ -2,10 +2,10 @@
 import { ImgHTMLAttributes, StyleValue, computed, nextTick, shallowRef, watch } from 'vue'
 import { ImageProps, NImage } from 'naive-ui'
 import { useImagesStore } from '@/stores/images'
-import { Image, showImagePreview } from '@/utils/image'
+import { Image, Image_, showImagePreview } from '@/utils/image'
 import { isString } from 'lodash-es'
 const $props = defineProps<{
-  src?: string | Image,
+  src?: Image_,
   previewable?: boolean
   infiniteRetry?: boolean
   round?: boolean
@@ -75,7 +75,7 @@ defineExpose({
     }" :src>
   </NImage>
   <div class="justify-center items-center" v-if="!images.loaded.has(src) && !images.error.has(src) && !hideLoading"
-    :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]" :style>
+    :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]" :style @click="$emit('click')">
     <slot name="loading" v-if="$slots.loading"></slot>
     <VanLoading v-else />
   </div>

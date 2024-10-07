@@ -1,28 +1,32 @@
-<script setup lang='tsx'>
+<script setup lang='ts'>
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import 'swiper/css'
 import 'swiper/css/virtual'
 import 'swiper/css/zoom'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Zoom, HashNavigation, } from 'swiper/modules'
-import { FunctionalComponent, onMounted, reactive, ReservedProps, shallowRef, watch } from 'vue'
+import { reactive, shallowRef, watch } from 'vue'
 import { inRange } from 'lodash-es'
 import config, { fullscreen } from '@/config'
-import { onBeforeRouteLeave, useRoute } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores'
 import SettingPage from '@/page/setting.vue'
 import { Icon as VanIcon } from 'vant'
 import FloatPopup from '@/components/floatPopup.vue'
+import { useSmallWindowContext } from '@/stores/smallWindow'
+import { Image_ } from '@/utils/image'
+import { LoaingMask, MenuButton } from './helper'
 const $props = withDefaults(defineProps<{
   images: string[],
   startPosition?: number,
   comicTitle?: string,
   epTitle?: string,
-  moreSetting?: {}[]
+  moreSetting?: {}[],
+  cover?: Image_
 }>(), {
   moreSetting: [] as any,
   show: true,
-  startPosition: NaN
+  startPosition: NaN,
 })
 const $route = useRoute()
 const showMenu = shallowRef(false)
@@ -31,7 +35,7 @@ const selectPage = shallowRef(Number($route.hash.substring(1)) - 1)
 const showSliderButtonNumber = shallowRef(false)
 const app = useAppStore()
 const swiper = shallowRef<SwiperClass>()
-defineEmits<{
+const $emit = defineEmits<{
   lastEp: []
   nextEp: []
   back: []
@@ -43,10 +47,8 @@ defineSlots<{
   left(arg: { width: string, MenuButton: typeof MenuButton }): any
   right(arg: { width: string, MenuButton: typeof MenuButton }): any
 }>()
-const page = shallowRef(selectPage.value)
+const page = shallowRef(selectPage.value || 0)
 watch(page, page => selectPage.value = page)
-const LoaingMask: FunctionalComponent<{ index: number }> = ({ index }) => (<div class="w-[100vw] h-[100vh] text-center flex justify-center items-center" > <span class="text-3xl text-white" > {index} </span></div >)
-
 const full = () => config.value['bika.read.watchFullscreen'] ? fullscreen.enter() : fullscreen.exit()
 fullscreen.isSupported.value && config.value['bika.read.watchFullscreen'] && full()
 onBeforeRouteLeave(() => fullscreen.isSupported.value && fullscreen.exit())
@@ -54,12 +56,6 @@ const imageStore = reactive({
   loaded: new Set<string>(),
   error: new Set<string>()
 })
-const MenuButton: FunctionalComponent<{ baseIcon?: string, icon?: string, primary?: boolean, size?: 'big' | 'small', width?: string | number } & ReservedProps, { click: [any] }, { default: any }> = ({ width = "auto", baseIcon, size = 'big', primary, icon, onClick, ...props }, ctx) => (
-  <div onClick={onClick} {...props} class="w-full flex justify-center items-center flex-col *:block" style={{ width, height: width }}>
-    <VanIcon size={size == 'big' ? '2rem' : '1rem'} name={baseIcon ? (primary ? baseIcon : `${baseIcon}-o`) : icon} class={[size == 'big' && "-mb-1"]} color={primary ? 'var(--p-color)' : 'white'} />
-    <span>{ctx.slots.default()}</span>
-  </div >
-)
 window.$api.swiper = swiper
 const initialSlide = isNaN($props.startPosition) ? 0 : $props.startPosition
 console.log(`initialSlide:`, initialSlide)
@@ -86,9 +82,17 @@ watch(() => config.value, () => {
 }, { flush: 'post' })
 
 const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
-const scale = shallowRef(1)
-// watch(() => scale.value != 1, isScale => isScale ? swiper.value?.disable() : swiper.value?.enable())
 
+const $router = useRouter()
+const smw = useSmallWindowContext()
+const openSmWindow = () => {
+  smw.$open($props.images, $props.cover ?? $props.images[0], () => {
+    $router.force.push($route.fullPath)
+  }, {
+    begin: page.value
+  })
+  $emit('back')
+}
 </script>
 
 <template>
@@ -97,7 +101,7 @@ const scale = shallowRef(1)
       :slidesPerView="config['bika.read.twoImage'] ? 2 : 1" @slideChange="sw => page = sw.activeIndex"
       class="w-[100vw] h-[100vh] !fixed !top-0 bg-black" virtual @init="onInit" zoom
       :direction="config['bika.read.vertical'] ? 'vertical' : 'horizontal'" :hashNavigation="{ replaceState: true }"
-      :dir="config['bika.read.rtl'] ? 'rtl' : 'ltr'" @zoomChange="(_sw, sc) => { scale = sc }">
+      :dir="config['bika.read.rtl'] ? 'rtl' : 'ltr'">
       <SwiperSlide v-for="(src, index) of images" :key="index" :virtualIndex="index" :data-hash="index + 1"
         class="overflow-hidden">
         <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full swiper-zoom-container">
@@ -189,6 +193,7 @@ const scale = shallowRef(1)
         {{ app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
       </div>
       <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
+      <VanCell title="小窗播放" icon="shrink" clickable @click="openSmWindow"></VanCell>
       <van-cell center title="垂直阅读">
         <template #right-icon>
           <van-switch v-model="config['bika.read.vertical']" />

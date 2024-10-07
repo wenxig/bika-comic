@@ -1,10 +1,10 @@
 import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
-import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction, isUndefined } from 'lodash-es'
+import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
 import router from '@/router'
 import config, { isOnline } from '@/config'
-import { SmartAbortController, errorReturn, createStateContentData, getBikaApiHeaders, setValue, coverFunctionToStateContentData } from '@/utils/requset'
+import { SmartAbortController, errorReturn,  getBikaApiHeaders, setValue } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
@@ -83,12 +83,6 @@ export const api = (() => {
 
       if (/post/ig.test(v.config.method ?? '')) return v
       if (true) return errorReturn(v.data, '异常数据返回')
-      // v.config.__retryCount = (v.config.__retryCount ?? 0) + 1
-      // if (v.config.__retryCount && v.config.retry && v.config.__retryCount >= v.config.retry) return errorReturn(v.data, '异常数据返回')
-      // return await api({
-      //   ...v.config,
-      //   headers: {}
-      // })
     }
     return v
   }, handleError)

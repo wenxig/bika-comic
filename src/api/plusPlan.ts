@@ -2,8 +2,8 @@ import config, { isOnline, type baseConfig } from '@/config'
 import { useAppStore } from '@/stores'
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
-import { fromPairs, isEmpty, isFunction, isObject, toPairs } from 'lodash-es'
-import { ProComic, ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusMaxComic } from '.'
+import { fromPairs, isEmpty, isFunction,  isObject, isString, toPairs } from 'lodash-es'
+import {  ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
 import { until, useLocalStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
@@ -114,17 +114,34 @@ export const patchWatchHitory = async (data: Record<string, WatchHistory>, confi
 interface RawFavourtImage {
   src: string
   time: number
-  comic: RawProComic
+  comic: string | RawProComic
+}
+interface FavourtImageMeta {
+  id: string,
+  categories: string[],
+  title: string,
+  author: string
 }
 export class FavourtImage {
   public src!: string
   public time!: number
-  private _comic!: ProComic
-  public get comic(): ProComic {
+  private _comic!: string
+  public get meta(): FavourtImageMeta {
+    const turle = this._comic.split('\u1145')
+    return {
+      id: turle[0],
+      categories: turle[1].split(','),
+      title: turle[2],
+      author: turle[3]
+    }
+  }
+  public get comic(): string {
     return this._comic
   }
-  public set comic(v: RawProComic) {
-    this._comic = new ProComic(v)
+  public set comic(v: RawProComic | string) {
+    // id \u1145 c,a,t,e,g,o,r,i,e,s \u1145 title \u1145 anouth
+    if (isString(v)) this._comic = v
+    else this._comic = `${v._id}\u1145${v.categories.join(',')}\u1145${v.title}\u1145${v.author}`
   }
   public get date() {
     return new Date(this.time)
@@ -323,8 +340,8 @@ export const getNewUpdatesComic = async (config?: AxiosRequestConfig) => {
     const jsonObject = JSON.parse(decodedString)
     return jsonObject
   }).map(v => new News(v))
-  console.log(processd);
-  
+  console.log(processd)
+
   return processd.map(pdata => pdata.toProPlusComic())
 }
 

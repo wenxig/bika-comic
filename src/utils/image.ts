@@ -19,16 +19,20 @@ export class Image {
     setValue(this, v)
   }
   public getUrl() {
-    return getUrl(this)
+    return Image.getUrl(this)
+  }
+  public toString() {
+    return this.getUrl()
+  }
+  static getUrl(thumb?: Image) {
+    if (thumb instanceof Image) {
+      if (thumb!.fileServer == 'local') return new URL(`../assets/images/${thumb!.path}`, import.meta.url).href
+      return new URL(`${config.value['bika.proxy.image']}/${thumb!.path}`).href
+    }
+    return ''
   }
 }
-function getUrl(thumb?: Image) {
-  if (thumb instanceof Image) {
-    if (thumb!.fileServer == 'local') return new URL(`../assets/images/${thumb!.path}`, import.meta.url).href
-    return new URL(`${config.value['bika.proxy.image']}/${thumb!.path}`).href
-  }
-  return ''
-}
+export type Image_ = Image | string
 import router from '@/router'
 import { showImagePreview as _showImagePreview, ImagePreviewOptions, ImagePreviewInstance } from 'vant'
 import { computed, shallowRef } from 'vue'

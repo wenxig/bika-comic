@@ -16,5 +16,6 @@ export default Object.freeze({
   splitAuthorRegexp: /\,|，|\&|\||、|＆|(\sand\s)|(\s[xX]\s)/ig,
   sameAnthorRegexp: /\(|\)|（|）/g,
   iframeEl: <InjectionKey<ShallowRef<HTMLIFrameElement | undefined>>>Symbol('iframeEl'),
-  userTemp: 'temp.user'
+  userTemp: 'temp.user',
+  comicCardMaxTagsShow : 5
 })

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getComicEps, getComicLikeOthers, type ProComic, type ProPlusComic, type ProPlusMaxComic, type Ep, getComicInfo } from '@/api'
+import { getComicEps, getComicLikeOthers, type ProComic, type ProPlusComic, type ProPlusMaxComic,  getComicInfo } from '@/api'
 import { ref } from 'vue'
 import { last } from 'lodash-es'
 import { createStateContentData, useStateContent, type UseStateContent } from '@/utils/requset'

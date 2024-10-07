@@ -6,6 +6,7 @@ import { useElementSize } from '@vueuse/core'
 import { shallowRef } from 'vue'
 import { max, isEmpty } from 'lodash-es'
 import { useComicStore } from '@/stores/comic'
+import symbol from '@/symbol'
 withDefaults(defineProps<{
   comic: ProComic | ProPlusComic | ProPlusMaxComic
   height: number | string
@@ -25,7 +26,6 @@ const $emit = defineEmits<{
 }>()
 $emit('setup')
 const comicStore = useComicStore()
-const MAX_TAGS = 5
 const info = shallowRef<HTMLDivElement>()
 const { height: contentHeight } = useElementSize(info)
 defineSlots<{
@@ -37,9 +37,7 @@ defineSlots<{
 <template>
   <button v-if="(comic instanceof Comic)"
     class="overflow-hidden w-full van-hairline--bottom flex bg-center bg-[--van-background-2] text-[--van-text-color] border-none relative active:bg-gray p-0 items-start"
-    :style="[
-      { [resizeable ? 'minHeight' : 'height']: `${((resizeable ? max([contentHeight, height]) : height) ?? 0)}px` },
-    ]"
+    :style="{ [resizeable ? 'minHeight' : 'height']: `${((resizeable ? max([contentHeight, height]) : height) ?? 0)}px` }"
     :class="[{ 'van-haptics-feedback': !disabled, 'shadow-sm': type == 'big' }, { '!w-[calc(50%-2px)] rounded-lg shadow-sm !block': type == 'small' }]"
     @click="$props.whenClick ? $props.whenClick() : (() => { comic instanceof ProPlusMaxComic ? comicStore.$setupComic(comic) : comicStore.$setupPreload(comic); $router.force[mode](`/comic/${comic._id}/info`) })()"
     :disabled>
@@ -91,9 +89,9 @@ defineSlots<{
         汉化：{{ comic.chineseTeam }}
       </span>
       <div class="my-1 w-full h-auto">
-        <van-tag type="primary" v-for="tag of comic.categories.slice(0, MAX_TAGS)"
+        <van-tag type="primary" v-for="tag of comic.categories.slice(0, symbol.comicCardMaxTagsShow)"
           class="mr-1 *:!text-nowrap !text-nowrap">{{ toCn(tag) }}</van-tag>
-        <van-tag type="primary" plain v-if="comic.categories.length > MAX_TAGS"
+        <van-tag type="primary" plain v-if="comic.categories.length > symbol.comicCardMaxTagsShow"
           class="mr-1 *:!text-nowrap !text-nowrap">...</van-tag>
       </div>
       <div class="w-full flex" v-if="!hideViewNumber">

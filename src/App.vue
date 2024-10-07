@@ -94,6 +94,9 @@ provide(symbol.iframeEl, ifr)
       更新
     </VanButton>
   </Popup>
+  <Teleport to="#small-window">
+    <SmallWindow />
+  </Teleport>
   <VanImagePreview :show="false" v-once />
   <Dev />
 </template>

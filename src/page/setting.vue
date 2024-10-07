@@ -136,6 +136,18 @@ const quitLogin = () => {
         {{ config['bika.read.preloadIamgeNumbers'] }}
       </VanCell>
     </VanCellGroup>
+    <VanCellGroup title="小窗播放">
+      <van-cell center title="启用">
+        <template #right-icon>
+          <van-switch v-model="config['bika.smallWindow.enable']" />
+        </template>
+      </van-cell>
+      <van-cell center title="退出自动切换小窗">
+        <template #right-icon>
+          <van-switch v-model="config['bika.smallWindow.openOnQuit']" />
+        </template>
+      </van-cell>
+    </VanCellGroup>
     <VanCellGroup title="分流设置">
       <van-cell title="接口分流" clickable
         @click="showInterfaceProxySelect = true">{{ new Url(config['bika.proxy.interface']).host }}</van-cell>
