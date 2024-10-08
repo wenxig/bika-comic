@@ -91,7 +91,7 @@ const openSmWindow = () => {
   }, {
     begin: page.value
   })
-  $emit('back')
+  // $emit('back')
 }
 </script>
 
@@ -193,7 +193,7 @@ const openSmWindow = () => {
         {{ app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
       </div>
       <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
-      <VanCell title="小窗播放" icon="shrink" clickable @click="openSmWindow"></VanCell>
+      <VanCell title="小窗播放" icon="shrink" v-if="config['bika.smallWindow.enable']" clickable @click="openSmWindow"></VanCell>
       <van-cell center title="垂直阅读">
         <template #right-icon>
           <van-switch v-model="config['bika.read.vertical']" />
