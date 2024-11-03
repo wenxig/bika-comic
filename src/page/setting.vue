@@ -14,6 +14,7 @@ import { onBeforeRouteLeave } from 'vue-router'
 import localforage from 'localforage'
 import { clearChatDb } from '@/api/chat'
 import { clearComicPagesTemp } from '@/api'
+import { uniq } from 'lodash-es'
 const $window = window
 
 document.body.classList.add('setting-page')
@@ -70,6 +71,15 @@ const Url = URL
 const quitLogin = () => {
   localStorage.clear()
   location.reload()
+}
+const showAddSelfImageProxy = shallowRef(false)
+const selfImageProxyInputerText = shallowRef('')
+const changeToSelfImageProxy = () => {
+  const url = selfImageProxyInputerText.value.replace(/(?=.+)\/+$/ig, '')
+  if (!URL.canParse(url)) return window.$message.error('不是合规的url地址')
+  config.value['bika.proxy.image'] = _ImageProxy[0] = url
+  showAddSelfImageProxy.value = showImageProxySelect.value = false
+  selfImageProxyInputerText.value = ''
 }
 </script>
 
@@ -162,10 +172,12 @@ const quitLogin = () => {
   </NScrollbar>
 
   <Popup v-model:show="showImageProxySelect" round position="bottom">
-    <van-picker :columns="allProxies.image.map(v => ({ text: new Url(v).host, value: v }))"
+    <van-picker class="van-hairline--bottom"
+      :columns="uniq(allProxies.image.concat([config['bika.proxy.image']])).map(v => ({ text: new Url(v).host, value: v }))"
       @cancel="showImageProxySelect = false"
       @confirm="(v) => { config['bika.proxy.image'] = v.selectedValues[0]; showImageProxySelect = false }"
       v-model="_ImageProxy" />
+    <VanCell clickable @click="showAddSelfImageProxy = true" border title="自定义"></VanCell>
   </Popup>
   <Popup v-model:show="showInterfaceProxySelect" round position="bottom">
     <van-picker :columns="allProxies.interface.map(v => ({ text: new Url(v).host, value: v }))"
@@ -179,8 +191,18 @@ const quitLogin = () => {
       @confirm="(v) => { config['bika.proxy.db'] = v.selectedValues[0]; showDbProxySelect = false }"
       v-model="_DbProxy" />
   </Popup>
+
+  <Popup v-model:show="showAddSelfImageProxy" round position="bottom">
+    <VanField v-model="selfImageProxyInputerText" class="mt-2" placeholder="输入你的url地址, 如: https://github.com/wenxig" />
+    <VanButton block class="w-full h-8 mt-20" type="primary" @click="changeToSelfImageProxy">提交</VanButton>
+  </Popup>
   <Sorter ref="sorter" @reload="searchResult.clear()" />
   <VanNumberKeyboard :model-value="config['bika.read.preloadIamgeNumbers'].toString()"
     @update:model-value="value => config['bika.read.preloadIamgeNumbers'] = Number(value)"
     :show="showSetPreloadImageNumbers" @blur="showSetPreloadImageNumbers = false" />
 </template>
+<style scoped lang='scss'>
+:global(*) {
+  --van-border-width: 1px;
+}
+</style>

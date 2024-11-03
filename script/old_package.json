@@ -1,10 +1,9 @@
 {
   "name": "bika-comic",
-  "version": "4.3.0",
+  "version": "4.2.1",
   "license": "LGPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
-    "dev:s": "cd ../server; bun dev",
     "build": "vite build",
     "preview": "vite preview",
     "bu": "./script/build_upload.sh",
@@ -25,7 +24,7 @@
     "mitt": "latest",
     "naive-ui": "^2.40.1",
     "opencc-js": "latest",
-    "pinia": "^2.1.7",
+    "pinia": "latest",
     "swiper": "^11.1.9",
     "vant": "^4.9.7",
     "vue": "^3.5.12",

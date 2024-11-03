@@ -11,7 +11,7 @@ export interface FillerTag {
   name: string
   mode: "unshow" | "show" | "auto"
 }
-type ImageQuality = 'original' | 'low' | 'medium' | 'high'
+type ImageQuality = 'low' | 'medium' | 'high' | 'original'
 export const baseConfig = {
   'bika.read.preloadIamgeNumbers': 2,
   'bika.read.watchFullscreen': true,

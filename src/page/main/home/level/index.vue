@@ -1,6 +1,5 @@
 <script setup lang='ts'>
 import { createLoadingMessage } from '@/utils/message'
-import { Interceptor } from 'vant/lib/utils'
 import { shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 const $route = useRoute()
@@ -9,7 +8,7 @@ document.title = '排行榜 | bika'
 console.log('in level page');
 
 const selectPage = shallowRef($route.path.substring($route.path.lastIndexOf('/') + 1))
-const beforeChange: Interceptor = async (t: string) => {
+const beforeChange = async (t: string) => {
   const loading = createLoadingMessage()
   await loading.bind($router.force.replace(`/main/home/level/${t}`))
   return true

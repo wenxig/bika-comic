@@ -46,6 +46,6 @@ watch(() => isRefreshing.value ? [] : sortBy(values(app.readHistory), i => i[3])
   <List :item-height="160" reloadable @reload="then => resyncHistory().then(then)" class="h-[calc(100%-46px)]"
     :data="isRefreshing ? [] : sortBy(values(app.readHistory), i => i[3]).toReversed().filter(Boolean)"
     :is-requesting="isRefreshing" v-slot="{ height, data: { item } }" ref="list">
-    <ComicCard :comic="item[1]" :height />
+    <ComicCard :comic="item[1]" :height hide-view-number hide-ep-info  />
   </List>
 </template>

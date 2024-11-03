@@ -3,8 +3,8 @@
     "http://api.go2778.com"
   ],
   "image": [
+    "https://s3.picacomic.com/static", 
     "https://s3.go2778.com/static",
-    "https://s3.picacomic.com/static",
     "https://storage.diwodiwo.xyz/static"
   ],
   "db":[
