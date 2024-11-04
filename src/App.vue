@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 const stop = new SmartAbortController()
 watch(config, (config, oldConfig) => {
-  console.log('change config')
+  console.log('change config', config)
   if (isSetup) return
   if (config['bika.plusPlan']) {
     stop.abort()

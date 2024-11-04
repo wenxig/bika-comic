@@ -12,6 +12,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import _package from './package.json'
 import tailwindConfig from './tailwind.config.ts'
+import TurboConsole from "vite-plugin-turbo-console"
 
 enum BuildFlag {
   production,
@@ -20,7 +21,7 @@ enum BuildFlag {
 
 const BUILD_FALG = BuildFlag.production as BuildFlag
 
-export default defineConfig(({ }) => ({
+export default defineConfig({
   plugins: [
     vue(),
     vueJsx(),
@@ -30,6 +31,7 @@ export default defineConfig(({ }) => ({
         NaiveUiResolver()
       ],
     }),
+    // TurboConsole({
     VitePWA({
       includeAssets: [],
       manifest: {
@@ -114,7 +116,7 @@ export default defineConfig(({ }) => ({
     terserOptions: {
       compress: {
         drop_debugger: true,
-        drop_console: true
+        // drop_console: true
       },
     },
     target: BUILD_FALG == BuildFlag.preview ? ['ESNext'] : undefined
@@ -123,4 +125,4 @@ export default defineConfig(({ }) => ({
     __VAN_CELL_HEIGHT__: 44
   },
   base: "/"
-}))
+})

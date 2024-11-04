@@ -2,26 +2,24 @@
 import Popup from '@/components/popup.vue'
 import config, { isDark } from '@/config'
 import { DevData, useAppStore } from '@/stores'
-import { isBoolean, isNumber, isString } from 'lodash-es'
+import { isArray, isBoolean, isFunction, isNil, isNumber, isObject, isString } from 'lodash-es'
 import { shallowRef, watch } from 'vue'
-import VueJsonPretty from 'vue-json-pretty';
+import VueJsonPretty from 'vue-json-pretty'
 const app = useAppStore()
 const isText = (v: unknown): v is (string | number | boolean) => isNumber(v) || isString(v) || isBoolean(v)
 const $window = window
 
+const logs = new Array<any[]>()
 const devPreviewData = shallowRef<DevData['data'][number]>('')
 const devShowPreview = shallowRef(false)
 const baseLogFunction = window.console.log
-if (!import.meta.env.DEV) watch(() => config.value['bika.devMode'], devMode => {
+watch(() => config.value['bika.devMode'], devMode => {
+  console.log('devmode', devMode)
+
   if (devMode) {
     window.console.log = (...v) => {
-      const app = useAppStore()
-      const base = app.devData.get('log') ?? {
-        name: 'console.log',
-        data: []
-      }
-      base.data.push(v.join(' '))
-      app.devData.set('log', base)
+      baseLogFunction(...v)
+      logs.push(v)
     }
   } else {
     app.devData.clear()
@@ -43,6 +41,30 @@ if (!import.meta.env.DEV) watch(() => config.value['bika.devMode'], devMode => {
     </VanFloatingBubble>
     <Popup v-model:show="app.showDevPupop" position="bottom" round class="h-[80vh] overflow-hidden">
       <VanTabs class="!h-full w-full overflow-hidden">
+        <van-tab title="log" name="控制台" class="!h-full w-full overflow-hidden">
+          <List item-resizable :end="false" :isRequesting="false" :data="logs" :item-height="20" go-bottom
+            v-slot="{ data: { item: v }, height }" class="h-[80vh] w-[100vw] bg-black !overflow-x-hidden">
+            <div
+              class="flex flex-nowrap text-sm *:ml-1 van-hairline--top-bottom *:inline text-nowrap w-full overflow-y-hidden nos"
+              :style="{ height: `${height}px` }">
+              <template v-for="value of v">
+                <div v-if="isBoolean(value)" class="text-blue-500">{{ value }}</div>
+                <div v-else-if="isString(value)" class="text-orange-300">{{ value.replace(/\n/g, '\\n') }}</div>
+                <div v-else-if="isNumber(value)" class="text-green-500">{{ value }}</div>
+                <div v-else-if="isNil(value)" class="text-gray-400">{{ String(value) }}</div>
+                <div v-else-if="isFunction(value)" class="text-blue-600">f(...){...}</div>
+                <div v-else-if="isArray(value)" @click="() => { devPreviewData = value; devShowPreview = true }"
+                  class="font-semibold underline rounded van-haptics-feedback italic text-white">&nbsp;Array&nbsp;
+                </div>
+                <div v-else @click="() => { devPreviewData = value; devShowPreview = true }"
+                  class="font-semibold underline rounded van-haptics-feedback italic text-white">&nbsp;
+                  {{ value.toString().substring(8, v.length - 1) }}
+                  &nbsp;
+                </div>
+              </template>
+            </div>
+          </List>
+        </van-tab>
         <van-tab v-for="c of app.devData.values()" :title="c.name" :name="c.name"
           class="!h-full w-full overflow-hidden">
           <List item-resizable :end="false" :isRequesting="false" :data="c.data.map(value => ({ value })).toReversed()"
@@ -61,3 +83,8 @@ if (!import.meta.env.DEV) watch(() => config.value['bika.devMode'], devMode => {
     </Popup>
   </template>
 </template>
+<style scoped lang='scss'>
+.nos {
+  scrollbar-width: none;
+}
+</style>

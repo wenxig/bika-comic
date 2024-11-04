@@ -69,13 +69,17 @@ export const api = (() => {
   }
   api.interceptors.response.use(async v => {
     if (config.value['bika.devMode']) {
-      const app = useAppStore()
-      const base = app.devData.get('defaultApi') ?? {
-        name: '哔咔api',
-        data: []
+      try {
+        const app = useAppStore()
+        const base = app.devData.get('defaultApi') ?? {
+          name: '哔咔api',
+          data: []
+        }
+        base.data.push(v)
+        app.devData.set('defaultApi', base)
+      } catch (error) {
+        
       }
-      base.data.push(v)
-      app.devData.set('defaultApi', base)
     }
     if (!v.data.data) {
       await delay(3000)

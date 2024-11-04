@@ -17,6 +17,7 @@ const $props = withDefaults(defineProps<{
   listProp?: Partial<VirtualListProps>
   retriable?: boolean
   errCause?: string
+  goBottom?: boolean
 }>(), {
   listProp: <any>{}
 })
@@ -50,12 +51,19 @@ const refreshing = () => $emit('reload', () => isRefreshing.value = false)
 
 const isReq = shallowRef(false)
 watch([() => $props.data, isReq], ([data]) => {
+  if ($props.goBottom) vList.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
   if (!isReq.value) if (((ceil(window.innerHeight / $props.itemHeight) + 2) > data.length) && !$props.end) {
     isReq.value = true
     if ($props.isErr && $props.reloadable) $emit('retry')
     else $emit('next', () => isReq.value = false)
   }
 }, { immediate: true })
+watch(vList, vList => {
+  if (!vList) return
+  const list = vList.virtualListInstRef?.itemsElRef?.querySelector(' .v-vl-visible-items')
+  list?.classList.add('overflow-x-hidden')
+  // overflow-x-hidden
+})
 </script>
 
 <template>
