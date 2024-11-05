@@ -32,6 +32,8 @@ export default defineConfig({
       ],
     }),
     // TurboConsole({
+    //   disableLaunchEditor:true,
+    // }),
     VitePWA({
       includeAssets: [],
       manifest: {

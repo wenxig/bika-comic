@@ -2,30 +2,61 @@
 import Popup from '@/components/popup.vue'
 import config, { isDark } from '@/config'
 import { DevData, useAppStore } from '@/stores'
-import { isArray, isBoolean, isFunction, isNil, isNumber, isObject, isString } from 'lodash-es'
-import { shallowRef, watch } from 'vue'
+import { isArray, isBoolean, isFunction, isMap, isNil, isNumber, isSet, isString } from 'lodash-es'
+import { shallowReactive, shallowRef, watch } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
 const app = useAppStore()
 const isText = (v: unknown): v is (string | number | boolean) => isNumber(v) || isString(v) || isBoolean(v)
 const $window = window
-
-const logs = new Array<any[]>()
 const devPreviewData = shallowRef<DevData['data'][number]>('')
 const devShowPreview = shallowRef(false)
+const openJsonPerview = (value: object) => {
+  if (isSet(value) || isMap(value)) value = value.toJSONObject()
+  devPreviewData.value = value
+  devShowPreview.value = true
+}
+const all = shallowReactive(new Array<{ value: any[], type: 'log' | 'error' | 'warn' }>())
 const baseLogFunction = window.console.log
+const baseInfoFunction = window.console.info
+const baseErrorFunction = window.console.error
+const baseWarnFunction = window.console.error
+const baseDebugFunction = window.console.debug
 watch(() => config.value['bika.devMode'], devMode => {
-  console.log('devmode', devMode)
-
+  console.log('devmode change', devMode)
   if (devMode) {
-    window.console.log = (...v) => {
-      baseLogFunction(...v)
-      logs.push(v)
+    window.console.log = (...value) => {
+      baseLogFunction(...value)
+      all.push({ value, type: 'log' })
+    }
+    window.console.info = (...value) => {
+      baseInfoFunction(...value)
+      all.push({ value, type: 'log' })
+    }
+    window.console.debug = (...value) => {
+      baseDebugFunction(...value)
+      all.push({ value, type: 'log' })
+    }
+    window.console.error = (...value) => {
+      baseErrorFunction(...value)
+      all.push({ value, type: 'error' })
+    }
+    window.console.warn = (...value) => {
+      baseWarnFunction(...value)
+      all.push({ value, type: 'warn' })
     }
   } else {
     app.devData.clear()
     window.console.log = baseLogFunction
+    window.console.info = baseInfoFunction
+    window.console.error = baseErrorFunction
+    window.console.warn = baseWarnFunction
+    window.console.debug = baseDebugFunction
   }
 }, { immediate: true })
+window.addEventListener('error', event => {
+  all.push({ value: event.error, type: 'error' })
+})
+
 </script>
 
 <template>
@@ -41,26 +72,41 @@ watch(() => config.value['bika.devMode'], devMode => {
     </VanFloatingBubble>
     <Popup v-model:show="app.showDevPupop" position="bottom" round class="h-[80vh] overflow-hidden">
       <VanTabs class="!h-full w-full overflow-hidden">
-        <van-tab title="log" name="控制台" class="!h-full w-full overflow-hidden">
-          <List item-resizable :end="false" :isRequesting="false" :data="logs" :item-height="20" go-bottom
-            v-slot="{ data: { item: v }, height }" class="h-[80vh] w-[100vw] bg-black !overflow-x-hidden">
+        <van-tab title="控制台" name="log" class="!h-full w-full overflow-hidden">
+          <List item-resizable :end="false" :isRequesting="false" :data="all" :item-height="20" go-bottom
+            v-slot="{ data: { item: { value: v, type } }, height }" class="h-[calc(80vh-60px)] w-[100vw] !overflow-x-hidden">
             <div
-              class="flex flex-nowrap text-sm *:ml-1 van-hairline--top-bottom *:inline text-nowrap w-full overflow-y-hidden nos"
-              :style="{ height: `${height}px` }">
-              <template v-for="value of v">
-                <div v-if="isBoolean(value)" class="text-blue-500">{{ value }}</div>
-                <div v-else-if="isString(value)" class="text-orange-300">{{ value.replace(/\n/g, '\\n') }}</div>
-                <div v-else-if="isNumber(value)" class="text-green-500">{{ value }}</div>
-                <div v-else-if="isNil(value)" class="text-gray-400">{{ String(value) }}</div>
-                <div v-else-if="isFunction(value)" class="text-blue-600">f(...){...}</div>
-                <div v-else-if="isArray(value)" @click="() => { devPreviewData = value; devShowPreview = true }"
-                  class="font-semibold underline rounded van-haptics-feedback italic text-white">&nbsp;Array&nbsp;
+              class="flex flex-nowrap text-xs *:inline-flex *:items-center *:ml-1 van-hairline--top-bottom text-nowrap w-full overflow-y-hidden nos"
+              :style="{ height: `${height}px` }"
+              :class="[type == 'error' && 'bg-red-100 bg-opacity-80', type == 'warn' && 'bg-yellow-100 bg-opacity-80']">
+              <template v-if="(isString(v[0]) && !v[0].includes('%c')) || !isString(v[0])">
+                <template v-for="value of v">
+                  <div v-if="isBoolean(value)" class="text-blue-700">{{ value }}</div>
+                  <div v-else-if="isString(value)" class="text-[--van-text-color]">{{ value.replace(/\n/g, '\\n') }}
+                  </div>
+                  <div v-else-if="isNumber(value)" class="text-blue-700">{{ value }}</div>
+                  <div v-else-if="isNil(value)" class="text-gray-400">{{ String(value) }}</div>
+                  <div v-else-if="isFunction(value)" class="text-blue-600">f(...){...}</div>
+                  <div v-else-if="isArray(value)" @click="openJsonPerview(value)"
+                    class="font-semibold underline rounded van-haptics-feedback italic text-[--van-text-color]">
+                    &nbsp;({{value.length}})&nbsp;Array&nbsp;
+                  </div>
+                  <div v-else @click="openJsonPerview(value)"
+                    class="font-semibold underline rounded van-haptics-feedback italic text-[--van-text-color]">&nbsp;
+                    {{ value?.toString?.().match(/(?=\s).+(?=\])/g)?.[0].substring(1) }}
+                    &nbsp;
+                  </div>
+                </template>
+              </template>
+              <template v-else-if="isString(v[0])">
+                <!-- split会产生空块，抵消了index+1 -->
+                <div class="text-[--van-text-color]" :style="[v[index] ?? v.at(-1)]"
+                  v-for="(value, index) of v[0].split('%c')">
+                  {{ value }}
                 </div>
-                <div v-else @click="() => { devPreviewData = value; devShowPreview = true }"
-                  class="font-semibold underline rounded van-haptics-feedback italic text-white">&nbsp;
-                  {{ value.toString().substring(8, v.length - 1) }}
-                  &nbsp;
-                </div>
+              </template>
+              <template v-else>
+                [[unknown data]]
               </template>
             </div>
           </List>

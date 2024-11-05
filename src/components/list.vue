@@ -1,7 +1,7 @@
 <script setup lang='ts' generic="T extends NonNullable<VirtualListProps['items']>[number]">
 import { type NVirtualList, VirtualListProps } from 'naive-ui'
 import { ceil, debounce, isEmpty } from 'lodash-es'
-import { StyleValue, shallowRef, watch } from 'vue'
+import { StyleValue, nextTick, shallowRef, watch } from 'vue'
 import { useScroll } from '@vueuse/core'
 import StateContent from '@/components/stateContent.vue'
 const $props = withDefaults(defineProps<{
@@ -50,8 +50,11 @@ const isPullRereshHold = shallowRef(false)
 const refreshing = () => $emit('reload', () => isRefreshing.value = false)
 
 const isReq = shallowRef(false)
-watch([() => $props.data, isReq], ([data]) => {
+watch(() => $props.data, () => {
+  console.only(`<list> data changed; goBottom:`, $props.goBottom)
   if ($props.goBottom) vList.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
+}, { flush: 'post', deep: true })
+watch([() => $props.data, isReq], ([data]) => {
   if (!isReq.value) if (((ceil(window.innerHeight / $props.itemHeight) + 2) > data.length) && !$props.end) {
     isReq.value = true
     if ($props.isErr && $props.reloadable) $emit('retry')

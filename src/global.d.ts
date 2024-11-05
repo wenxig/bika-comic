@@ -6,6 +6,17 @@ declare global {
     $dialog: ReturnType<typeof useDialog>
     $api: Record<string, any>
   }
+  interface Map<K, V> {
+    toJSON(): string
+    toJSONObject(): [K, V][]
+  }
+  interface Set<T> {
+    toJSON(): string
+    toJSONObject(): T[]
+  }
+  interface Console {
+    only(...arg: any[]): void
+  }
 }
 declare module 'vue-router' {
   interface Router {

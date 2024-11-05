@@ -1,4 +1,4 @@
-import { computed, createApp, defineComponent } from "vue"
+import { computed, createApp, defineComponent, } from "vue"
 import { createPinia } from "pinia"
 import { init } from "@/stores"
 import App from "./App.vue"
@@ -9,6 +9,19 @@ import { NConfigProvider, GlobalThemeOverrides, NMessageProvider, NDialogProvide
 import { isDark } from "./config"
 import { ConfigProviderThemeVars, ConfigProvider as VanConfigProvider } from 'vant'
 import { reactiveComputed, useCssVar } from '@vueuse/core'
+Map.prototype.toJSON = function () {
+  return JSON.stringify([...this.entries()])
+}
+Set.prototype.toJSON = function () {
+  return JSON.stringify([...this.values()])
+}
+Map.prototype.toJSONObject = function () {
+  return [...this.entries()]
+}
+Set.prototype.toJSONObject = function () {
+  return [...this.values()]
+}
+console.only = window.console.log
 const rawDecodeURIComponent = window.decodeURIComponent
 window.decodeURIComponent = (url: string) => {
   do {
