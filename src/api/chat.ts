@@ -29,9 +29,9 @@ const chat = window.$api.chat = (() => {
       const app = useAppStore()
       const base = app.devData.get('chatApi') ?? {
         name: '聊天api',
-        data: []
+        network: []
       }
-      base.data.push(v)
+      base.network.push(v)
       app.devData.set('chatApi', base)
     }
     return v
@@ -78,9 +78,9 @@ const messageChat = (() => {
       const app = useAppStore()
       const base = app.devData.get('chatApi') ?? {
         name: '聊天api',
-        data: []
+        network: []
       }
-      base.data.push(v)
+      base.network.push(v)
       app.devData.set('chatApi', base)
     }
     return v

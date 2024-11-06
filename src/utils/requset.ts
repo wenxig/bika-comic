@@ -1,11 +1,11 @@
-import { useAppStore } from "@/stores"
+import { useAppStore, type DevData } from "@/stores"
 import { reactiveComputed } from "@vueuse/core"
 import { flatten, isEmpty, uniqBy, } from "lodash-es"
 import config from "@/config"
 import symbol from "@/symbol"
 import { HmacSHA256, enc } from "crypto-js"
 import mitt from "mitt"
-import {  shallowReactive, type ShallowReactive } from "vue"
+import { shallowReactive, type ShallowReactive } from "vue"
 export function getBikaApiHeaders(pathname: string, method: string) {
   type Headers = [name: string, value: string][]
   pathname = pathname.substring(1)
@@ -122,3 +122,22 @@ export const createStateContentData = <T>(data: T, isLoading = false, isEmpty = 
 })
 
 export const coverFunctionToStateContentData = <T extends (...arg: any[]) => Promise<any>>(fn: T, _isEmpty?: (v: Awaited<ReturnType<T>>) => boolean): (...args: Parameters<T>) => StateContentData<Awaited<ReturnType<T>>> => (...arg) => useStateContent(fn(...arg))
+export const setDevData = (id: string, kv: DevData['network']) => {
+  if (config.value['bika.devMode']) {
+    try {
+      const app = useAppStore()
+      const base = app.devData.get(id) ?? <DevData>{
+        name: id,
+        network: {}
+      }
+      base.network ??= {}
+      for (const key in kv) {
+        if (Object.prototype.hasOwnProperty.call(kv, key)) {
+          const element = kv[key]
+          base.network[key] = element
+        }
+      }
+      app.devData.set('defaultApi', base)
+    } catch { }
+  }
+}

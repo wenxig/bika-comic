@@ -2,8 +2,8 @@ import config, { isOnline, type baseConfig } from '@/config'
 import { useAppStore } from '@/stores'
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
-import { fromPairs, isEmpty, isFunction,  isObject, isString, toPairs } from 'lodash-es'
-import {  ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusMaxComic } from '.'
+import { fromPairs, isEmpty, isFunction, isObject, isString, toPairs } from 'lodash-es'
+import { ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
 import { until, useLocalStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
@@ -19,15 +19,15 @@ export const api = (() => {
     return v
   })
   api.interceptors.response.use(v => {
-    if (config.value['bika.devMode']) {
-      const app = useAppStore()
-      const base = app.devData.get('plusApi') ?? {
-        name: '华夏复兴计划api',
-        data: []
-      }
-      base.data.push(v)
-      app.devData.set('plusApi', base)
-    }
+    // if (config.value['bika.devMode']) {
+    //   const app = useAppStore()
+    //   const base = app.devData.get('plusApi') ?? {
+    //     name: '华夏复兴计划api',
+    //     network: []
+    //   }
+    //   base.network.push(v)
+    //   app.devData.set('plusApi', base)
+    // }
     return v
   }, async err => {
     if (isCancel(err)) return Promise.reject(err)

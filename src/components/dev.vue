@@ -2,20 +2,35 @@
 import Popup from '@/components/popup.vue'
 import config, { isDark } from '@/config'
 import { DevData, useAppStore } from '@/stores'
-import { isArray, isBoolean, isFunction, isMap, isNil, isNumber, isSet, isString } from 'lodash-es'
+import { flatten, isArray, isBoolean, isError, isFunction, isMap, isNil, isNumber, isObject, isSet, isString } from 'lodash-es'
 import { shallowReactive, shallowRef, watch } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
+import type { JSONDataType } from 'vue-json-pretty/types/utils'
 const app = useAppStore()
 const isText = (v: unknown): v is (string | number | boolean) => isNumber(v) || isString(v) || isBoolean(v)
 const $window = window
-const devPreviewData = shallowRef<DevData['data'][number]>('')
+const devPreviewData = shallowRef<NonNullable<DevData['log']>[number]>('')
 const devShowPreview = shallowRef(false)
-const openJsonPerview = (value: object) => {
+const openJsonPerview = (value: JSONDataType) => {
   if (isSet(value) || isMap(value)) value = value.toJSONObject()
   devPreviewData.value = value
   devShowPreview.value = true
 }
-const all = shallowReactive(new Array<{ value: any[], type: 'log' | 'error' | 'warn' }>())
+type MessageBlocks = unknown[]
+const errorProcesser = (error: Error) => error.stack ? [error.stack] : [`${error.name}: ${error.message}`]
+const linesProcesser = (value: MessageBlocks) => {
+  const v = flatten(value.map(v => isString(v) ? v.split(/(?=\n)/g) : isArray(v) ? [v] : v))
+  const nv: MessageBlocks[] = [[]]
+  for (const element of v) {
+    if (isString(element) && element.includes('\n')) {
+      nv.push([element])
+    } else {
+      nv.at(-1)?.push(element)
+    }
+  }
+  return nv
+}
+const all = shallowReactive<{ value: MessageBlocks, type: 'log' | 'error' | 'warn', id: number }[]>([])
 const baseLogFunction = window.console.log
 const baseInfoFunction = window.console.info
 const baseErrorFunction = window.console.error
@@ -26,23 +41,28 @@ watch(() => config.value['bika.devMode'], devMode => {
   if (devMode) {
     window.console.log = (...value) => {
       baseLogFunction(...value)
-      all.push({ value, type: 'log' })
+      const id = all.length
+      linesProcesser(value).forEach(value => all.push({ value, type: 'log', id }))
     }
     window.console.info = (...value) => {
       baseInfoFunction(...value)
-      all.push({ value, type: 'log' })
+      const id = all.length
+      linesProcesser(value).forEach(value => all.push({ value, type: 'log', id }))
     }
     window.console.debug = (...value) => {
       baseDebugFunction(...value)
-      all.push({ value, type: 'log' })
+      const id = all.length
+      linesProcesser(value).forEach(value => all.push({ value, type: 'log', id }))
     }
     window.console.error = (...value) => {
       baseErrorFunction(...value)
-      all.push({ value, type: 'error' })
+      const id = all.length
+      linesProcesser(isError(value[0]) ? errorProcesser(value[0]) : value).forEach(value => all.push({ value, type: 'log', id }))
     }
     window.console.warn = (...value) => {
       baseWarnFunction(...value)
-      all.push({ value, type: 'warn' })
+      const id = all.length
+      linesProcesser(value).forEach(value => all.push({ value: value, type: 'warn', id }))
     }
   } else {
     app.devData.clear()
@@ -53,10 +73,10 @@ watch(() => config.value['bika.devMode'], devMode => {
     window.console.debug = baseDebugFunction
   }
 }, { immediate: true })
-window.addEventListener('error', event => {
-  all.push({ value: event.error, type: 'error' })
+window.addEventListener('error', ({ error }) => {
+  window.console.error(error)
 })
-
+const getName = (v: object) => v.constructor.name
 </script>
 
 <template>
@@ -74,36 +94,38 @@ window.addEventListener('error', event => {
       <VanTabs class="!h-full w-full overflow-hidden">
         <van-tab title="控制台" name="log" class="!h-full w-full overflow-hidden">
           <List item-resizable :end="false" :isRequesting="false" :data="all" :item-height="20" go-bottom
-            v-slot="{ data: { item: { value: v, type } }, height }" class="h-[calc(80vh-60px)] w-[100vw] !overflow-x-hidden">
+            v-slot="{ data: { item: { value: v, type, id }, index }, height }"
+            class="h-[calc(80vh-60px)] w-[100vw] !overflow-x-hidden">
             <div
-              class="flex flex-nowrap text-xs *:inline-flex *:items-center *:ml-1 van-hairline--top-bottom text-nowrap w-full overflow-y-hidden nos"
-              :style="{ height: `${height}px` }"
-              :class="[type == 'error' && 'bg-red-100 bg-opacity-80', type == 'warn' && 'bg-yellow-100 bg-opacity-80']">
+              class="flex flex-nowrap text-[11px] font-mono *:inline-flex *:items-center *:ml-1 text-nowrap w-full overflow-y-hidden nos"
+              :style="{ height: `${height}px` }" :class="[all[index - 1]?.id != id && 'van-hairline--top', all[index + 1]?.id != id && 'van-hairline--bottom',
+              type == 'error' && 'bg-red-100 bg-opacity-80', type == 'warn' && 'bg-yellow-100 bg-opacity-80']">
               <template v-if="(isString(v[0]) && !v[0].includes('%c')) || !isString(v[0])">
                 <template v-for="value of v">
                   <div v-if="isBoolean(value)" class="text-blue-700">{{ value }}</div>
-                  <div v-else-if="isString(value)" class="text-[--van-text-color]">{{ value.replace(/\n/g, '\\n') }}
+                  <div v-else-if="isString(value)" class="text-[--van-text-color]">{{ value.replaceAll(' ', '&nbsp;') }}
                   </div>
                   <div v-else-if="isNumber(value)" class="text-blue-700">{{ value }}</div>
                   <div v-else-if="isNil(value)" class="text-gray-400">{{ String(value) }}</div>
                   <div v-else-if="isFunction(value)" class="text-blue-600">f(...){...}</div>
                   <div v-else-if="isArray(value)" @click="openJsonPerview(value)"
                     class="font-semibold underline rounded van-haptics-feedback italic text-[--van-text-color]">
-                    &nbsp;({{value.length}})&nbsp;Array&nbsp;
+                    &nbsp;({{ value.length }})&nbsp;Array&nbsp;
                   </div>
-                  <div v-else @click="openJsonPerview(value)"
+                  <div v-else-if="isObject(value)" @click="openJsonPerview(<JSONDataType>value)"
                     class="font-semibold underline rounded van-haptics-feedback italic text-[--van-text-color]">&nbsp;
-                    {{ value?.toString?.().match(/(?=\s).+(?=\])/g)?.[0].substring(1) }}
+                    Object[{{ getName(value) }}]
                     &nbsp;
                   </div>
                 </template>
               </template>
               <template v-else-if="isString(v[0])">
                 <!-- split会产生空块，抵消了index+1 -->
-                <div class="text-[--van-text-color]" :style="[v[index] ?? v.at(-1)]"
-                  v-for="(value, index) of v[0].split('%c')">
-                  {{ value }}
-                </div>
+                <Var :value="v[index] ?? v.at(-1)" v-slot="{ value }" v-for="(style, index) of v[0].split('%c')">
+                  <div class="text-[--van-text-color]" :style="[isString(style) && style]">
+                    {{ value }}
+                  </div>
+                </Var>
               </template>
               <template v-else>
                 [[unknown data]]
@@ -113,8 +135,9 @@ window.addEventListener('error', event => {
         </van-tab>
         <van-tab v-for="c of app.devData.values()" :title="c.name" :name="c.name"
           class="!h-full w-full overflow-hidden">
-          <List item-resizable :end="false" :isRequesting="false" :data="c.data.map(value => ({ value })).toReversed()"
-            :item-height="44" v-slot="{ data: { item: { value: v } } }" class="h-[80vh]">
+          <List item-resizable :end="false" :isRequesting="false"
+            :data="c.log?.map(value => ({ value })).toReversed() ?? []" :item-height="44"
+            v-slot="{ data: { item: { value: v } } }" class="h-[80vh]">
             <VanCell :title="isText(v) ? 'text' : 'json'" is-link
               @click="() => { devPreviewData = v; devShowPreview = true }">
               {{ isText(v) ? v : '' }}
@@ -125,7 +148,7 @@ window.addEventListener('error', event => {
     </Popup>
     <Popup position="center" closeable class="w-[90vw] h-[90vh]" round v-model:show="devShowPreview">
       <VueJsonPretty :deep="1" :theme="isDark ? 'dark' : 'light'" showIcon virtual class="w-full h-full"
-        :height="$window.innerHeight * 0.9" :data="devPreviewData" />
+        :height="$window.innerHeight * 0.9" v-if="isObject(devPreviewData)" :data="devPreviewData" />
     </Popup>
   </template>
 </template>

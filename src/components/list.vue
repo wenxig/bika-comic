@@ -1,7 +1,7 @@
 <script setup lang='ts' generic="T extends NonNullable<VirtualListProps['items']>[number]">
 import { type NVirtualList, VirtualListProps } from 'naive-ui'
 import { ceil, debounce, isEmpty } from 'lodash-es'
-import { StyleValue, nextTick, shallowRef, watch } from 'vue'
+import { StyleValue,  shallowRef, watch } from 'vue'
 import { useScroll } from '@vueuse/core'
 import StateContent from '@/components/stateContent.vue'
 const $props = withDefaults(defineProps<{

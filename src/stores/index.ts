@@ -4,17 +4,19 @@ import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Lev
 import { markRaw, reactive, ref, shallowRef, watch } from 'vue'
 import { getSearchHitory, getWatchHitory, getSubscribe, type Subscribe, isInPlusPlan, getFavourtImages, putFavourtImages, WatchHistory } from '@/api/plusPlan'
 import { SmartAbortController } from '@/utils/requset'
-import type { AxiosRequestConfig } from 'axios'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { getNewUpdatesComic } from '@/api/plusPlan'
 import { searchResult } from './temp'
 import { type FavourtImage } from '@/api/plusPlan'
 import config from '@/config'
 import localforage from 'localforage'
 import symbol from '@/symbol'
+import type { JSONDataType } from 'vue-json-pretty/types/utils'
 
 export type DevData = {
   name: string,
-  data: (Record<string, any> | string | number | (any[]))[]
+  network?: Record<string, [AxiosRequestConfig, result?: AxiosResponse<any, any>]>
+  log?: JSONDataType[]
 }
 
 const _searchHistory = await localforage.getItem<string[]>(symbol.searchHistory) ?? []

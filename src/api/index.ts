@@ -1,10 +1,10 @@
-import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
+import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError, type AxiosHeaders } from 'axios'
 import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
 import router from '@/router'
 import config, { isOnline } from '@/config'
-import { SmartAbortController, errorReturn,  getBikaApiHeaders, setValue } from '@/utils/requset'
+import { SmartAbortController, errorReturn, getBikaApiHeaders, setDevData, setValue } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
@@ -31,7 +31,6 @@ export interface RawData<T> {
   data: T,
   error?: string
 }
-
 export const api = (() => {
   const api = axios.create({
     baseURL: '',
@@ -42,12 +41,15 @@ export const api = (() => {
     requestConfig.baseURL = config.value['bika.proxy.interface']
     await until(isOnline).toBe(true)
     for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
+    setDevData('bkApi', { [(<AxiosHeaders>requestConfig.headers.get('signature'))[0]]: [requestConfig] })
     return requestConfig
   })
   const handleError = async (err: any) => {
     await delay(3000)
-    if (isCancel(err)) return Promise.reject(err)
-    if (!isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
+    if (isCancel(err) || !isAxiosError<RawData<{ error: string }>>(err)) {
+      setDevData('bkApi', { [(<AxiosHeaders>err.config.headers.get('signature'))[0]]: [err.config, err] })
+      return Promise.reject(err)
+    }
     if (err?.response?.status == 401 && userLoginData.value.email) {
       localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
       if (err.config) for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
@@ -68,19 +70,8 @@ export const api = (() => {
     return api(err.config)
   }
   api.interceptors.response.use(async v => {
-    if (config.value['bika.devMode']) {
-      try {
-        const app = useAppStore()
-        const base = app.devData.get('defaultApi') ?? {
-          name: '哔咔api',
-          data: []
-        }
-        base.data.push(v)
-        app.devData.set('defaultApi', base)
-      } catch (error) {
-        
-      }
-    }
+    setDevData('bkApi', { [(<AxiosHeaders>v.config.headers.get('signature'))[0]]: [v.config, v] })
+
     if (!v.data.data) {
       await delay(3000)
       if (["/", ''].includes(v.config.url ?? '')) return v
