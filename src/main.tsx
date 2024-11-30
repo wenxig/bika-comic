@@ -9,6 +9,7 @@ import { NConfigProvider, GlobalThemeOverrides, NMessageProvider, NDialogProvide
 import { isDark } from "./config"
 import { ConfigProviderThemeVars, ConfigProvider as VanConfigProvider } from 'vant'
 import { reactiveComputed, useCssVar } from '@vueuse/core'
+import { setupRequestProxy } from "./utils/requset"
 Map.prototype.toJSON = function () {
   return JSON.stringify([...this.entries()])
 }
@@ -36,6 +37,7 @@ window.decodeURI = (url: string) => {
   } while (url.includes('%'))
   return url
 }
+setupRequestProxy()
 
 const app = createApp(
   defineComponent(() => {

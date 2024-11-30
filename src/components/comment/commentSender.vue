@@ -6,6 +6,7 @@ import { useAppStore } from '@/stores'
 import Popup from '@/components/popup.vue'
 import { FieldInstance } from 'vant'
 import { isString } from 'lodash-es'
+import config from '@/config'
 
 const show = shallowRef(false)
 type SentTo = Comic | Comment
@@ -81,7 +82,7 @@ defineExpose({
     await $nextTick()
     inputer?.focus()
   }">
-    <div class="bg-gray-100 text-gray-300 w-[90%] h-[80%] rounded-full px-2 flex items-center !text-xs van-ellipsis">
+    <div :class="[config['bika.darkMode'] ? 'bg-[#333] text-[#666]' :'bg-gray-100 text-gray-300']" class="w-[90%] h-[80%] rounded-full px-2 flex items-center !text-xs van-ellipsis">
       {{ input || '写下你的留言吧...' }}
     </div>
   </div>

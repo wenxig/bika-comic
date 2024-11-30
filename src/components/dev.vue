@@ -2,7 +2,7 @@
 import Popup from '@/components/popup.vue'
 import config, { isDark } from '@/config'
 import { DevData, useAppStore } from '@/stores'
-import { flatten, isArray, isBoolean, isError, isFunction, isMap, isNil, isNumber, isObject, isSet, isString } from 'lodash-es'
+import { flatten, isArray, isBoolean, isError, isFunction, isMap, isNil, isNumber, isObject, isSet, isString, values } from 'lodash-es'
 import { shallowReactive, shallowRef, watch } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
 import type { JSONDataType } from 'vue-json-pretty/types/utils'
@@ -135,13 +135,15 @@ const getName = (v: object) => v.constructor.name
         </van-tab>
         <van-tab v-for="c of app.devData.values()" :title="c.name" :name="c.name"
           class="!h-full w-full overflow-hidden">
-          <List item-resizable :end="false" :isRequesting="false"
-            :data="c.log?.map(value => ({ value })).toReversed() ?? []" :item-height="44"
-            v-slot="{ data: { item: { value: v } } }" class="h-[80vh]">
-            <VanCell :title="isText(v) ? 'text' : 'json'" is-link
-              @click="() => { devPreviewData = v; devShowPreview = true }">
-              {{ isText(v) ? v : '' }}
-            </VanCell>
+          <List item-resizable :end="false" :isRequesting="false" :data="values(c.network)" :item-height="20"
+            v-slot="{ data: { item: v }, height }" class="h-[80vh]">
+            <div
+              class="flex flex-nowrap text-[11px] font-mono *:inline-flex *:items-center *:ml-1 text-nowrap w-full overflow-y-hidden nos"
+              :style="{ height: `${height}px` }"
+              :class="['van-hairline--top', 'van-hairline--bottom', v.value.error && 'bg-red-100 bg-opacity-80']">
+              {{ v.value.request }}
+            </div>
+
           </List>
         </van-tab>
       </VanTabs>

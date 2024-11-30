@@ -25,9 +25,12 @@ const comicStore = useComicStore()
         <div class="h-5 flex items-center" @click="config['bika.info.unsortComic'] = !config['bika.info.unsortComic']">
           反向排序<van-icon name="exchange" /></div>
       </div>
-      <VanButton type="primary" plain class="!h-auto !min-h-[--van-button-default-height] w-[calc(25vw-8px)] !m-1"
-        v-for="ep of eps" @click="$router.force[mode](`/comic/${id}/read/${ep.order}`)" :disabled="ep.order == now">
-        {{ ep.title }}
+      <VanButton type="primary" plain style="--width: calc(50vw - 8px);"
+        class="!h-auto !min-h-[--van-button-default-height] w-[--width] !m-1" v-for="ep of eps"
+        @click="$router.force[mode](`/comic/${id}/read/${ep.order}`)" :disabled="ep.order == now">
+        <div class="text-wrap w-[--width] break-words">{{ ep.title }}
+        </div>
+        <NTime :time="ep.updated_time" class="!text-[--primary-color-light]" />
       </VanButton>
     </StateContent>
   </div>

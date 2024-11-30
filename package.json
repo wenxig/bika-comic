@@ -1,6 +1,6 @@
 {
   "name": "bika-comic",
-  "version": "4.3.2",
+  "version": "4.4.0",
   "license": "LGPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
@@ -13,25 +13,25 @@
   },
   "dependencies": {
     "@vant/touch-emulator": "latest",
-    "@vant/use": "latest",
-    "@vercel/speed-insights": "latest",
-    "@vueuse/core": "latest",
-    "axios": "latest",
+    "@vant/use": "^1.6.0",
+    "@vercel/speed-insights": "^1.0.12",
+    "@vueuse/core": "^10.11.0",
+    "axios": "^1.7.2",
     "crypto-js": "^4.2.0",
     "dayjs": "latest",
     "localforage": "latest",
     "lodash-es": "latest",
     "marked": "latest",
     "mitt": "latest",
-    "naive-ui": "^2.40.1",
+    "naive-ui": "^2.40.2",
     "opencc-js": "latest",
-    "pinia": "^2.1.7",
+    "pinia": "^2.2.8",
     "swiper": "^11.1.9",
-    "vant": "^4.9.7",
-    "vue": "^3.5.12",
+    "vant": "^4.9.9",
+    "vue": "^3.5.13",
     "vue-json-pretty": "latest",
     "vue-picture-cropper": "latest",
-    "vue-router": "latest"
+    "vue-router": "^4.4.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "latest",
@@ -49,14 +49,14 @@
     "postcss": "latest",
     "postcss-pxtorem": "latest",
     "sass": "latest",
-    "tailwindcss": "latest",
+    "tailwindcss": "^3.4.4",
     "terser": "latest",
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "unplugin-vue-components": "latest",
-    "vite": "^5.4.7",
+    "vite": "^6.0.1",
     "vite-plugin-pwa": "latest",
     "vite-plugin-turbo-console": "^0.3.2",
     "vue-component-type-helpers": "^2.0.29",
-    "vue-tsc": "^2.0.26"
+    "vue-tsc": "^2.1.10"
   }
 }

@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getProfile } from '@/api'
 import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
-import { markRaw, reactive, ref, shallowRef, watch } from 'vue'
+import { markRaw, reactive, ref, shallowRef, watch, type ShallowReactive, type ShallowRef } from 'vue'
 import { getSearchHitory, getWatchHitory, getSubscribe, type Subscribe, isInPlusPlan, getFavourtImages, putFavourtImages, WatchHistory } from '@/api/plusPlan'
-import { SmartAbortController } from '@/utils/requset'
-import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { SmartAbortController, type ProxyXMLHttpRequest } from '@/utils/requset'
+import type { AxiosRequestConfig } from 'axios'
 import { getNewUpdatesComic } from '@/api/plusPlan'
 import { searchResult } from './temp'
 import { type FavourtImage } from '@/api/plusPlan'
@@ -15,7 +15,11 @@ import type { JSONDataType } from 'vue-json-pretty/types/utils'
 
 export type DevData = {
   name: string,
-  network?: Record<string, [AxiosRequestConfig, result?: AxiosResponse<any, any>]>
+  network?: ShallowReactive<Record<any, ShallowRef<{
+    request: ProxyXMLHttpRequest
+    result?: XMLHttpRequestResponseType
+    error?: number | 'abort'
+  }>>>
   log?: JSONDataType[]
 }
 

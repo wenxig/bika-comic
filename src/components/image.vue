@@ -4,7 +4,7 @@ import { ImageProps, NImage } from 'naive-ui'
 import { useImagesStore } from '@/stores/images'
 import { Image, Image_, showImagePreview } from '@/utils/image'
 import { isString } from 'lodash-es'
-const $props = defineProps<{
+const $props = withDefaults(defineProps<{
   src?: Image_,
   previewable?: boolean
   infiniteRetry?: boolean
@@ -20,7 +20,10 @@ const $props = defineProps<{
     loaded: Set<string>
     error: Set<string>
   }
-}>()
+  fetchpriority?: 'high' | 'low' | 'auto'
+}>(), {
+  fetchpriority: 'auto'
+})
 const src = computed(() => isString($props.src) ? $props.src : $props.src ? $props.src.getUrl ? $props.src.getUrl() : new Image($props.src).getUrl() : '')
 
 const $emit = defineEmits<{
@@ -50,20 +53,20 @@ defineSlots<{
   loading(): any
   fail(): any
 }>()
-const imageComp = shallowRef<InstanceType<typeof NImage>>()
+const imageComp = shallowRef<HTMLImageElement>()
 defineExpose({
-  imageEl: computed(() => imageComp.value?.imageRef)
+  imageEl: imageComp
 })
+//vue3监听如何图片加载完成
 </script>
 
 <template>
   <NImage @error="reload" v-bind="$props" :object-fit="fit" preview-disabled
-    :img-props="{ ...(imgProp ?? {}), class: 'w-full' }" ref="imageComp"
+    :img-props="{ ...(imgProp ?? {}), class: 'w-full', ['fetchpriority' as any]: $props.fetchpriority }"
     :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]" :style
     v-show="!images.error.has(src) && images.loaded.has(src)" v-if="show" @load="(...e) => {
       $emit('load', ...e)
       images.loaded.add(src)
-      // stopTimer()
     }" @click="(e: Event) => {
       $emit('click')
       if (previewable) {
@@ -75,7 +78,8 @@ defineExpose({
     }" :src>
   </NImage>
   <div class="justify-center items-center" v-if="!images.loaded.has(src) && !images.error.has(src) && !hideLoading"
-    :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]" :style @click="$emit('click')">
+    :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]" :style
+    @click="$emit('click')">
     <slot name="loading" v-if="$slots.loading"></slot>
     <VanLoading v-else />
   </div>

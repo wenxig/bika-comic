@@ -104,7 +104,7 @@ const openSmWindow = () => {
       :dir="config['bika.read.rtl'] ? 'rtl' : 'ltr'">
       <SwiperSlide v-for="(src, index) of images" :key="index" :virtualIndex="index" :data-hash="index + 1"
         class="overflow-hidden">
-        <Image infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full swiper-zoom-container">
+        <Image fetchpriority="high" infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full swiper-zoom-container">
           <template #loading>
             <LoaingMask :index="index + 1" />
           </template>
@@ -136,7 +136,7 @@ const openSmWindow = () => {
       </div>
       <div class="flex flex-col h-full ml-1 w-full">
         <div class="text-[--p-color] text-lg van-ellipsis">{{ comicTitle }}</div>
-        <div class="text-sm">{{ epTitle }} ({{ page + 1 }}/{{ images.length }})</div>
+        <div class="text-sm">{{ epTitle }} ({{ (page + 1) || 1 }}/{{ images.length }})</div>
       </div>
     </div>
     <div v-if="!showMenu" @click="showMenu = true" class="!fixed z-[1] top-0 left-0 w-[100vw] h-[3rem]"></div>
@@ -193,7 +193,8 @@ const openSmWindow = () => {
         {{ app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
       </div>
       <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
-      <VanCell title="小窗播放" icon="shrink" v-if="config['bika.smallWindow.enable']" clickable @click="openSmWindow"></VanCell>
+      <VanCell title="小窗播放" icon="shrink" v-if="config['bika.smallWindow.enable']" clickable @click="openSmWindow">
+      </VanCell>
       <van-cell center title="垂直阅读">
         <template #right-icon>
           <van-switch v-model="config['bika.read.vertical']" />

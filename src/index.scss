@@ -13,11 +13,13 @@ html,
 
 $pColor: #db547c;
 $lightPColor: lighten($pColor, 8);
+$superLightPColor: lighten($lightPColor, 8);
 $pressedPColor: darken($pColor, 8);
 :root:root {
   --primary-color: #{$pColor};
   --primary-color-pressed: #{$pressedPColor};
   --primary-color-hover: #{$lightPColor};
+  --primary-color-light: #{$superLightPColor};
   --van-primary-color: var(--primary-color) !important;
   --van-blue: var(--primary-color) !important;
   --p-color: var(--primary-color);
