@@ -1,11 +1,11 @@
-import { useAppStore, type DevData } from "@/stores"
+import { useAppStore } from "@/stores"
 import { reactiveComputed } from "@vueuse/core"
 import { flatten, isEmpty, uniqBy, } from "lodash-es"
 import config from "@/config"
 import symbol from "@/symbol"
 import { HmacSHA256, enc } from "crypto-js"
 import mitt from "mitt"
-import { shallowReactive, shallowRef, watch, type ShallowReactive } from "vue"
+import { shallowReactive, type ShallowReactive } from "vue"
 export function getBikaApiHeaders(pathname: string, method: string) {
   type Headers = [name: string, value: string][]
   pathname = pathname.substring(1)
@@ -58,9 +58,9 @@ export class SmartAbortController implements AbortController {
     this.mitt.on('abort', handler)
   }
 }
-export const errorReturn = (err: Error, because = '') => {
+export const errorReturn = (err: Error, cause = '') => {
   try {
-    window.$message?.error('网络错误:' + because)
+    window.$message?.error('网络错误:' + cause)
   } catch { }
   return Promise.reject(err)
 }
@@ -122,49 +122,3 @@ export const createStateContentData = <T>(data: T, isLoading = false, isEmpty = 
 })
 
 export const coverFunctionToStateContentData = <T extends (...arg: any[]) => Promise<any>>(fn: T, _isEmpty?: (v: Awaited<ReturnType<T>>) => boolean): (...args: Parameters<T>) => StateContentData<Awaited<ReturnType<T>>> => (...arg) => useStateContent(fn(...arg))
-export const setDevData = (name: string, k: keyof NonNullable<DevData['network']>, v: NonNullable<DevData['network']>[string]['value']) => {
-  if (config.value['bika.devMode']) {
-    try {
-      const app = useAppStore()
-      const base = app.devData.get(name) ?? <DevData>{ name }
-      base.network ??= shallowReactive({});
-      (base.network[k] ??= shallowRef(v)).value = v
-      app.devData.set('defaultApi', base)
-    } catch { }
-  }
-}
-export const useDevData = (name: string, k: keyof NonNullable<DevData['network']>, v: NonNullable<DevData['network']>[string]['value']) => {
-  const app = useAppStore()
-  const base = app.devData.get(name) ?? <DevData>{ name }
-  base.network ??= shallowReactive({});
-  (base.network[k] ??= shallowRef(v)).value = v
-  app.devData.set('defaultApi', base)
-  return base.network[k]
-}
-
-const XMLHttpRequest = window.XMLHttpRequest
-export class ProxyXMLHttpRequest extends XMLHttpRequest {
-  private requsetId = Symbol()
-  constructor() {
-    super()
-  }
-  public override send(body?: Document | XMLHttpRequestBodyInit | null): void {
-    super.send(body)
-    const dev = useDevData('network', this.requsetId, {
-      request: this,
-    })
-    this.addEventListener('loadend', () => {
-      dev.value.result = this.responseType
-    }, { once: true })
-    this.addEventListener('error', ({ }) => {
-      dev.value.error = this.status
-    }, { once: true })
-    this.addEventListener('abort', ({ }) => {
-      dev.value.error = 'abort'
-    }, { once: true })
-  }
-  public override open(method: unknown, url: unknown, async?: unknown, username?: unknown, password?: unknown): void {
-
-  }
-}
-export const setupRequestProxy = () => { }// window.XMLHttpRequest = ProxyXMLHttpRequest

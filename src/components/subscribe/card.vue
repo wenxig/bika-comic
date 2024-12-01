@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { ProComic, ProPlusComic } from '@/api'
-import { Subscribe, removeSubscribe } from '@/api/plusPlan'
+import { Subscribe } from '@/api/plusPlan'
 import userIcon from '@/assets/images/userIcon.png?url'
 import { createLoadingMessage } from '@/utils/message'
 import { shallowRef } from 'vue'
@@ -20,7 +20,7 @@ const deleteSubscribe = async () => {
   isRequesting.value = true
   const loading = createLoadingMessage('订阅中')
   try {
-    await loading.bind(removeSubscribe([$props.subscribe.id]))
+    await loading.bind(Subscribe.remove([$props.subscribe.id]))
     await $router.force.replace('/main/subscribe')
     isRequesting.value = false
   } catch {

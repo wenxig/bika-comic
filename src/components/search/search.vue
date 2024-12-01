@@ -5,7 +5,7 @@ import SearchPop from './searchPop.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useScrollParent } from '@vant/use'
 import { useLockHtmlScroll } from 'naive-ui/es/_utils'
-import { patchSubscribe, removeSubscribe } from '@/api/plusPlan'
+import {   Subscribe } from '@/api/plusPlan'
 import { getComicInfo, searchComicsWithAuthor } from '@/api'
 import { SmartAbortController } from '@/utils/requset'
 import { createLoadingMessage } from '@/utils/message'
@@ -65,7 +65,7 @@ const addSubscribe = async () => {
       case 'id': return
       case 'translater':
       case 'anthor': {
-        await patchSubscribe([{
+        await Subscribe.add([{
           id: onlySearchText.value,
           name: onlySearchText.value,
           type: searchMode.value
@@ -77,7 +77,7 @@ const addSubscribe = async () => {
         const data = await getComicInfo(_id)
         if (!data) break
         const { _creator: { _id: id, avatar } } = data
-        await patchSubscribe([{
+        await Subscribe.add([{
           id,
           name: onlySearchText.value,
           type: searchMode.value,
@@ -108,7 +108,7 @@ const deleteSubscribe = async () => {
       case 'id': return
       case 'translater':
       case 'anthor': {
-        await removeSubscribe([onlySearchText.value], { signal: sac.signal })
+        await Subscribe.remove([onlySearchText.value], { signal: sac.signal })
         break
       }
       case 'uploader': {
@@ -116,7 +116,7 @@ const deleteSubscribe = async () => {
         const data = await getComicInfo(_id)
         if (!data) break
         const { _creator: { _id: id } } = data
-        await removeSubscribe([id], { signal: sac.signal })
+        await Subscribe.remove([id], { signal: sac.signal })
         break
       }
     }

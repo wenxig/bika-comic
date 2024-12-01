@@ -1,10 +1,10 @@
-import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError, type AxiosHeaders } from 'axios'
+import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
 import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
 import router from '@/router'
 import config, { isOnline } from '@/config'
-import { SmartAbortController, errorReturn, getBikaApiHeaders, setDevData, setValue, useDevData } from '@/utils/requset'
+import { SmartAbortController, errorReturn, getBikaApiHeaders,  setValue } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
@@ -320,8 +320,11 @@ export class Collection {
   constructor(v: RawCollection) {
     setValue(this, v)
   }
+  public static async getFromNet(config: AxiosRequestConfig = {}){
+    const res = await api.get<RawData<{ collections: RawCollection[] }>>("/collections", config)
+    return res.data.data.collections.map(v => new Collection(v))
+  }
 }
-export const getCollections = async (config: AxiosRequestConfig = {}) => (await api.get<RawData<{ collections: RawCollection[] }>>("/collections", config)).data.data.collections.map(v => new Collection(v))
 
 interface RawCategories {
   title: string
@@ -345,11 +348,18 @@ export class Categories {
   constructor(v: RawCategories) {
     setValue(this, v)
   }
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    const res = await api.get<RawData<{ categories: RawCategories[] }>>("/categories", config)
+    return res.data.data.categories.map(v => new Categories(v))
+  }
 }
-export const getCategories = async (config: AxiosRequestConfig = {}) => (await api.get<RawData<{ categories: RawCategories[] }>>("/categories", config)).data.data.categories.map(v => new Categories(v))
 
-export type HotTag = string
-export const getHotTags = async (config: AxiosRequestConfig = {}) => (await api.get<RawData<{ keywords: HotTag[] }>>("/keywords", config)).data.data.keywords
+export class HotTag extends String {
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    const res = await api.get<RawData<{ keywords: string[] }>>("/keywords", config)
+    return res.data.data.keywords.map(v => new HotTag(v))
+  }
+}
 
 export type SearchResult<T = RawProPlusComic> = Result<T>
 

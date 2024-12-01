@@ -1,14 +1,16 @@
-import config, { isOnline, type baseConfig } from '@/config'
+import config, { isOnline } from '@/config'
 import { useAppStore } from '@/stores'
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
-import { fromPairs, isEmpty, isFunction, isObject, isString, toPairs } from 'lodash-es'
-import { ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusMaxComic } from '.'
+import { defaultsDeep, fromPairs, isEmpty, isFunction, isObject, isString, toPairs } from 'lodash-es'
+import { ProPlusComic, ProPlusMaxComic, User, type RawProComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
 import { until, useLocalStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
 import { errorReturn, setValue } from '@/utils/requset'
 import symbol from '@/symbol'
+import { reactive } from 'vue'
+import proxyData from '@/api/proxy.json'
 export const api = (() => {
   const api = axios.create({
     baseURL: import.meta.env.DEV ? 'http://localhost:8787' : 'https://bika.wenxig.workers.dev',
@@ -173,32 +175,112 @@ export const patchFavourtImages = async (data: FavourtImage[], config: AxiosRequ
   return (await api.patch<Res<RawFavourtImage[]>>(`/${id}/favourt/image`, data, config)).data.data.map(v => new FavourtImage(v))
 }
 
-
-
-export const getSearchHitory = async (config: AxiosRequestConfig = {}) => {
-  if (!id) return false
-  return (await api.get<Res<string[]>>(`/${id}/history/search`, config)).data.data
-}
-export const patchSearchHitory = async (data: string[], config: AxiosRequestConfig = {}) => {
-  if (!id || isEmpty(data)) return false
-  const app = useAppStore()
-  return app.searchHistory = (await api.patch<Res<string[]>>(`/${id}/history/search`, data, config)).data.data
-}
-
-export const getConfig = async (config: AxiosRequestConfig = {}) => {
-  if (!id) return false
-  return (await api.get<Res<typeof baseConfig>>(`/${id}/setting`, config)).data.data
+export class SearchHistory extends String {
+  public static async get(config: AxiosRequestConfig = {}) {
+    if (!id) return false
+    const res = await api.get<Res<string[]>>(`/${id}/history/search`, config)
+    return res.data.data.map(v => new SearchHistory(v))
+  }
+  public static async patch(data: string[], config: AxiosRequestConfig = {}) {
+    if (!id || isEmpty(data)) return false
+    const app = useAppStore()
+    const res = await api.patch<Res<string[]>>(`/${id}/history/search`, data, config)
+    app.searchHistory = res.data.data.map(v => new SearchHistory(v))
+    return app.searchHistory
+  }
 }
 
-export const putConfig = async (data: typeof baseConfig, config: AxiosRequestConfig = {}) => {
-  if (!id || isEmpty(data)) return false
-  return (await api.put<Res<typeof baseConfig>>(`/${id}/setting`, data, config)).data.data
+export interface FillerTag {
+  name: string
+  mode: "unshow" | "show" | "auto"
 }
+export type ImageQuality = 'low' | 'medium' | 'high' | 'original'
 
-export const patchConfig = async (data: typeof baseConfig, config: AxiosRequestConfig = {}) => {
-  if (!id || isEmpty(data)) return false
-  return (await api.patch<Res<typeof baseConfig>>(`/${id}/setting`, data, config)).data.data
+export class UserConfig {
+  public 'bika.read.preloadIamgeNumbers': number
+  public 'bika.read.watchFullscreen': boolean
+  public 'bika.read.vertical': boolean
+  public 'bika.read.twoImage': boolean
+  public 'bika.read.rtl': boolean
+  public 'bika.read.imageQuality': ImageQuality
+  public 'bika.search.sort': SortType
+  public 'bika.search.fillerTags': FillerTag[]
+  public 'bika.search.showAIProject': boolean
+  public 'bika.proxy.interface': string
+  public 'bika.proxy.image': string
+  public 'bika.proxy.db': string
+  public 'bika.proxy.chat': string
+  public 'bika.subscribe.updateTime': string
+  public 'bika.info.unsortComic': boolean
+  public 'bika.plusPlan': boolean
+  public 'bika.devMode': boolean
+  public 'bika.darkMode': boolean
+  public 'bika.game.search.fillerTags': FillerTag[]
+  public 'bika.smallWindow.enable': boolean
+  public 'bika.smallWindow.openOnQuit': boolean
+  constructor(config: typeof UserConfig.default) {
+    this['bika.read.preloadIamgeNumbers'] = config['bika.read.preloadIamgeNumbers']
+    this['bika.read.watchFullscreen'] = config['bika.read.watchFullscreen']
+    this['bika.read.vertical'] = config['bika.read.vertical']
+    this['bika.read.twoImage'] = config['bika.read.twoImage']
+    this['bika.read.rtl'] = config['bika.read.rtl']
+    this['bika.read.imageQuality'] = config['bika.read.imageQuality']
+    this['bika.search.sort'] = config['bika.search.sort']
+    this['bika.search.fillerTags'] = config['bika.search.fillerTags']
+    this['bika.search.showAIProject'] = config['bika.search.showAIProject']
+    this['bika.proxy.interface'] = config['bika.proxy.interface']
+    this['bika.proxy.image'] = config['bika.proxy.image']
+    this['bika.proxy.db'] = config['bika.proxy.db']
+    this['bika.proxy.chat'] = config['bika.proxy.chat']
+    this['bika.subscribe.updateTime'] = config['bika.subscribe.updateTime']
+    this['bika.info.unsortComic'] = config['bika.info.unsortComic']
+    this['bika.plusPlan'] = config['bika.plusPlan']
+    this['bika.devMode'] = config['bika.devMode']
+    this['bika.darkMode'] = config['bika.darkMode']
+    this['bika.game.search.fillerTags'] = config['bika.game.search.fillerTags']
+    this['bika.smallWindow.enable'] = config['bika.smallWindow.enable']
+    this['bika.smallWindow.openOnQuit'] = config['bika.smallWindow.openOnQuit']
+
+  }
+  static default = {
+    'bika.read.preloadIamgeNumbers': 2,
+    'bika.read.watchFullscreen': true,
+    'bika.read.vertical': false,
+    'bika.read.twoImage': false,
+    'bika.read.rtl': false,
+    'bika.read.imageQuality': <ImageQuality>'original',
+    'bika.search.sort': 'dd' as SortType,
+    'bika.search.fillerTags': new Array<FillerTag>(),
+    'bika.search.showAIProject': true,
+    "bika.proxy.interface": proxyData.interface[0],
+    "bika.proxy.image": proxyData.image[0],
+    "bika.proxy.db": proxyData.db[0],
+    "bika.proxy.chat": proxyData.chat[0],
+    'bika.subscribe.updateTime': dayjs().format("YYYY-MM-DD"),
+    'bika.info.unsortComic': false,
+    'bika.plusPlan': true,
+    'bika.devMode': false,
+    'bika.darkMode': false,
+    'bika.game.search.fillerTags': new Array<FillerTag>(),
+    'bika.smallWindow.enable': false,
+    'bika.smallWindow.openOnQuit': false,
+  }
+
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    if (!id) return false
+    return new UserConfig(defaultsDeep((await api.get<Res<RawUserConfig>>(`/${id}/setting`, config)).data.data, this.default))
+  }
+
+  public static async update(data: Partial<UserConfig>, config: AxiosRequestConfig = {}) {
+    if (!id || isEmpty(data)) return false
+    return new UserConfig((await api.put<Res<RawUserConfig>>(`/${id}/setting`, defaultsDeep(data, this.default), config)).data.data)
+  }
+
+  public static getFromDB() {
+    return new UserConfig(defaultsDeep(JSON.parse(localStorage.getItem(symbol.config) ?? '{}'), this.default))
+  }
 }
+export type RawUserConfig = typeof UserConfig.default
 
 interface RawSubscribe {
   type: 'translater' | 'anthor' | 'uploader'
@@ -214,26 +296,28 @@ export class Subscribe {
   constructor(v: RawSubscribe) {
     setValue(this, v)
   }
-}
-export const getSubscribe = async (config: AxiosRequestConfig = {}) => {
-  if (!id) return false
-  const data = (await api.get<Res<RawSubscribe[]>>(`/${id}/subscribe`, config)).data.data
-  if (data) return data.map(v => new Subscribe(v))
-  return false
-}
-export const patchSubscribe = async (data: Subscribe[], config: AxiosRequestConfig = {}) => {
-  if (!id || isEmpty(data)) return false
-  const subscribes = (await api.patch<Res<RawSubscribe[]>>(`/${id}/subscribe`, data, config)).data.data.map(v => new Subscribe(v))
-  const app = useAppStore()
-  app.$patch({ subscribes })
-  return subscribes
-}
-export const removeSubscribe = async (data: string[], config: AxiosRequestConfig = {}) => {
-  if (!id || isEmpty(data)) return false
-  const subscribes = (await api.delete<Res<RawSubscribe[]>>(`/${id}/subscribe?ids=${encodeURIComponent(JSON.stringify(data))}`, config)).data.data.map(v => new Subscribe(v))
-  const app = useAppStore()
-  app.$patch({ subscribes })
-  return subscribes
+  public static store = reactive([])
+
+  public static async get(config: AxiosRequestConfig = {}) {
+    if (!id) return false
+    const data = (await api.get<Res<RawSubscribe[]>>(`/${id}/subscribe`, config)).data.data
+    if (data) return data.map(v => new Subscribe(v))
+    return false
+  }
+  public static async add(data: Subscribe[], config: AxiosRequestConfig = {}) {
+    if (!id || isEmpty(data)) return false
+    const subscribes = (await api.patch<Res<RawSubscribe[]>>(`/${id}/subscribe`, data, config)).data.data.map(v => new Subscribe(v))
+    const app = useAppStore()
+    app.$patch({ subscribes })
+    return subscribes
+  }
+  public static async remove(data: string[], config: AxiosRequestConfig = {}) {
+    if (!id || isEmpty(data)) return false
+    const subscribes = (await api.delete<Res<RawSubscribe[]>>(`/${id}/subscribe?ids=${encodeURIComponent(JSON.stringify(data))}`, config)).data.data.map(v => new Subscribe(v))
+    const app = useAppStore()
+    app.$patch({ subscribes })
+    return subscribes
+  }
 }
 
 
@@ -263,7 +347,7 @@ const newUpdates = (() => {
   return newUpdates
 })()
 
-interface RawNews {
+interface RawYestdayUpdateComics {
   author: string
   categories: string
   chineseTeam: string
@@ -285,7 +369,8 @@ interface RawNews {
   totalViews: number
   updated_at: string
 }
-class News {
+/** @deprecated */
+export class YestdayUpdateComics {
   public author!: string
   public categories!: string
   public chineseTeam!: string
@@ -306,7 +391,7 @@ class News {
   public totalLikes!: number
   public totalViews!: number
   public updated_at!: string
-  constructor(v: RawNews) {
+  constructor(v: RawYestdayUpdateComics) {
     setValue(this, v)
   }
   public toProPlusComic() {
@@ -331,18 +416,15 @@ class News {
       updated_at: this.updated_at
     })
   }
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    const news = await newUpdates.get<string>(`/${dayjs().format(`YYYY-MM-DD`)}.data`, config)
+    const processd = news.data.split('\r\n').filter(Boolean).map(t => {
+      const decodedWords = enc.Base64.parse(t)      
+      const decodedString = enc.Utf8.stringify(decodedWords)
+      const jsonObject = JSON.parse(decodedString)
+      return jsonObject
+    }).map(v => new YestdayUpdateComics(v))
+    return processd.map(pdata => pdata.toProPlusComic())
+  }
 }
-export const getNewUpdatesComic = async (config?: AxiosRequestConfig) => {
-  const news = await newUpdates.get<string>(`/${dayjs().format(`YYYY-MM-DD`)}.data`, config)
-  const processd = news.data.split('\r\n').filter(Boolean).map(t => {
-    const decodedWords = enc.Base64.parse(t)
-    const decodedString = enc.Utf8.stringify(decodedWords)
-    const jsonObject = JSON.parse(decodedString)
-    return jsonObject
-  }).map(v => new News(v))
-  console.log(processd)
-
-  return processd.map(pdata => pdata.toProPlusComic())
-}
-
 export const getVer = async (config: AxiosRequestConfig = {}) => (await api.get<Res<string>>('/ver', config)).data.data
