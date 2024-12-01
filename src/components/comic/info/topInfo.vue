@@ -65,7 +65,7 @@ const app = useAppStore()
             <VanSkeletonParagraph class="!p-0" row-width="50%" />
           </template>
           分类:<span v-for="c of comic?.categories" class="ml-1 van-haptics-feedback"
-            @click="$router.force[mode]({ path: `/search`, query: { keyword: encodeURIComponent(c), mode: 'categories' }, replace: true })">{{ toCn(c) }}</span>
+            @click="$router.force[mode]({ path: `/search`, query: { keyword: encodeURIComponent(c.toString()), mode: 'categories' }, replace: true })">{{ toCn(c.toString()) }}</span>
         </VanSkeleton>
       </div>
       <div class="w-full flex text-[--van-text-color]">

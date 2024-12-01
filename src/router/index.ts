@@ -8,6 +8,7 @@ import { useGameStore } from "@/stores/game"
 import { getGameInfo } from "@/api/game"
 import { useAppStore } from "@/stores"
 import symbol from "@/symbol"
+import eventBus from "@/utils/eventBus"
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -203,3 +204,7 @@ router.force = {
   replace: to => $routerForceDo('replace', to),
 }
 export default router
+
+eventBus.on('networkError_unauth', () => {
+  router.force.replace('/auth/login')
+})

@@ -168,9 +168,9 @@ const toSearchInHideMode = async () => {
   <List :itemHeight="160" :data="listData" reloadable @reload="then => reload().then(then)" v-else
     :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value" :is-err="comicStream.isErr.value"
     :err-cause="comicStream.errCause.value" retriable @retry="comicStream.retry()"
-    v-slot="{ data: { item: comic }, height }" class="duration-200 transition-[height,transform]"
+    v-slot="{ data: { item: comic }, height }" class="duration-200"
     :end="comicStream.done.value" @next="nextSearch" ref="list"
-    :class="[showSearch ? 'h-[calc(100vh-86px)] translate-y-0' : 'h-[calc(100vh-32px)] -translate-y-[54px]']">
+    :class="[showSearch ? 'h-[calc(100vh-86px)] translate-y-0 transition-[height,transform]' : 'h-[calc(100vh-32px)] -translate-y-[54px] transition-[transform]']">
     <ComicCard :comic :height />
   </List>
   <Sorter ref="sorter" @reload="reload()" />

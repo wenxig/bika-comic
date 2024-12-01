@@ -1,14 +1,14 @@
 <script setup lang='ts'>
 import Popup from '@/components/popup.vue'
 import config, { isDark } from '@/config'
-import { DevData, useAppStore } from '@/stores'
+import {  useAppStore } from '@/stores'
 import { flatten, isArray, isBoolean, isError, isFunction, isMap, isNil, isNumber, isObject, isSet, isString } from 'lodash-es'
 import { shallowReactive, shallowRef, watch } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
 import type { JSONDataType } from 'vue-json-pretty/types/utils'
 const app = useAppStore()
 const $window = window
-const devPreviewData = shallowRef<DevData[number]>('')
+const devPreviewData = shallowRef<JSONDataType>('')
 const devShowPreview = shallowRef(false)
 const openJsonPerview = (value: JSONDataType) => {
   if (isSet(value) || isMap(value)) value = value.toJSONObject()
@@ -64,7 +64,6 @@ watch(() => config.value['bika.devMode'], devMode => {
       linesProcesser(value).forEach(value => all.push({ value: value, type: 'warn', id }))
     }
   } else {
-    app.devData.clear()
     window.console.log = baseLogFunction
     window.console.info = baseInfoFunction
     window.console.error = baseErrorFunction
