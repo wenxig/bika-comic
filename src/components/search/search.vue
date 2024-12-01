@@ -44,7 +44,7 @@ const handleSearch = (value: string) => {
 }
 
 useLockHtmlScroll(isShowSearchPop)
-const subscribes = computed(() => app.subscribes.find(v => v.id == onlySearchText.value))
+const subscribes = computed(() => Subscribe.store.subscribes.find(v => v.id == onlySearchText.value))
 const sac = new SmartAbortController()
 let dl = noop
 const isRequesting = shallowRef(false)

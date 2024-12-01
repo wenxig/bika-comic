@@ -116,7 +116,8 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
           点赞
         </component :is="MenuButton">
       </template>
-      <component :is="MenuButton" icon="chat-o" @click="comment?.show()">
+      <component :is="MenuButton" icon="chat-o" v-if="comicStore.comic.comic && comicStore.comic.comic.allowComment"
+        @click="comment?.show()">
         评论
       </component :is="MenuButton">
     </template>

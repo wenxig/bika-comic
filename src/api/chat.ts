@@ -24,18 +24,7 @@ const chat = window.$api.chat = (() => {
     if (token) v.headers.Authorization = `Bearer ${token}`
     return v
   })
-  chat.interceptors.response.use(v => {
-    if (config.value['bika.devMode']) {
-      const app = useAppStore()
-      const base = app.devData.get('chatApi') ?? {
-        name: '聊天api',
-        network: []
-      }
-      base.network.push(v)
-      app.devData.set('chatApi', base)
-    }
-    return v
-  }, async err => {
+  chat.interceptors.response.use(null, async err => {
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<{
       message: any,
@@ -73,18 +62,7 @@ const messageChat = (() => {
     if (token) v.headers.Authorization = `Bearer ${token}`
     return v
   })
-  chat.interceptors.response.use(v => {
-    if (config.value['bika.devMode']) {
-      const app = useAppStore()
-      const base = app.devData.get('chatApi') ?? {
-        name: '聊天api',
-        network: []
-      }
-      base.network.push(v)
-      app.devData.set('chatApi', base)
-    }
-    return v
-  }, async err => {
+  chat.interceptors.response.use(null, async err => {
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<{
       message: any,

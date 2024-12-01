@@ -12,16 +12,17 @@ const $props = defineProps<{
   subscribe: Subscribe,
   comic: ProPlusComic | ProComic
 }>()
-defineEmits<{
+const $emit = defineEmits<{
   userSelect: []
+  remove: []
 }>()
 const isRequesting = shallowRef(false)
 const deleteSubscribe = async () => {
   isRequesting.value = true
-  const loading = createLoadingMessage('订阅中')
+  const loading = createLoadingMessage('取关中')
   try {
-    await loading.bind(Subscribe.remove([$props.subscribe.id]))
-    await $router.force.replace('/main/subscribe')
+    loading.bind(Subscribe.remove([$props.subscribe.id]))
+    $emit('remove')
     isRequesting.value = false
   } catch {
     isRequesting.value = false

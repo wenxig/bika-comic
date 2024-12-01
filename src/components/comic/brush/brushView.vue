@@ -70,13 +70,12 @@ const toComicPage = async (url: string) => {
 }
 onBeforeRouteLeave(() => void (brushComic.page = index.value))
 const initialSlide = brushComic.page
-const app = useAppStore()
 const isChangingSb = shallowRef(false)
 const sb = async () => {
   if (isChangingSb.value) return
   const a = authors.value[0]
   isChangingSb.value = true
-  if (app.subscribes.find(v => v.name == a)) {
+  if (Subscribe.store.subscribes.find(v => v.name == a)) {
     const loading = createLoadingMessage('删除中')
     await loading.bind(Subscribe.remove([a]))
   }

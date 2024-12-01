@@ -993,7 +993,6 @@ export interface Me {
   favourite: MyFavourtComicStream
   data: UserProfile
 }
-
 export const getMe = async (config: AxiosRequestConfig = {}): Promise<Me> => {
   const data = {
     data: <UserProfile | undefined>undefined,

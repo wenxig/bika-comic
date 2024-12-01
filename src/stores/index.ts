@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getProfile } from '@/api'
 import { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
-import { markRaw, reactive, ref, shallowRef, watch, type ShallowReactive, type ShallowRef } from 'vue'
+import { markRaw, ref, shallowRef, watch } from 'vue'
 import { getWatchHitory, isInPlusPlan, getFavourtImages, putFavourtImages, SearchHistory, Subscribe, WatchHistory, YestdayUpdateComics } from '@/api/plusPlan'
 import { SmartAbortController } from '@/utils/requset'
 import type { AxiosRequestConfig } from 'axios'
@@ -10,9 +10,6 @@ import { type FavourtImage } from '@/api/plusPlan'
 import config from '@/config'
 import localforage from 'localforage'
 import symbol from '@/symbol'
-import type { JSONDataType } from 'vue-json-pretty/types/utils'
-
-export type DevData = JSONDataType[]
 
 const _searchHistory = await localforage.getItem<string[]>(symbol.searchHistory) ?? []
 
@@ -54,40 +51,7 @@ export const useAppStore = defineStore('app', () => {
     else user.value = markRaw(await getMe(config))
   }
 
-  const subscribes = shallowRef<Subscribe[]>([])
-  const subscribesUpdates = shallowRef<ProPlusComic[]>([])
-  type SubscribesData = ComicStream<ProComic | ProPlusComic>
-  const subscribesData = shallowRef<Record<string, SubscribesData>>({})
-  const $reloadSubscribes = (config: AxiosRequestConfig = {}) => Subscribe.get(config).then(v => v && (subscribes.value = v))
-  const newUpdateComics = shallowRef<ProPlusComic[]>()
-  watch(subscribes, subscribes => {
-    console.log('change subscribes')
-    const obj: Record<string, SubscribesData> = {}
-    for (const data of subscribes) {
-      if (searchResult.has(data.id)) {
-        var s: SubscribesData = searchResult.get(data.id)!
-        obj[data.id] = s
-        continue
-      }
-      switch (data.type) {
-        case 'translater': {
-          var s: SubscribesData = new ComicStreamWithTranslater(data.name)
-          break
-        }
-        case 'anthor': {
-          var s: SubscribesData = new ComicStreamWithAuthor(data.name)
-          break
-        }
-        case 'uploader': {
-          var s: SubscribesData = new ComicStreamWithUploader(data.name) as any
-          break
-        }
-      }
-      searchResult.set(data.id, s)
-      obj[data.id] = s
-    }
-    subscribesData.value = obj
-  })
+  const yesterdayUpdateComics = shallowRef<ProPlusComic[]>()
 
   const announcements = shallowRef(new AnnouncementStream())
   const $reloadAnnouncements = async () => {
@@ -116,15 +80,13 @@ export const useAppStore = defineStore('app', () => {
   const $reloadFavourtIamges = (c: AxiosRequestConfig = {}) => getFavourtImages(c).then(v => v && (favourtImages.value = v))
 
 
-  const devData = reactive(new Map<string, DevData>())
   const showDevPupop = shallowRef(false)
 
 
   return {
-    subscribes, showDevPupop, devData, favourtImages, levelBoard, announcements: () => announcements.value, newUpdateComics, subscribesData, subscribesUpdates, categories, collections_list, hotTags, user: () => user.value, searchHistory, readHistory,
+    showDevPupop, favourtImages, levelBoard, announcements: () => announcements.value,  yesterdayUpdateComics,  categories, collections_list, hotTags, user: () => user.value, searchHistory, readHistory,
     $reload: {
       me: $reloadMe,
-      subscribes: $reloadSubscribes,
       readHistory: $reloadReadHistory,
       levelboard: $reloadLevelBoard,
       favourtImages: $reloadFavourtIamges,
@@ -141,12 +103,11 @@ export async function init() {
     Categories.getFromNet().then(v => app.categories = v),
     HotTag.getFromNet().then(v => app.hotTags = v),
     Collection.getFromNet().then(v => app.collections_list = v),
-    YestdayUpdateComics.getFromNet().then(v => app.newUpdateComics = v),
+    YestdayUpdateComics.getFromNet().then(v => app.yesterdayUpdateComics = v),
     app.$reload.announcements(),
     SearchHistory.get().then(v => v && (app.searchHistory = v)),
     app.$reload.levelboard(),
     app.$reload.readHistory(),
-    app.$reload.subscribes(),
     app.$reload.me(),
     app.$reload.favourtImages(),
   ] as const)

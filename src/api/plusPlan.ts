@@ -1,16 +1,17 @@
-import config, { isOnline } from '@/config'
+import { isOnline } from '@/config'
 import { useAppStore } from '@/stores'
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
 import { defaultsDeep, fromPairs, isEmpty, isFunction, isObject, isString, toPairs } from 'lodash-es'
-import { ProPlusComic, ProPlusMaxComic, User, type RawProComic, type RawProPlusMaxComic } from '.'
+import { ComicStreamWithAuthor, ComicStreamWithTranslater, ComicStreamWithUploader, ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
 import { until, useLocalStorage } from '@vueuse/core'
 import dayjs from 'dayjs'
 import { errorReturn, setValue } from '@/utils/requset'
 import symbol from '@/symbol'
-import { reactive } from 'vue'
+import { shallowReactive, watch } from 'vue'
 import proxyData from '@/api/proxy.json'
+import { searchResult, type SearchStreamType } from '@/stores/temp'
 export const api = (() => {
   const api = axios.create({
     baseURL: import.meta.env.DEV ? 'http://localhost:8787' : 'https://bika.wenxig.workers.dev',
@@ -20,18 +21,7 @@ export const api = (() => {
     await until(isOnline).toBe(true)
     return v
   })
-  api.interceptors.response.use(v => {
-    // if (config.value['bika.devMode']) {
-    //   const app = useAppStore()
-    //   const base = app.devData.get('plusApi') ?? {
-    //     name: '华夏复兴计划api',
-    //     network: []
-    //   }
-    //   base.network.push(v)
-    //   app.devData.set('plusApi', base)
-    // }
-    return v
-  }, async err => {
+  api.interceptors.response.use(null, async err => {
     if (isCancel(err)) return Promise.reject(err)
     if (!isAxiosError<{
       message: any,
@@ -116,7 +106,7 @@ export const patchWatchHitory = async (data: Record<string, WatchHistory>, confi
 interface RawFavourtImage {
   src: string
   time: number
-  comic: string | RawProComic
+  comic: string | RawProComic | RawProPlusMaxComic | RawProPlusComic
 }
 interface FavourtImageMeta {
   id: string,
@@ -296,8 +286,39 @@ export class Subscribe {
   constructor(v: RawSubscribe) {
     setValue(this, v)
   }
-  public static store = reactive([])
-
+  public static store
+  static {
+    this.store = {
+      streams: shallowReactive(new Map<Subscribe, SearchStreamType>()),
+      _subscribes: shallowReactive(new Array<Subscribe>()),
+      set subscribes(v: Subscribe[]) {
+        this._subscribes.splice(0, Infinity)
+        this._subscribes.push(...v)
+        console.log('change subscribes')
+      },
+      get subscribes() {
+        return this._subscribes
+      }
+    }
+    watch(this.store._subscribes, (subscribes: Subscribe[] /* <- 无法自动推断 */) => {
+      const createStreamIfNon = (id: string, Constructor: new (id: string) => SearchStreamType) => searchResult.get(id) ?? new Constructor(id)
+      for (const subscribe of subscribes) {
+        let stream: SearchStreamType
+        switch (subscribe.type) {
+          case 'translater': stream = createStreamIfNon(subscribe.id, ComicStreamWithTranslater); break
+          case 'anthor': stream = createStreamIfNon(subscribe.id, ComicStreamWithAuthor); break
+          case 'uploader': stream = createStreamIfNon(subscribe.id, ComicStreamWithUploader); break
+        }
+        this.store.streams.set(subscribe, stream)
+        // stream.next() // 用于进行更新判断
+      }
+    })
+    this.get().then(v => {
+      if (v) {
+        this.store.subscribes = v
+      }
+    })
+  }
   public static async get(config: AxiosRequestConfig = {}) {
     if (!id) return false
     const data = (await api.get<Res<RawSubscribe[]>>(`/${id}/subscribe`, config)).data.data
@@ -307,15 +328,17 @@ export class Subscribe {
   public static async add(data: Subscribe[], config: AxiosRequestConfig = {}) {
     if (!id || isEmpty(data)) return false
     const subscribes = (await api.patch<Res<RawSubscribe[]>>(`/${id}/subscribe`, data, config)).data.data.map(v => new Subscribe(v))
-    const app = useAppStore()
-    app.$patch({ subscribes })
+    Subscribe.store.subscribes = subscribes
+    // const app = useAppStore()
+    // app.$patch({ subscribes })
     return subscribes
   }
   public static async remove(data: string[], config: AxiosRequestConfig = {}) {
     if (!id || isEmpty(data)) return false
     const subscribes = (await api.delete<Res<RawSubscribe[]>>(`/${id}/subscribe?ids=${encodeURIComponent(JSON.stringify(data))}`, config)).data.data.map(v => new Subscribe(v))
-    const app = useAppStore()
-    app.$patch({ subscribes })
+    Subscribe.store.subscribes = subscribes
+    // const app = useAppStore()
+    // app.$patch({ subscribes })
     return subscribes
   }
 }
@@ -324,7 +347,7 @@ export class Subscribe {
 const newUpdates = (() => {
   const newUpdates = axios.create()
   newUpdates.interceptors.request.use(async con => {
-    con.baseURL = config.value['bika.proxy.db']
+    con.baseURL = UserConfig.getFromDB()['bika.proxy.db']
     await until(isOnline).toBe(true)
     return con
   })
@@ -419,7 +442,9 @@ export class YestdayUpdateComics {
   public static async getFromNet(config: AxiosRequestConfig = {}) {
     const news = await newUpdates.get<string>(`/${dayjs().format(`YYYY-MM-DD`)}.data`, config)
     const processd = news.data.split('\r\n').filter(Boolean).map(t => {
-      const decodedWords = enc.Base64.parse(t)      
+      const decodedWords = enc.Base64.parse(t)
+      console.log(decodedWords)
+
       const decodedString = enc.Utf8.stringify(decodedWords)
       const jsonObject = JSON.parse(decodedString)
       return jsonObject
@@ -427,4 +452,5 @@ export class YestdayUpdateComics {
     return processd.map(pdata => pdata.toProPlusComic())
   }
 }
+window.$api.enc = enc
 export const getVer = async (config: AxiosRequestConfig = {}) => (await api.get<Res<string>>('/ver', config)).data.data

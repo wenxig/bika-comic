@@ -6,9 +6,8 @@ import { createLoadingMessage } from '@/utils/message'
 import config from '@/config'
 import { sum } from 'lodash-es'
 import { onBeforeRouteLeave } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { Subscribe } from '@/api/plusPlan'
 const app = useAppStore()
-
 document.body.classList.add('user-page')
 onBeforeRouteLeave(() => {
   document.body.classList.remove('user-page')
@@ -56,7 +55,7 @@ const $window = window
     </VanCol>
     <VanCol span="8">
       <n-statistic label="关注">
-        {{ app.subscribes.length ?? 0 }}
+        {{ Subscribe.store.subscribes.length ?? 0 }}
       </n-statistic>
     </VanCol>
     <VanCol span="8">
