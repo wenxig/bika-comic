@@ -113,10 +113,11 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
         </component :is="MenuButton">
         <component :is="MenuButton" baseIcon="star" :primary="comicStore.comic.comic.isFavourite"
           @click="comicStore.comic.comic?.favourt()">
-          点赞
+          收藏
         </component :is="MenuButton">
       </template>
-      <component :is="MenuButton" icon="chat-o" @click="comment?.show()">
+      <component :is="MenuButton" icon="chat-o" v-if="comicStore.comic.comic && comicStore.comic.comic.allowComment"
+        @click="comment?.show()">
         评论
       </component :is="MenuButton">
     </template>

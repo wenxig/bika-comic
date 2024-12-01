@@ -1,4 +1,5 @@
 <script setup lang='ts'>
+import { Subscribe } from '@/api/plusPlan'
 import config from '@/config'
 import { useAppStore } from '@/stores'
 import dayjs from 'dayjs'
@@ -8,8 +9,8 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const name = computed(() => route.path.match(/(?<=\/main\/)\w+(?=\/)?/g)?.[0])
 const app = useAppStore()
-const getComics = () => app.newUpdateComics?.map(v => {
-  for (const user of app.subscribes) {
+const getComics = () => app.yesterdayUpdateComics?.map(v => {
+  for (const user of Subscribe.store.subscribes) {
     switch (user.type) {
       case 'translater': {
         if (v.chineseTeam == user.id) return { subscribe: user, comic: v }

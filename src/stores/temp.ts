@@ -1,7 +1,8 @@
 import { type ChildrenCommentsStream, type ComicStream, type CommentsStream, type Ep, type Page, type ProComic, type ProPlusComic, type ProPlusMaxComic, type RandomComicStream } from "@/api"
 import { GameStream, } from "@/api/game"
 import { reactive, shallowRef } from "vue"
-export const searchResult = new Map<string, ComicStream<ProPlusComic | ProComic>>()
+export type SearchStreamType = ComicStream<ProPlusComic | ProComic>
+export const searchResult = new Map<string, SearchStreamType>()
 export const searchListScroolPosition = new Map<string, number>()
 
 export const comments = new Map<string, CommentsStream>()

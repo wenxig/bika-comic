@@ -6,9 +6,8 @@ import { createLoadingMessage } from '@/utils/message'
 import config from '@/config'
 import { sum } from 'lodash-es'
 import { onBeforeRouteLeave } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { Subscribe } from '@/api/plusPlan'
 const app = useAppStore()
-
 document.body.classList.add('user-page')
 onBeforeRouteLeave(() => {
   document.body.classList.remove('user-page')
@@ -24,13 +23,12 @@ if (isEmpty(app.user())) {
   onUnmounted(() => loading.destroy())
 }
 
-const $message = useMessage()
+const $window = window
 </script>
 
 <template>
   <div class="w-full h-10 flex justify-end items-center bg-[--van-background-2]">
-    <VanIcon color="var(--van-text-color-2)" class="mx-2"
-      @click="config['bika.darkMode'] = !config['bika.darkMode']">
+    <VanIcon color="var(--van-text-color-2)" class="mx-2" @click="config['bika.darkMode'] = !config['bika.darkMode']">
       <svg v-if="config['bika.darkMode']" xmlns="http://www.w3.org/2000/svg" class="w-7"
         xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
         <path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" fill="none" stroke="currentColor"
@@ -57,7 +55,7 @@ const $message = useMessage()
     </VanCol>
     <VanCol span="8">
       <n-statistic label="关注">
-        {{ app.subscribes.length ?? 0 }}
+        {{ Subscribe.store.subscribes.length ?? 0 }}
       </n-statistic>
     </VanCol>
     <VanCol span="8">
@@ -89,8 +87,7 @@ const $message = useMessage()
       </div>
     </div>
     <VanCell title="设置" is-link @click="$router.force.push('/setting')" />
-    <VanCell title="青少年模式" @click="$message.info('青少年不能使用这个，快退出')" is-link />
-    <VanCell title="插件管理" @click="$message.info('这是下个大版本的内容')" is-link />
+    <VanCell title="青少年模式" @click="$window.close()" is-link />
   </div>
 </template>
 <style scoped lang='scss'>

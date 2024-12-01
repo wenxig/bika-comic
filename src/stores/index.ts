@@ -1,27 +1,15 @@
 import { defineStore } from 'pinia'
-import { getCategories, getCollections, getHotTags, getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getProfile } from '@/api'
-import type { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
-import { markRaw, reactive, ref, shallowRef, watch, type ShallowReactive, type ShallowRef } from 'vue'
-import { getSearchHitory, getWatchHitory, getSubscribe, type Subscribe, isInPlusPlan, getFavourtImages, putFavourtImages, WatchHistory } from '@/api/plusPlan'
-import { SmartAbortController, type ProxyXMLHttpRequest } from '@/utils/requset'
+import { AnnouncementStream, getLevelboard, getMyProfile } from '@/api'
+import { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
+import { markRaw, ref, shallowRef, watch } from 'vue'
+import { getWatchHitory, isInPlusPlan, getFavourtImages, putFavourtImages, SearchHistory, Subscribe, WatchHistory, YestdayUpdateComics } from '@/api/plusPlan'
+import { SmartAbortController } from '@/utils/requset'
 import type { AxiosRequestConfig } from 'axios'
-import { getNewUpdatesComic } from '@/api/plusPlan'
 import { searchResult } from './temp'
 import { type FavourtImage } from '@/api/plusPlan'
 import config from '@/config'
 import localforage from 'localforage'
 import symbol from '@/symbol'
-import type { JSONDataType } from 'vue-json-pretty/types/utils'
-
-export type DevData = {
-  name: string,
-  network?: ShallowReactive<Record<any, ShallowRef<{
-    request: ProxyXMLHttpRequest
-    result?: XMLHttpRequestResponseType
-    error?: number | 'abort'
-  }>>>
-  log?: JSONDataType[]
-}
 
 const _searchHistory = await localforage.getItem<string[]>(symbol.searchHistory) ?? []
 
@@ -37,7 +25,7 @@ export const useAppStore = defineStore('app', () => {
 
   const collections_list = shallowRef<Collection[]>([])
 
-  const searchHistory = shallowRef<string[]>(_searchHistory)
+  const searchHistory = shallowRef<SearchHistory[]>(_searchHistory)
   watch(searchHistory, v => localforage.setItem(symbol.searchHistory, v))
 
   const readHistory = shallowRef<ReadHistory>(_readHistory)
@@ -55,48 +43,15 @@ export const useAppStore = defineStore('app', () => {
       user.value.favourite.reload()
       user.value.comments.reload()
       await Promise.all([
-        getProfile(config).then(v => user.value!.data = v),
+        getMyProfile(config).then(v => user.value!.data = v),
         user.value.favourite.next(),
         user.value.comments.next()
       ])
     }
-    else user.value = markRaw(await getMe(config))
+    else user.value = markRaw(await Me.getFromNet(config))
   }
 
-  const subscribes = shallowRef<Subscribe[]>([])
-  const subscribesUpdates = shallowRef<ProPlusComic[]>([])
-  type SubscribesData = ComicStream<ProComic | ProPlusComic>
-  const subscribesData = shallowRef<Record<string, SubscribesData>>({})
-  const $reloadSubscribes = (config: AxiosRequestConfig = {}) => getSubscribe(config).then(v => v && (subscribes.value = v))
-  const newUpdateComics = shallowRef<ProPlusComic[]>()
-  watch(subscribes, subscribes => {
-    console.log('change subscribes')
-    const obj: Record<string, SubscribesData> = {}
-    for (const data of subscribes) {
-      if (searchResult.has(data.id)) {
-        var s: SubscribesData = searchResult.get(data.id)!
-        obj[data.id] = s
-        continue
-      }
-      switch (data.type) {
-        case 'translater': {
-          var s: SubscribesData = new ComicStreamWithTranslater(data.name)
-          break
-        }
-        case 'anthor': {
-          var s: SubscribesData = new ComicStreamWithAuthor(data.name)
-          break
-        }
-        case 'uploader': {
-          var s: SubscribesData = new ComicStreamWithUploader(data.name) as any
-          break
-        }
-      }
-      searchResult.set(data.id, s)
-      obj[data.id] = s
-    }
-    subscribesData.value = obj
-  })
+  const yesterdayUpdateComics = shallowRef<ProPlusComic[]>()
 
   const announcements = shallowRef(new AnnouncementStream())
   const $reloadAnnouncements = async () => {
@@ -125,15 +80,13 @@ export const useAppStore = defineStore('app', () => {
   const $reloadFavourtIamges = (c: AxiosRequestConfig = {}) => getFavourtImages(c).then(v => v && (favourtImages.value = v))
 
 
-  const devData = reactive(new Map<string, DevData>())
   const showDevPupop = shallowRef(false)
 
 
   return {
-    subscribes, showDevPupop, devData, favourtImages, levelBoard, announcements: () => announcements.value, newUpdateComics, subscribesData, subscribesUpdates, categories, collections_list, hotTags, user: () => user.value, searchHistory, readHistory,
+    showDevPupop, favourtImages, levelBoard, announcements: () => announcements.value, yesterdayUpdateComics, categories, collections_list, hotTags, user: () => user.value, searchHistory, readHistory,
     $reload: {
       me: $reloadMe,
-      subscribes: $reloadSubscribes,
       readHistory: $reloadReadHistory,
       levelboard: $reloadLevelBoard,
       favourtImages: $reloadFavourtIamges,
@@ -142,19 +95,19 @@ export const useAppStore = defineStore('app', () => {
   }
 })
 
+
 export async function init() {
   const app = useAppStore()
   config.value['bika.plusPlan'] = await isInPlusPlan()
   await Promise.all([
-    getCategories().then(v => app.categories = v),
-    getHotTags().then(v => app.hotTags = v),
-    getCollections().then(v => app.collections_list = v),
-    getNewUpdatesComic().then(v => app.newUpdateComics = v),
+    Categories.getFromNet().then(v => app.categories = v),
+    HotTag.getFromNet().then(v => app.hotTags = v),
+    Collection.getFromNet().then(v => app.collections_list = v),
+    YestdayUpdateComics.getFromNet().then(v => app.yesterdayUpdateComics = v),
     app.$reload.announcements(),
-    getSearchHitory().then(v => v && (app.searchHistory = v)),
+    SearchHistory.get().then(v => v && (app.searchHistory = v)),
     app.$reload.levelboard(),
     app.$reload.readHistory(),
-    app.$reload.subscribes(),
     app.$reload.me(),
     app.$reload.favourtImages(),
   ] as const)

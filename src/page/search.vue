@@ -9,7 +9,7 @@ import config, { FillerTag } from '@/config'
 import { searchResult as lastSearchResult, searchListScroolPosition } from '@/stores/temp'
 import List from '@/components/list.vue'
 import { computedWithControl, useTitle, watchOnce } from '@vueuse/core'
-import { patchSearchHitory } from '@/api/plusPlan'
+import {  SearchHistory } from '@/api/plusPlan'
 import { modeMap, sorterValue } from '@/utils/translater'
 import Sorter from '@/components/search/sorter.vue'
 import { useAppStore } from '@/stores'
@@ -24,7 +24,7 @@ const $route = useRoute()
 const $router = useRouter()
 const searchText = computed(() => decodeURIComponent($route.query.keyword as string ?? ''))
 const searchMode = computed(() => ($route.query.mode as SearchMode) ?? 'keyword')
-patchSearchHitory([`${modeMap[searchMode.value]}${searchText.value}`])
+SearchHistory.patch([`${modeMap[searchMode.value]}${searchText.value}`])
 useTitle(computed(() => `${decodeURIComponent($route.query.keyword as string ?? '')} | 搜索 | bika`))
 function createStream(keyword: string, sort: SortType) {
   const storeKey = keyword + "\u1145" + searchMode.value
@@ -168,9 +168,9 @@ const toSearchInHideMode = async () => {
   <List :itemHeight="160" :data="listData" reloadable @reload="then => reload().then(then)" v-else
     :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value" :is-err="comicStream.isErr.value"
     :err-cause="comicStream.errCause.value" retriable @retry="comicStream.retry()"
-    v-slot="{ data: { item: comic }, height }" class="duration-200 transition-[height,transform]"
+    v-slot="{ data: { item: comic }, height }" class="duration-200"
     :end="comicStream.done.value" @next="nextSearch" ref="list"
-    :class="[showSearch ? 'h-[calc(100vh-86px)] translate-y-0' : 'h-[calc(100vh-32px)] -translate-y-[54px]']">
+    :class="[showSearch ? 'h-[calc(100vh-86px)] translate-y-0 transition-[height,transform]' : 'h-[calc(100vh-32px)] -translate-y-[54px] transition-[transform]']">
     <ComicCard :comic :height />
   </List>
   <Sorter ref="sorter" @reload="reload()" />

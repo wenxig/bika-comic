@@ -1,10 +1,9 @@
-import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError, type AxiosHeaders } from 'axios'
+import axios, { type AxiosRequestConfig, isCancel, type AxiosResponse, isAxiosError } from 'axios'
 import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from 'lodash-es'
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
-import router from '@/router'
 import config, { isOnline } from '@/config'
-import { SmartAbortController, errorReturn, getBikaApiHeaders, setDevData, setValue, useDevData } from '@/utils/requset'
+import { SmartAbortController, errorReturn, getBikaApiHeaders, setValue } from '@/utils/requset'
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
@@ -12,12 +11,16 @@ import { until, useLocalStorage } from '@vueuse/core'
 import { createLoadingMessage, createDialog } from '@/utils/message'
 import symbol from '@/symbol'
 import localforage from 'localforage'
+import eventBus from '@/utils/eventBus'
 export { type RawImage, Image } from '@/utils/image'
 const createClass = <T extends Result<any>, C>(v: T, Class: new (data: T['docs'][number]) => C): Result<C> => {
   v.docs = v.docs.map(v => new Class(v))
   return v
 }
 const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
+eventBus.on('networkError_unauth', () => {
+  localStorage.removeItem(symbol.loginToken)
+})
 export interface Result<T> {
   docs: T[]
   limit: number
@@ -49,21 +52,19 @@ export const api = (() => {
   })
   const handleError = async (err: any) => {
     await delay(3000)
-    if (isCancel(err) || !isAxiosError<RawData<{ error: string }>>(err)) {
-      return Promise.reject(err)
-    }
+    if (isCancel(err) || !isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
+
     if (err?.response?.status == 401 && userLoginData.value.email) {
       localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
       if (err.config) for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
       return api(err.config ?? {})
-    }
-    else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
-      localStorage.removeItem(symbol.loginToken)
-      await router.force.replace('/auth/login')
+    } else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
+      eventBus.emit('networkError_unauth')
       return Promise.reject(err)
     }
-    if (location.pathname.startsWith('/auth')) return Promise.reject(err)
+
     if (err?.response && err.response.data.error == '1014') return Promise.resolve((<AxiosResponse>{ data: false, config: err.config, headers: err.response?.headers, status: 200, statusText: '200', request: err.request })) // only /comic/:id
+
     if (!err.config) return errorReturn(err, err.message)
     if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
     err.config.__retryCount = err.config?.__retryCount ?? 0
@@ -320,8 +321,11 @@ export class Collection {
   constructor(v: RawCollection) {
     setValue(this, v)
   }
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    const res = await api.get<RawData<{ collections: RawCollection[] }>>("/collections", config)
+    return res.data.data.collections.map(v => new Collection(v))
+  }
 }
-export const getCollections = async (config: AxiosRequestConfig = {}) => (await api.get<RawData<{ collections: RawCollection[] }>>("/collections", config)).data.data.collections.map(v => new Collection(v))
 
 interface RawCategories {
   title: string
@@ -345,11 +349,18 @@ export class Categories {
   constructor(v: RawCategories) {
     setValue(this, v)
   }
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    const res = await api.get<RawData<{ categories: RawCategories[] }>>("/categories", config)
+    return res.data.data.categories.map(v => new Categories(v))
+  }
 }
-export const getCategories = async (config: AxiosRequestConfig = {}) => (await api.get<RawData<{ categories: RawCategories[] }>>("/categories", config)).data.data.categories.map(v => new Categories(v))
 
-export type HotTag = string
-export const getHotTags = async (config: AxiosRequestConfig = {}) => (await api.get<RawData<{ keywords: HotTag[] }>>("/keywords", config)).data.data.keywords
+export class HotTag extends String {
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    const res = await api.get<RawData<{ keywords: string[] }>>("/keywords", config)
+    return res.data.data.keywords.map(v => new HotTag(v))
+  }
+}
 
 export type SearchResult<T = RawProPlusComic> = Result<T>
 
@@ -978,28 +989,32 @@ export class UserSentComment {
   }
 }
 
-export interface Me {
-  comments: MyCommentsStream
-  favourite: MyFavourtComicStream
-  data: UserProfile
-}
-
-export const getMe = async (config: AxiosRequestConfig = {}): Promise<Me> => {
-  const data = {
-    data: <UserProfile | undefined>undefined,
-    comments: new MyCommentsStream(),
-    favourite: new MyFavourtComicStream()
+export class Me {
+  public comments: MyCommentsStream
+  public favourite: MyFavourtComicStream
+  public data: UserProfile
+  constructor(comments: MyCommentsStream, favourite: MyFavourtComicStream, data: UserProfile) {
+    this.comments = comments
+    this.favourite = favourite
+    this.data = data
   }
-  const [profile] = await Promise.all([
-    getProfile(config),
-    data.comments.next(),
-    data.favourite.next()
-  ])
-  data.data = profile
-  return <Me>data
+  public static async getFromNet(config: AxiosRequestConfig = {}) {
+    const data = {
+      data: <UserProfile | undefined>undefined,
+      comments: new MyCommentsStream(),
+      favourite: new MyFavourtComicStream()
+    }
+    const [profile] = await Promise.all([
+      getMyProfile(config),
+      data.comments.next(),
+      data.favourite.next()
+    ])
+    data.data = profile
+    return new Me(data.comments, data.favourite, data.data)
+  }
 }
 
-export const getProfile = async (config: AxiosRequestConfig = {}) => new UserProfile((await api.get<RawData<{ user: RawUserProfile }>>(`/users/profile`, config)).data.data.user)
+export const getMyProfile = async (config: AxiosRequestConfig = {}) => new UserProfile((await api.get<RawData<{ user: RawUserProfile }>>(`/users/profile`, config)).data.data.user)
 
 export class MyFavourtComicStream extends PlusComicStream<ProComic> {
   constructor() {

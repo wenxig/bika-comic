@@ -5,7 +5,7 @@ import { isBoolean, isEmpty, noop } from 'lodash-es'
 import {  watchDebounced } from '@vueuse/core'
 import { computed, shallowRef, watch } from 'vue'
 import { SmartAbortController } from '@/utils/requset'
-import { getSearchHitory } from '@/api/plusPlan'
+import { SearchHistory } from '@/api/plusPlan'
 import { modeMap } from '@/utils/translater'
 import { useZIndex } from '@/utils/layout'
 const inputText = defineModel<string>({ required: true })
@@ -87,7 +87,7 @@ const searchHistorySac = new SmartAbortController()
 watch(show, show => {
   if (!show) return
   searchHistorySac.abort()
-  getSearchHitory({ signal: searchHistorySac.signal }).then(v => !isBoolean(v) && (app.searchHistory = v))
+  SearchHistory.get({ signal: searchHistorySac.signal }).then(v => !isBoolean(v) && (app.searchHistory = v))
 }, { immediate: true })
 
 const _zi = useZIndex(show)
@@ -107,7 +107,7 @@ const zIndex = computed(() => $props.zIndex ?? _zi[0].value)
           <div class="w-full h-auto flex flex-wrap pl-1 mb-1">
             <van-tag type="primary" v-for="(tag, index) of app.searchHistory.toReversed().slice(0, 12)" size="large"
               class="m-1 text-nowrap van-haptics-feedback" plain :key="index"
-              @click="() => { inputText = tag; $emit('search') }">{{ tag }}</van-tag>
+              @click="() => { inputText = tag.toString(); $emit('search') }">{{ tag }}</van-tag>
           </div>
         </template>
         <span class="text-xl text-[--van-primary-color] font-bold w-full pl-3 van-hairline--top">热词</span>

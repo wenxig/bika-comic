@@ -16,7 +16,7 @@
     "@vant/use": "^1.6.0",
     "@vercel/speed-insights": "^1.0.12",
     "@vueuse/core": "^10.11.0",
-    "axios": "^1.7.2",
+    "axios": "^1.7.8",
     "crypto-js": "^4.2.0",
     "dayjs": "latest",
     "localforage": "latest",

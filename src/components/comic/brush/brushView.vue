@@ -14,7 +14,7 @@ import { useComicStore } from '@/stores/comic'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { brushComic } from '@/stores/temp'
 import { useAppStore } from '@/stores'
-import { patchSubscribe, removeSubscribe } from '@/api/plusPlan'
+import {  Subscribe } from '@/api/plusPlan'
 import { createLoadingMessage } from '@/utils/message'
 const swEl = shallowRef<InstanceType<typeof Swiper>>()
 const swiper = computed<SwiperClass | undefined>(() => swEl.value?.$el?.swiper)
@@ -70,19 +70,18 @@ const toComicPage = async (url: string) => {
 }
 onBeforeRouteLeave(() => void (brushComic.page = index.value))
 const initialSlide = brushComic.page
-const app = useAppStore()
 const isChangingSb = shallowRef(false)
 const sb = async () => {
   if (isChangingSb.value) return
   const a = authors.value[0]
   isChangingSb.value = true
-  if (app.subscribes.find(v => v.name == a)) {
-    const loading = createLoadingMessage('订阅中')
-    await loading.bind(removeSubscribe([a]))
+  if (Subscribe.store.subscribes.find(v => v.name == a)) {
+    const loading = createLoadingMessage('删除中')
+    await loading.bind(Subscribe.remove([a]))
   }
   else {
-    const loading = createLoadingMessage('取关中')
-    await loading.bind(patchSubscribe([{
+    const loading = createLoadingMessage('订阅中')
+    await loading.bind(Subscribe.add([{
       id: a,
       name: a,
       type: 'anthor'
