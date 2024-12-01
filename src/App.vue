@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SpeedInsights } from "@vercel/speed-insights/vue"
 import config, { isOnline } from './config'
-import {  UserConfig } from "./api/plusPlan"
+import { UserConfig } from "./api/plusPlan"
 import { nextTick, watch, shallowRef, provide } from "vue"
 import { SmartAbortController } from "./utils/requset"
 import symbol from "./symbol"
@@ -13,6 +13,7 @@ import { getVer } from './api/plusPlan'
 import Popup from '@/components/popup.vue'
 import Dev from '@/components/dev.vue'
 import packageJson from '../package.json'
+import eventBus from "./utils/eventBus"
 window.$message = useMessage()
 window.$loading = useLoadingBar()
 window.$dialog = useDialog()
@@ -69,9 +70,10 @@ watch(config, (config, oldConfig) => {
   if (config['bika.darkMode'] != oldConfig['bika.darkMode']) loadTheme()
   localStorage.setItem(symbol.config, JSON.stringify(config))
 }, { deep: true })
-const ifr = shallowRef<HTMLIFrameElement>()
-provide(symbol.iframeEl, ifr)
 
+eventBus.on('networkError', ([cause]) => [
+  window.$message?.error('网络错误:' + cause)
+])
 </script>
 
 <template>

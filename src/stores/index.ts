@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getMe, ComicStreamWithTranslater, ComicStreamWithAuthor, ComicStreamWithUploader, AnnouncementStream, getLevelboard, getProfile } from '@/api'
+import { AnnouncementStream, getLevelboard, getMyProfile } from '@/api'
 import { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
 import { markRaw, ref, shallowRef, watch } from 'vue'
 import { getWatchHitory, isInPlusPlan, getFavourtImages, putFavourtImages, SearchHistory, Subscribe, WatchHistory, YestdayUpdateComics } from '@/api/plusPlan'
@@ -43,12 +43,12 @@ export const useAppStore = defineStore('app', () => {
       user.value.favourite.reload()
       user.value.comments.reload()
       await Promise.all([
-        getProfile(config).then(v => user.value!.data = v),
+        getMyProfile(config).then(v => user.value!.data = v),
         user.value.favourite.next(),
         user.value.comments.next()
       ])
     }
-    else user.value = markRaw(await getMe(config))
+    else user.value = markRaw(await Me.getFromNet(config))
   }
 
   const yesterdayUpdateComics = shallowRef<ProPlusComic[]>()
@@ -84,7 +84,7 @@ export const useAppStore = defineStore('app', () => {
 
 
   return {
-    showDevPupop, favourtImages, levelBoard, announcements: () => announcements.value,  yesterdayUpdateComics,  categories, collections_list, hotTags, user: () => user.value, searchHistory, readHistory,
+    showDevPupop, favourtImages, levelBoard, announcements: () => announcements.value, yesterdayUpdateComics, categories, collections_list, hotTags, user: () => user.value, searchHistory, readHistory,
     $reload: {
       me: $reloadMe,
       readHistory: $reloadReadHistory,

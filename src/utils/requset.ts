@@ -6,6 +6,7 @@ import symbol from "@/symbol"
 import { HmacSHA256, enc } from "crypto-js"
 import mitt from "mitt"
 import { shallowReactive, type ShallowReactive } from "vue"
+import eventBus from "./eventBus"
 export function getBikaApiHeaders(pathname: string, method: string) {
   type Headers = [name: string, value: string][]
   pathname = pathname.substring(1)
@@ -60,7 +61,7 @@ export class SmartAbortController implements AbortController {
 }
 export const errorReturn = (err: Error, cause = '') => {
   try {
-    window.$message?.error('网络错误:' + cause)
+    eventBus.emit('networkError',[cause])
   } catch { }
   return Promise.reject(err)
 }

@@ -26,7 +26,7 @@ const comicStore = useComicStore()
           反向排序<van-icon name="exchange" /></div>
       </div>
       <VanButton type="primary" plain style="--width: calc(33vw - 8px);"
-        class="!h-auto !min-h-[--van-button-default-height] w-[--width] mt-1 last:mb-1" v-for="ep of eps"
+        class="!h-auto !min-h-[--van-button-default-height] w-[--width] my-1" v-for="ep of eps"
         @click="$router.force[mode](`/comic/${id}/read/${ep.order}`)" :disabled="ep.order == now">
         <div class="text-wrap w-[--width] break-words">{{ ep.title }}
         </div>

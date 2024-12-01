@@ -1,6 +1,4 @@
 import config, { isOnline } from "@/config"
-import router from "@/router"
-import { useAppStore } from "@/stores"
 import symbol from "@/symbol"
 import { delay } from "@/utils/delay"
 import { errorReturn, setValue, uuid } from "@/utils/requset"
@@ -11,7 +9,11 @@ import { noop } from "lodash-es"
 import mitt from 'mitt'
 import type { UserSex } from "."
 import { shallowReactive, shallowRef, watch, type Ref } from "vue"
+import eventBus from "@/utils/eventBus"
 const chatToken = useLocalStorage(symbol.chatToken, '')
+eventBus.on('networkError_unauth',()=>{
+  chatToken.value = undefined
+})
 const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 const chat = window.$api.chat = (() => {
   const chat = axios.create({
@@ -35,8 +37,7 @@ const chat = window.$api.chat = (() => {
       return chat(err.config ?? {})
     }
     else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
-      chatToken.value = undefined
-      await router.force.replace('/auth/login')
+      eventBus.emit('networkError_unauth')
       return Promise.reject(err)
     }
     if (!err.config) return Promise.reject(err)
@@ -73,8 +74,7 @@ const messageChat = (() => {
       return chat(err.config ?? {})
     }
     else if (err?.response?.status == 401 && !location.pathname.includes('auth')) {
-      chatToken.value = undefined
-      await router.force.replace('/auth/login')
+      eventBus.emit('networkError_unauth')
       return Promise.reject(err)
     }
     if (!err.config) return Promise.reject(err)

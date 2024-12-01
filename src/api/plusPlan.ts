@@ -1,11 +1,12 @@
-import { isOnline } from '@/config'
+const isOnline = useOnline()
+
 import { useAppStore } from '@/stores'
 import axios, { isAxiosError, isCancel, type AxiosRequestConfig } from 'axios'
 import { HmacMD5, enc } from 'crypto-js'
 import { defaultsDeep, fromPairs, isEmpty, isFunction, isObject, isString, toPairs } from 'lodash-es'
-import { ComicStreamWithAuthor, ComicStreamWithTranslater, ComicStreamWithUploader, ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusComic, type RawProPlusMaxComic } from '.'
+import {  ComicStreamWithAuthor, ComicStreamWithTranslater, ComicStreamWithUploader, ProPlusComic, ProPlusMaxComic, type RawProComic, type RawProPlusComic, type RawProPlusMaxComic } from '.'
 import { delay } from '@/utils/delay'
-import { until, useLocalStorage } from '@vueuse/core'
+import { until, useLocalStorage, useOnline } from '@vueuse/core'
 import dayjs from 'dayjs'
 import { errorReturn, setValue } from '@/utils/requset'
 import symbol from '@/symbol'
@@ -392,8 +393,7 @@ interface RawYestdayUpdateComics {
   totalViews: number
   updated_at: string
 }
-/** @deprecated */
-export class YestdayUpdateComics {
+export class YestdayUpdateComics{
   public author!: string
   public categories!: string
   public chineseTeam!: string
@@ -442,13 +442,13 @@ export class YestdayUpdateComics {
   public static async getFromNet(config: AxiosRequestConfig = {}) {
     const news = await newUpdates.get<string>(`/${dayjs().format(`YYYY-MM-DD`)}.data`, config)
     const processd = news.data.split('\r\n').filter(Boolean).map(t => {
-      const decodedWords = enc.Base64.parse(t)
-      console.log(decodedWords)
-
-      const decodedString = enc.Utf8.stringify(decodedWords)
-      const jsonObject = JSON.parse(decodedString)
-      return jsonObject
-    }).map(v => new YestdayUpdateComics(v))
+      try {
+        const decodedWords = enc.Base64.parse(t)
+        const decodedString = enc.Utf8.stringify(decodedWords)
+        const jsonObject = JSON.parse(decodedString)
+        return jsonObject
+      } catch {}
+    }).filter(Boolean).map(v => new YestdayUpdateComics(v))
     return processd.map(pdata => pdata.toProPlusComic())
   }
 }

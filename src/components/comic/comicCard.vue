@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { Comic, ProComic, ProPlusComic, ProPlusMaxComic } from '@/api'
+import { ProComic, ProPlusComic, ProPlusMaxComic } from '@/api'
 import Image from '../image.vue'
 import { spiltAnthors, toCn } from '@/utils/translater'
 import { useElementSize } from '@vueuse/core'
@@ -35,7 +35,7 @@ defineSlots<{
 </script>
 
 <template>
-  <button v-if="(comic instanceof Comic)"
+  <button
     class="overflow-hidden w-full van-hairline--bottom flex bg-center bg-[--van-background-2] text-[--van-text-color] border-none relative active:bg-gray p-0 items-start"
     :style="{ [resizeable ? 'minHeight' : 'height']: `${((resizeable ? max([contentHeight, height]) : height) ?? 0)}px` }"
     :class="[{ 'van-haptics-feedback': !disabled, 'shadow-sm': type == 'big' }, { '!w-[calc(50%-2px)] rounded-lg shadow-sm !block': type == 'small' }]"
@@ -67,7 +67,7 @@ defineSlots<{
       </div>
       <div class=" my-1 w-full h-auto flex-nowrap flex">
         <van-tag type="primary" v-for="tag of comic.categories.slice(0, 3)"
-          class="mr-1 text-nowrap">{{ toCn(tag) }}</van-tag>
+          class="mr-1 text-nowrap">{{ toCn(tag.toString()) }}</van-tag>
         <van-tag type="primary" plain v-if="comic.categories.length > 3" class="mr-1 text-nowrap">...</van-tag>
       </div>
     </div>
@@ -90,7 +90,7 @@ defineSlots<{
       </span>
       <div class="my-1 w-full h-auto">
         <van-tag type="primary" v-for="tag of comic.categories.slice(0, symbol.comicCardMaxTagsShow)"
-          class="mr-1 *:!text-nowrap !text-nowrap">{{ toCn(tag) }}</van-tag>
+          class="mr-1 *:!text-nowrap !text-nowrap">{{ toCn(tag.toString()) }}</van-tag>
         <van-tag type="primary" plain v-if="comic.categories.length > symbol.comicCardMaxTagsShow"
           class="mr-1 *:!text-nowrap !text-nowrap">...</van-tag>
       </div>

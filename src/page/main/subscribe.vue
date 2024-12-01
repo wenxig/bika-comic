@@ -59,7 +59,7 @@ const reload = () => {
         class="h-full w-[60px] mx-1 inline-flex flex-col text-center rounded-xl p-1 justify-center"
         :class="[{ 'bg-opacity-50 transition-colors': !select, }, !select && (isDark ? 'bg-[--van-background-3]' : 'bg-gray-300')]">
         <VanIcon name="bell" class="h-[60px] w-[60px] rounded-full bg-gray-300" size="50px" color="var(--van-white)" />
-        全部
+        昨日更新
       </div>
       <div v-for="subscribes of Subscribe.store.subscribes" @click="select = subscribes"
         class="h-full min-w-auto mx-1 inline-flex flex-col text-center rounded-xl p-1 justify-center items-center"
@@ -69,18 +69,18 @@ const reload = () => {
       </div>
     </div>
     <div class="w-full h-10 van-hairline--top-bottom flex items-center pl-4 font-bold text-lg bg-[--van-background-2]">
-      {{ select ? '最近更新' : '今日更新' }}
+      {{ select ? '最近更新' : '昨日更新' }}
     </div>
     <List :item-height="200" :data="getComics() ?? []" v-if="!select" class="w-full van-hairline--top"
       :is-err="stream?.isErr.value" :err-cause="stream?.errCause.value" retriable @retry="stream?.retry()"
       :isRequesting="false" reload-box-class="h-[calc(100%-2.5rem-94px)]"
       v-slot="{ height, data: { item: { comic, subscribe } } }">
-      <Card :height :comic :subscribe @user-select="select = subscribe" />
+      <Card :height :comic :subscribe @user-select="select = subscribe" @remove="select = undefined" />
     </List>
     <List :item-height="200" :data="stream?.docs.value ?? []" v-else reloadable @reload="ok => reload()?.then(ok)"
       class="w-full van-hairline--top h-[calc(100%-2.5rem-94px)]" :isRequesting="stream?.isRequesting.value ?? true"
       :end="stream?.done.value ?? false" @next="stream?.next()" v-slot="{ height, data: { item: comic } }">
-      <Card :height :comic :subscribe="subscribe" @remove="select = undefined" @user-select="select = subscribe.id" />
+      <Card :height :comic :subscribe @remove="select = undefined" @user-select="select = subscribe.id" />
     </List>
   </div>
 </template>
