@@ -30,8 +30,12 @@ const comicStore = useComicStore()
         @click="$router.force[mode](`/comic/${id}/read/${ep.order}`)" :disabled="ep.order == now">
         <div class="text-wrap w-[--width] break-words">{{ ep.title }}
         </div>
-        <NTime format="yyyy-mm-dd" :time="ep.updated_time" class="!text-[--primary-color-light]" />
+        <NTime format="yyyy-MM-dd" :time="ep.updated_time" class="!text-[--primary-color-light]" />
       </VanButton>
+      <div v-for="index of eps.length % 3 == 0 ? 0 : eps.length == 1 ? 2 : 1" style="--width: calc(33vw - 8px);"
+        class="!h-auto !min-h-[--van-button-default-height] w-[--width] my-1">
+        <!-- placeholder block -->
+      </div>
     </StateContent>
   </div>
 </template>
