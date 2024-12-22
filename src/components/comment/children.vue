@@ -57,7 +57,7 @@ const showComment = shallowRef(false)
 </script>
 
 <template>
-  <FloatPopup ref="floatPopup" :anchors>
+  <FloatPopup ref="floatPopup" :anchors lock-scroll>
     <div ref="topCommentEl">
       <CommentRow v-if="_father" :comment="_father" :height="ITEM_HEIGHT" show-children-comment
         @comment="$emit('comment', _father!)" class="!border-none" @show-user="$emit('showUser', _father?._user!)"
@@ -85,5 +85,4 @@ const showComment = shallowRef(false)
 :deep(.van-floating-panel__content) {
   overflow: hidden;
 }
-</style>import { createLoadingMessage } from '@/utils/message'
-import { isEmpty } from 'lodash-es'
+</style>

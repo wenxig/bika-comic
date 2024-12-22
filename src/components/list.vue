@@ -61,12 +61,6 @@ watch([() => $props.data, isReq], ([data]) => {
     else $emit('next', () => isReq.value = false)
   }
 }, { immediate: true })
-watch(vList, vList => {
-  if (!vList) return
-  const list = vList.virtualListInstRef?.itemsElRef?.querySelector(' .v-vl-visible-items')
-  list?.classList.add('overflow-x-hidden')
-  // overflow-x-hidden
-})
 </script>
 
 <template>
