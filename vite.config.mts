@@ -74,7 +74,10 @@ export default defineConfig({
             },
           }
         ],
-
+        maximumFileSizeToCacheInBytes: 1024 * 1024 * 1024
+      },
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 1024 * 1024 * 1024
       },
       devOptions: {
         enabled: true,
