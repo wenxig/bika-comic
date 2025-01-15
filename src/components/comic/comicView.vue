@@ -16,6 +16,7 @@ import FloatPopup from '@/components/floatPopup.vue'
 import { useSmallWindowContext } from '@/stores/smallWindow'
 import { Image_ } from '@/utils/image'
 import { LoaingMask, MenuButton } from './helper'
+import { useClipboard } from '@vueuse/core'
 const $props = withDefaults(defineProps<{
   images: string[],
   startPosition?: number,
@@ -93,6 +94,8 @@ const openSmWindow = () => {
   })
   // $emit('back')
 }
+const $window = window
+const copier = useClipboard({ legacy: true })
 </script>
 
 <template>
@@ -104,7 +107,8 @@ const openSmWindow = () => {
       :dir="config['bika.read.rtl'] ? 'rtl' : 'ltr'">
       <SwiperSlide v-for="(src, index) of images" :key="index" :virtualIndex="index" :data-hash="index + 1"
         class="overflow-hidden">
-        <Image fetchpriority="high" infiniteRetry fit="contain" :use-list="imageStore" :src class="w-full h-full swiper-zoom-container">
+        <Image fetchpriority="high" infiniteRetry fit="contain" :use-list="imageStore" :src
+          class="w-full h-full swiper-zoom-container">
           <template #loading>
             <LoaingMask :index="index + 1" />
           </template>
@@ -192,6 +196,9 @@ const openSmWindow = () => {
           class="van-cell__left-icon" />
         {{ app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
       </div>
+      <VanCell title="复制图片地址" icon="records-o" clickable
+        @click="copier.copy(`${config['bika.proxy.image']}${images[page]}`).then(() => $window.$message.success('成功复制！'))">
+      </VanCell>
       <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
       <VanCell title="小窗播放" icon="shrink" v-if="config['bika.smallWindow.enable']" clickable @click="openSmWindow">
       </VanCell>

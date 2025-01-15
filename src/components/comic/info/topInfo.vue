@@ -1,18 +1,24 @@
 <script setup lang='ts'>
 import Image from '@/components/image.vue'
-import { isEmpty, isUndefined } from 'lodash-es'
+import { isEmpty, isUndefined, last } from 'lodash-es'
 import { ProPlusComic } from '@/api'
 import { spiltAnthors, toCn } from '@/utils/translater'
 import { ProPlusMaxComic } from '@/api'
 import { useAppStore } from '@/stores'
 import symbol from '@/symbol'
-withDefaults(defineProps<{
+import { computed } from 'vue'
+const $props = withDefaults(defineProps<{
   comic?: ProPlusMaxComic | ProPlusComic
   mode?: 'push' | 'replace'
 }>(), {
   mode: 'push'
 })
 const app = useAppStore()
+const thirdParty = computed(() => ({
+  isHave: (/pixiv/ig).test($props.comic?.title ?? '') && (/\d{6,}/ig).test($props.comic?.title ?? ''),
+  linkToUser: `https://www.pixiv.net/users/${last($props.comic?.title?.match(/\d{6,}/ig))}`,
+}))
+const $window = window
 </script>
 
 <template>
@@ -26,7 +32,7 @@ const app = useAppStore()
       </VanSkeleton>
     </VanCol>
     <VanCol span="15" class="ml-1 flex flex-col *:text-sm">
-      <div class="font-bold text-[--van-text-color]">
+      <div class="font-bold text-[--van-text-color]" @click="thirdParty.isHave && $window.open(thirdParty.linkToUser)">
         <VanSkeleton class="!px-0 !pb-1" :loading="!comic">
           <template #template>
             <VanSkeletonParagraph />
@@ -37,8 +43,7 @@ const app = useAppStore()
           {{ comic?.title }}
         </VanSkeleton>
       </div>
-      <VanSkeleton class="!px-0 !pb-1" :loading="!comic"
-        v-if="(comic?.author != undefined) && !isEmpty(comic?.author)">
+      <VanSkeleton class="!px-0 !pb-1" :loading="!comic" v-if="(comic?.author != undefined) && !isEmpty(comic?.author)">
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
         </template>
