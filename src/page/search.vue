@@ -40,6 +40,15 @@ function createStream(keyword: string, sort: SortType) {
       }
       break
     }
+    case 'pid': {
+      try {
+        $router.force.replace(`/comic/${searchText.value}/info`)
+        var s: Stream = new ComicStreamWithId(keyword, sort)
+      } catch {
+        var s: Stream = new ComicStreamWithNoop(keyword, sort)
+      }
+      break
+    }
     case 'keyword': var s: Stream = new ComicStreamWithKeyword(keyword, sort); break
     case 'uploader': var s: Stream = new ComicStreamWithUploader(keyword, sort); break
     case 'translater': var s: Stream = new ComicStreamWithTranslater(keyword, sort); break

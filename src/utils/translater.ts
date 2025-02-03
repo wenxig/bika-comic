@@ -14,7 +14,8 @@ export const modeMap = {
   id: '###',
   tag: '##',
   categories: '#',
-  keyword: ''
+  keyword: '',
+  pid: 'PICA',
 } as Record<SearchMode, string>
 
 export const useSearchMode = (val: MaybeRefOrGetter<string>) => {
@@ -24,13 +25,14 @@ export const useSearchMode = (val: MaybeRefOrGetter<string>) => {
     if (data.value.startsWith(modeMap.translater)) return 'translater'
     if (data.value.startsWith(modeMap.anthor)) return 'anthor'
     if (data.value.startsWith(modeMap.id)) return 'id'
+    if (new RegExp(`^${modeMap.pid}`, 'ig').test(data.value)) return 'pid'
     if (data.value.startsWith(modeMap.tag)) return 'tag'
     if (data.value.startsWith(modeMap.categories)) return 'categories'
     return 'keyword'
   })
 }
 
-const translateMap: Record<string, string > = {
+const translateMap: Record<string, string> = {
   knight: '骑士',
   manager: '管理者',
   vip: '会员',

@@ -43,7 +43,6 @@ const newDateString = dayjs().format("YYYY-MM-DD")
     <van-tabbar-item name="subscribe" icon="eye-o" v-if="config['bika.plusPlan']"
       :dot="!isEmpty(getComics()) && (config['bika.subscribe.updateTime'] != newDateString)"
       @click="config['bika.subscribe.updateTime'] = newDateString">关注</van-tabbar-item>
-    <van-tabbar-item name="chat" icon="chat-o">泡泡</van-tabbar-item>
     <van-tabbar-item name="user" icon="user-o">我的</van-tabbar-item>
   </VanTabbar>
 </template>

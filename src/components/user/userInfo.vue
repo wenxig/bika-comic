@@ -13,16 +13,7 @@ const $props = defineProps<{
 const exp = computed(() => $props.user?.exp ?? 0)
 const needExp = computed(() => {
   const level = $props.user?.level ?? 1
-  const splitLevel = 2
-  if (level <= splitLevel) {
-    switch (level) {
-      case 1: return 150
-      case 2: return 600
-      default: return 1000
-    }
-  } else {
-    return 1000 * (level - splitLevel)
-  }
+  return (((level + 1) * 2 - 1) ** 2 - 1) * 25 // 要知道我翻了20分钟bkapp(2.3)源码
 })
 const avatar = computed(() => (<any>$props.user)?.avatar || (<any>$props.user)?.avatarUrl || userIcon)
 </script>
