@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed } from 'vue'
 import { User, UserProfile } from '@/api'
-import userIcon from '@/assets/images/userIcon.png?url'
+import userIcon from '@/assets/images/userIcon.webp?url'
 import { ChatUserProfile } from '@/api/chat'
 import { userCharactersTranslater } from '@/utils/translater'
 const $props = defineProps<{

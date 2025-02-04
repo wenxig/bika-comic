@@ -5,9 +5,9 @@ import 'swiper/css/virtual'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Pagination, Keyboard } from 'swiper/modules'
 import 'swiper/css/pagination'
-import { computed, nextTick, reactive,  shallowRef, watch } from 'vue'
+import { computed, nextTick, reactive, shallowRef, watch } from 'vue'
 import { brushComic, preloadEps, preloadLikes, preloadPages, preloaInfo, random } from '@/stores/temp'
-import { getComicEps, getComicInfo, getComicLikeOthers, getComicPages, ProPlusMaxComic, RandomComicStream } from '@/api'
+import { getComicEps, getComicInfo, getRecommendComics, getComicPages, ProPlusMaxComic, RandomComicStream } from '@/api'
 import BrushView from '@/components/comic/brush/brushView.vue'
 import { createLoadingMessage, type LoadingInstance } from '@/utils/message'
 import CommentVue from '@/components/comment/comment.vue'
@@ -55,7 +55,7 @@ watch(() => [index.value, stream.docs.value] as const, ([index, docs]) => {
     if (!preloadEps.has(comic._id)) preloadEps.set(comic._id, getComicEps(comic._id))
     if (!preloadPages.has(comic._id)) preloadPages.set(comic._id, getComicPages(comic._id, 1))
     if (!preloaInfo.has(comic._id)) preloaInfo.set(comic._id, getComicInfo(comic._id))
-    if (!preloadLikes.has(comic._id)) preloadLikes.set(comic._id, getComicLikeOthers(comic._id))
+    if (!preloadLikes.has(comic._id)) preloadLikes.set(comic._id, getRecommendComics(comic._id))
   }
 })
 

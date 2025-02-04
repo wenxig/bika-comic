@@ -41,9 +41,9 @@ export default defineConfig({
         start_url: './',
         short_name: _package.name,
         icons: [{
-          src: 'favicon.png',
+          src: 'favicon.webp',
           sizes: "512x512",
-          type: "image/png",
+          type: "image/webp",
           purpose: "any",
         }],
         theme_color: '#000000',
@@ -67,7 +67,7 @@ export default defineConfig({
               networkTimeoutSeconds: 5000
             },
           }, {
-            urlPattern: /\.(png|jpg|jpeg|webp|ico)/ig, // 静态资源缓存
+            urlPattern: /\.(webp|jpg|jpeg|webp|ico)/ig, // 静态资源缓存
             handler: 'CacheFirst',
             options: {
               cacheName: 'assets-cache'

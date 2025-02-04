@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { ProComic, ProPlusComic } from '@/api'
 import { Subscribe } from '@/api/plusPlan'
-import userIcon from '@/assets/images/userIcon.png?url'
+import userIcon from '@/assets/images/userIcon.webp?url'
 import { createLoadingMessage } from '@/utils/message'
 import { shallowRef } from 'vue'
 import { useRouter } from 'vue-router'

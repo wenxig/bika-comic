@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { SignUp, signUp, login } from '@/api'
 import { shallowReactive, shallowRef } from 'vue'
-import loginImage from '@/assets/images/login-bg.png'
+import loginImage from '@/assets/images/login-bg.webp'
 import { createLoadingMessage } from '@/utils/message'
 import { joinInPlusPlan } from '@/api/plusPlan'
 import config from '@/config'

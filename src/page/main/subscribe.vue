@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import userIcon from '@/assets/images/userIcon.png?url'
+import userIcon from '@/assets/images/userIcon.webp?url'
 import { useAppStore } from '@/stores'
 import { computed, shallowRef, watch } from 'vue'
 import Card from '@/components/subscribe/card.vue'
@@ -80,7 +80,7 @@ const reload = () => {
     <List :item-height="200" :data="stream?.docs.value ?? []" v-else reloadable @reload="ok => reload()?.then(ok)"
       class="w-full van-hairline--top h-[calc(100%-2.5rem-94px)]" :isRequesting="stream?.isRequesting.value ?? true"
       :end="stream?.done.value ?? false" @next="stream?.next()" v-slot="{ height, data: { item: comic } }">
-      <Card :height :comic :subscribe @remove="select = undefined" @user-select="select = subscribe.id" />
+      <Card :height :comic :subscribe @remove="select = undefined" />
     </List>
   </div>
 </template>

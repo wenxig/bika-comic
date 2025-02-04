@@ -1,10 +1,10 @@
-<script setup lang='tsx'>
+<script setup lang='ts'>
 import { getComicPages, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { toNumber, clone, isEmpty, remove, isNumber } from 'lodash-es'
+import { toNumber,  isEmpty, remove, isNumber } from 'lodash-es'
 import { useAppStore } from '@/stores'
-import { useTitle, reactiveComputed } from '@vueuse/core'
+import { useTitle } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
 import config from '@/config'
 import ComicView from '@/components/comic/comicView.vue'
@@ -23,20 +23,25 @@ const $router = useRouter()
 const epId = toNumber($route.params.ep)
 const comicId = $route.params.id as string
 const app = useAppStore()
+const pageIns = computed(() => comicStore.now)
 const comicStore = useComicStore()
 const page = (toNumber($route.hash.substring(1)) || 1) - 1
-const comic = computed(() => comicStore.comic.comic)
+const detail = computed(() => pageIns.value?.detail.value)
+const union = computed(() => pageIns.value?.union.value)
+const eps = computed(() => pageIns.value?.eps.value)
+const recommend = computed(() => pageIns.value?.recommendComics.value)
 const comicView = shallowRef<InstanceType<typeof ComicView>>()
 
 // 历史记录
 const createHistory = () => {
-  if (comicStore.comic.comic) return new WatchHistory([epId.toString(), comicStore.comic.comic, (comicView.value?.index ?? 0) - 1, new Date().getTime()])
+  if (detail.value) return new WatchHistory([epId.toString(), detail.value, (comicView.value?.index ?? 0) - 1, new Date().getTime()])
   throw new Error('comic is not have value!!!')
 }
-const saveHistory = () => comicStore.comic.comic && patchWatchHitory({ [comicId]: createHistory() }).catch(() => window.$message.error('历史记录同步失败'))
+const saveHistory = () => detail.value && patchWatchHitory({ [comicId]: createHistory() }).catch(() => window.$message.error('历史记录同步失败'))
 watch(() => comicView.value?.index, page => {
-  if (isNumber(page)) {
-    if (comicStore.comic.comic) console.log('history: ', app.readHistory[comicId] = createHistory())
+  if (isNumber(page) && detail.value) {
+    app.readHistory[comicId] = createHistory()
+    console.log('history:', app.readHistory[comicId])
   }
 }, { immediate: true })
 onBeforeRouteLeave((t, f) => { if (t.fullPath != f.fullPath) saveHistory() })
@@ -45,9 +50,8 @@ onMounted(async () => {
 })
 
 //标题
-const eps = reactiveComputed(() => comicStore.comic.eps)
-const epInfo = computed(() => eps[eps.length - epId])
-const title = computed(() => `p${(comicView.value?.index ?? 0) + 1} | ${epInfo.value?.title ?? '阅读'} | ${(comic.value && comic.value?.title) || '漫画'} | bika`)
+const epInfo = computed(() => eps.value && eps.value[eps.value.length - epId])
+const title = computed(() => `p${((comicView.value?.index ?? 0) + 1) || 1} | ${epInfo.value?.title || '阅读'} | ${union.value?.title || '漫画::加载中'} | bika`)
 useTitle(title)
 
 // 图源
@@ -58,7 +62,7 @@ const lastPagesLength = shallowRef<number>();
   const loading = createLoadingMessage()
   onUnmounted(loading.destroy)
   try {
-    if (eps[epId + 1]) getComicPages(comicId, epId + 1)  // 下一
+    if (eps.value?.[epId + 1]) getComicPages(comicId, epId + 1)  // 下一
     const [v, v2] = await Promise.all([
       getComicPages(comicId, epId), // 当前
       (epId - 1 == 0) ? undefined : getComicPages(comicId, epId - 1), // 上一
@@ -80,7 +84,7 @@ const lastPagesLength = shallowRef<number>();
 
 //选集
 const epSelectShow = shallowRef(false)
-const _eps = reactiveComputed(() => config.value['bika.info.unsortComic'] ? clone(comicStore.comic.eps).reverse() : comicStore.comic.eps)
+const epsInUnsortRule = computed(() => config.value['bika.info.unsortComic'] ? eps.value?.toReversed() : eps.value)
 const showInLast = () => window.$message.info('已是最后的章节')
 const showInFirst = () => window.$message.info('已是第一个章节')
 // 评论
@@ -93,31 +97,28 @@ const showComicInfo = shallowRef(false)
 const showComicLike = shallowRef(false)
 
 // 导航
-const toNextEp = () => (epId + 1 <= _eps.length) ? (!isEmpty(images.value) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)) : showInLast()
+const toNextEp = () => (epId + 1 <= (epsInUnsortRule.value?.length ?? 1)) ? (!isEmpty(images.value) && $router.force.replace(`/comic/${comicId}/read/${epId + 1}`)) : showInLast()
 const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.replace(`/comic/${comicId}/read/${epId - 1}`)) : showInFirst()
 </script>
 
 <template>
-  <ComicView :images :comic-title="comicStore.comic.comic ? comicStore.comic.comic.title : ''" :startPosition="page"
-    :ep-title="epInfo?.title" ref="comicView" @back="$router.back()" v-if="!isEmpty(images)"
-    @add-favourt-image="(src, time) => comic && app.favourtImages.push(new FavourtImage({ src, time, comic }))"
+  <ComicView :images :comic-title="union?.title || ''" :startPosition="page" :ep-title="epInfo?.title" ref="comicView"
+    @back="$router.back()" v-if="!isEmpty(images)"
+    @add-favourt-image="(src, time) => detail && app.favourtImages.push(new FavourtImage({ src, time, comic: detail }))"
     @remove-favourt-image="src => remove(app.favourtImages, { src })" @last-ep="toLastEp" @next-ep="toNextEp">
     <template #menu="{ MenuButton }">
       <component :is="MenuButton" icon="list-switch" @click="epSelectShow = true">
         章节
       </component :is="MenuButton">
-      <template v-if="comicStore.comic.comic">
-        <component :is="MenuButton" baseIcon="like" :primary="comicStore.comic.comic.isLiked"
-          @click="comicStore.comic.comic?.like()">
+      <template v-if="union">
+        <component :is="MenuButton" baseIcon="like" :primary="union?.isLiked" @click="union?.like()">
           点赞
         </component :is="MenuButton">
-        <component :is="MenuButton" baseIcon="star" :primary="comicStore.comic.comic.isFavourite"
-          @click="comicStore.comic.comic?.favourt()">
+        <component :is="MenuButton" baseIcon="star" :primary="union?.isFavourite" @click="union?.favourt()">
           收藏
         </component :is="MenuButton">
       </template>
-      <component :is="MenuButton" icon="chat-o" v-if="comicStore.comic.comic && comicStore.comic.comic.allowComment"
-        @click="comment?.show()">
+      <component :is="MenuButton" icon="chat-o" v-if="detail?.allowComment" @click="comment?.show()">
         评论
       </component :is="MenuButton">
     </template>
@@ -142,8 +143,7 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
   <!-- 章节选择 -->
   <Popup v-model:show="epSelectShow" class="max-h-[70%] min-h-[30%] pt-5 overflow-hidden overflow-y-auto" round
     position="bottom" closeable>
-    <Eps :eps="comicStore.comic.eps" :state="comicStore.comic.epsStateContent" :id="comicStore.comic.preload?._id ?? ''"
-      :now="epId" mode="replace" />
+    <Eps :eps="pageIns?.epsStateContent.value" :id="pageIns?.comicId ?? ''" :now="epId" mode="replace" />
   </Popup>
 
   <!-- 评论 -->
@@ -152,15 +152,15 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
   </FloatPopup>
 
   <!-- 关于 -->
-  <Popup v-model:show="showComicInfo" position="left" round v-if="comic"
+  <Popup v-model:show="showComicInfo" position="left" round
     class="w-[90vw] max-h-[70vh] pb-2 overflow-x-hidden overflow-y-auto">
-    <TopInfo :comic mode="replace" />
-    <Uploader :comic mode="replace" />
+    <TopInfo :comic="union" mode="replace" />
+    <Uploader :comic="detail" mode="replace" v-if="detail" />
   </Popup>
 
   <!-- 推荐 -->
   <Popup v-model:show="showComicLike" position="right" round
     class="w-[90vw] max-h-[70vh] pb-2 overflow-x-hidden overflow-y-auto">
-    <Likes :likes="comicStore.comic.likeComic" mode="replace" :state="comicStore.comic.likeComicStateContent" />
+    <Likes :likes="recommend" mode="replace" :state="pageIns?.recommendComicStateContent.value" />
   </Popup>
 </template>

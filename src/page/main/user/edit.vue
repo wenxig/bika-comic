@@ -6,7 +6,7 @@ import { createLoadingMessage } from '@/utils/message'
 import { until, useFileDialog } from '@vueuse/core'
 import { noop } from 'lodash-es'
 import { reactive, shallowRef } from 'vue'
-import userIcon from '@/assets/images/userIcon.png?url'
+import userIcon from '@/assets/images/userIcon.webp?url'
 import { showImagePreview } from '@/utils/image'
 document.title = '编辑 | 用户 | bika'
 const app = useAppStore()

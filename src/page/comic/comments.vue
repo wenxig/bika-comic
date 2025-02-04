@@ -9,7 +9,7 @@ const $route = useRoute()
 const id = $route.params.id as string
 const comicStore = useComicStore()
 
-const title = computed(() => `评论 | ${comicStore.comic.preload?.title || ''} | bika`)
+const title = computed(() => `评论 | ${comicStore.now?.union.value?.title || '漫画::加载中'} | bika`)
 useTitle(title)
 
 </script>

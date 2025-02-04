@@ -61,7 +61,7 @@ export class SmartAbortController implements AbortController {
 }
 export const errorReturn = (err: Error, cause = '') => {
   try {
-    eventBus.emit('networkError',[cause])
+    eventBus.emit('networkError', [cause])
   } catch { }
   return Promise.reject(err)
 }
@@ -114,12 +114,45 @@ export const useStateContent = <T extends Promise<any>>(promise: T, _isEmpty: (v
   })
   return v
 }
-
-export const createStateContentData = <T>(data: T, isLoading = false, isEmpty = true, isError = false): StateContentData<T> => ({
+export const createStateContentData = <T>(data?: T, isLoading = false, isEmpty = true, isError = false): StateContentData<T> => ({
   isError,
   isEmpty,
   isLoading,
   data
 })
+export const useStateContentWithResolvers = <T>(data?: Awaited<T>, isLoading = false, _isEmpty = !data || isEmpty(data), isError = false) => {
+  const base = createStateContentData<Awaited<T>>(data, isLoading, _isEmpty, isError)
+  const ref: UseStateContent<T> = shallowReactive(base)
+  return {
+    value: ref,
+    load(data?: Awaited<T>, isError = false) {
+      ref.data = data
+      ref.isLoading = false
+      ref.isEmpty = !data || isEmpty(data)
+      ref.isError = isError
+    },
+    reset() {
+      ref.data = base.data
+      ref.isLoading = base.isLoading
+      ref.isEmpty = base.isEmpty
+      ref.isError = base.isError
+    },
+    async bind(promise: Promise<Awaited<T> | undefined>) {
+      ref.isLoading = true
+      try {
+        const result = await promise
+        ref.data = result
+        ref.isLoading = false
+        ref.isError = false
+        ref.isEmpty = !result || isEmpty(result)
+        return result
+      } catch {
+        ref.data = undefined
+        ref.isLoading = false
+        ref.isError = true
+        ref.isEmpty = false
 
-export const coverFunctionToStateContentData = <T extends (...arg: any[]) => Promise<any>>(fn: T, _isEmpty?: (v: Awaited<ReturnType<T>>) => boolean): (...args: Parameters<T>) => StateContentData<Awaited<ReturnType<T>>> => (...arg) => useStateContent(fn(...arg))
+      }
+    }
+  }
+}

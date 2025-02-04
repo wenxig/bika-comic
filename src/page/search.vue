@@ -9,7 +9,7 @@ import config, { FillerTag } from '@/config'
 import { searchResult as lastSearchResult, searchListScroolPosition } from '@/stores/temp'
 import List from '@/components/list.vue'
 import { computedWithControl, useTitle, watchOnce } from '@vueuse/core'
-import {  SearchHistory } from '@/api/plusPlan'
+import { SearchHistory } from '@/api/plusPlan'
 import { modeMap, sorterValue } from '@/utils/translater'
 import Sorter from '@/components/search/sorter.vue'
 import { useAppStore } from '@/stores'
@@ -61,7 +61,6 @@ function createStream(keyword: string, sort: SortType) {
 }
 const comicStream = computedWithControl(() => $route, () => {
   const st = createStream(searchText.value, config.value['bika.search.sort'])
-  if (isEmpty(st.docs.value)) st.next().catch(noop)
   return st
 })
 const reload = (text?: string) => {
@@ -100,12 +99,18 @@ const isInMustshows = (name: string) => getMode(name) == 'show'
 
 const nextSearch = async (then?: VoidFunction) => {
   if (comicStream.value.isRequesting.value) return
-  if (isEmpty(comicStream.value.docs.value)) {
+  const loadTimes = shallowRef(0)
+  const loadingText = computed(() => loadTimes.value > 1 ? `已加载${loadTimes.value}页无结果` : '加载中')
+  const loading = createLoadingMessage(loadingText)
+  const loadNext = async () => {
+    loadTimes.value++
+    const oldLen = listData.value.length
     await comicStream.value.next()
-    return
+    if (oldLen == listData.value.length) {
+      return await loadNext()
+    }
   }
-  const loading = createLoadingMessage(undefined, undefined, true)
-  await loading.bind(comicStream.value.next(), false)
+  await loading.bind(loadNext())
   if (then) then()
 }
 
@@ -177,8 +182,8 @@ const toSearchInHideMode = async () => {
   <List :itemHeight="160" :data="listData" reloadable @reload="then => reload().then(then)" v-else
     :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value" :is-err="comicStream.isErr.value"
     :err-cause="comicStream.errCause.value" retriable @retry="comicStream.retry()"
-    v-slot="{ data: { item: comic }, height }" class="duration-200"
-    :end="comicStream.done.value" @next="nextSearch" ref="list"
+    v-slot="{ data: { item: comic }, height }" class="duration-200" :end="comicStream.done.value" @next="nextSearch"
+    ref="list"
     :class="[showSearch ? 'h-[calc(100vh-86px)] translate-y-0 transition-[height,transform]' : 'h-[calc(100vh-32px)] -translate-y-[54px] transition-[transform]']">
     <ComicCard :comic :height />
   </List>

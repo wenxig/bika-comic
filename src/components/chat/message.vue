@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { ChatMessageData, isUserMessage, ChatTextMessage, ChatImageMessage, ChatInstantImageMessage, ChatReplyTextMessage, ChatReplyImageMessage, ChatReplyAudioMessage, ChatAudioMessage, ChatUserProfile, getUser } from '@/api/chat'
 import Image from '@/components/image.vue'
-import userIcon from '@/assets/images/userIcon.png?url'
+import userIcon from '@/assets/images/userIcon.webp?url'
 import { computed, shallowRef, StyleValue } from 'vue'
 import { useAppStore } from '@/stores'
 import { useMessage } from 'naive-ui'
@@ -38,7 +38,7 @@ const audioEl = shallowRef<HTMLAudioElement>()
 
         <!-- content -->
         <!-- text -->
-        <Text :text="msg.data.message" v-if="(msg instanceof ChatTextMessage)" :class="[baseBoxClass, ]"
+        <Text :text="msg.data.message" v-if="(msg instanceof ChatTextMessage)" :class="[baseBoxClass,]"
           class="max-w-[calc(80vw-3rem)] p-1 rounded-md shadow-sm">
           <a v-for="mo of msg.data.userMentions" class="van-haptics-feedback underline mr-1" @click.stop="() => {
             const user = getUser(mo.id)
@@ -61,7 +61,7 @@ const audioEl = shallowRef<HTMLAudioElement>()
           </div>
         </div>
         <!-- audio -->
-        <div v-else-if="(msg instanceof ChatAudioMessage)" :class="[baseBoxClass, ]"
+        <div v-else-if="(msg instanceof ChatAudioMessage)" :class="[baseBoxClass,]"
           class="h-10 rounded-md shadow-sm text-xs flex items-center w-20 text-gray-400 relative"
           @click="audioEl?.play()">
           <audio controls :src="msg.data.audio" hidden class="hidden" ref="audioEl" />

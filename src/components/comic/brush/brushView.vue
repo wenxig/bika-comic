@@ -13,8 +13,7 @@ import symbol from '@/symbol'
 import { useComicStore } from '@/stores/comic'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { brushComic } from '@/stores/temp'
-import { useAppStore } from '@/stores'
-import {  Subscribe } from '@/api/plusPlan'
+import { Subscribe } from '@/api/plusPlan'
 import { createLoadingMessage } from '@/utils/message'
 const swEl = shallowRef<InstanceType<typeof Swiper>>()
 const swiper = computed<SwiperClass | undefined>(() => swEl.value?.$el?.swiper)
@@ -23,6 +22,7 @@ const $props = withDefaults(defineProps<{
   comic: ProComic
   eps?: Promise<Ep[]>
   info?: Promise<ProPlusMaxComic | false>
+  id: string
   firstPages?: Promise<Page[]>
   showCover?: boolean
   showMenu?: boolean
@@ -64,8 +64,7 @@ const showSliderButtonNumber = shallowRef(false)
 
 const comicStore = useComicStore()
 const toComicPage = async (url: string) => {
-  if ($props.info) comicStore.$setupComic(await $props.info)
-  else comicStore.$setupPreload($props.comic)
+  comicStore.$load($props.id, await ($props.info ?? $props.comic))
   return $router.force.push(url)
 }
 onBeforeRouteLeave(() => void (brushComic.page = index.value))

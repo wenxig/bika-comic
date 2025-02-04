@@ -2,7 +2,7 @@
 import { useComicStore } from '@/stores/comic'
 import { computed } from 'vue'
 const comicStore = useComicStore()
-const title = computed(() => comicStore.comic.preload?.title ?? (comicStore.comic.comic ? comicStore.comic.comic.title : undefined) ?? '')
+const title = computed(() => comicStore.now?.union.value?.title || '')
 
 </script>
 

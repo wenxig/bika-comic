@@ -2,7 +2,7 @@
 import Image from '@/components/image.vue'
 import { Comment, User } from '@/api'
 import { RowProps } from 'vant'
-import userIcon from '@/assets/images/userIcon.png?url'
+import userIcon from '@/assets/images/userIcon.webp?url'
 const $props = defineProps<{
   comment: Comment
   height: number

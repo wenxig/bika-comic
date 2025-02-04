@@ -1,9 +1,9 @@
 <script setup lang='ts'>
 import { useAppStore } from '@/stores'
-import { computed, watch } from 'vue'
-import { isEmpty, isUndefined, last, toNumber } from 'lodash-es'
+import { computed, shallowRef, watch } from 'vue'
+import { isEmpty, last, toNumber } from 'lodash-es'
 import Likes from '@/components/comic/info/likes.vue'
-import { getComicPages, ProPlusComic } from '@/api'
+import { getComicPages } from '@/api'
 import { useTitle, reactiveComputed } from '@vueuse/core'
 import { useComicStore } from '@/stores/comic'
 import Eps from '@/components/comic/info/eps.vue'
@@ -12,66 +12,80 @@ import Uploader from '@/components/comic/info/uploader.vue'
 import { onBeforeRouteLeave } from 'vue-router'
 const app = useAppStore()
 const comicStore = useComicStore()
-const comic = computed(() => comicStore.comic.comic)
-const preload = computed(() => !!comicStore.comic.preload ? comicStore.comic.preload : undefined)
-const history = reactiveComputed(() => preload.value?._id ? (app.readHistory[preload.value?._id] ?? []) : [])
-const readButtonText = computed(() => isEmpty(history) ? '开始阅读' : `继续阅读: ${(comicStore.comic.eps[comicStore.comic.eps.length - toNumber(history[0])]?.title) ?? ''}(P${history[2] + 1})`)
+const pageIns = computed(() => comicStore.now)
+const detail = computed(() => pageIns.value?.detail.value)
+const preload = computed(() => pageIns.value?.preload.value)
+const union = computed(() => pageIns.value?.union.value)
+const eps = computed(() => pageIns.value?.eps.value)
+const recommend = computed(() => pageIns.value?.recommendComics.value)
+const history = reactiveComputed(() => pageIns.value?.comicId ? (app.readHistory[pageIns.value?.comicId] ?? []) : [])
+const readButtonText = computed(() => (isEmpty(history) || !eps.value) ? '开始阅读' : `继续阅读: ${(eps.value[eps.value.length - toNumber(history[0])]?.title) ?? '漫画::加载中'}(P${(history[2] + 1) || 1})`)
 
 const title = computed(() => ` ${preload.value?.title ?? '漫画'} | bika`)
 useTitle(title)
 
-
 // preload
 const preloadIds = new Set<number>()
-const stopPreloadWatch = watch([() => comicStore.comic.eps, preload], ([eps, preload]) => {
-  if (isEmpty(eps) || isUndefined(preload?._id)) return
+const stopPreloadWatch = watch(eps, eps => {
+  if (!eps || !pageIns.value?.comicId) return
   console.log(eps[0].order, last(eps)!.order, history[1]?._id && Number(history[0]))
 
   preloadIds.add(eps[0].order) // 首个
   preloadIds.add(last(eps)!.order) // 最后一个
   preloadIds.add(Number(history[0])) // 历史记录
-  for (const id of preloadIds.values()) if (!isNaN(id) && preload._id) getComicPages(preload._id, id)
+  for (const id of preloadIds.values()) if (!isNaN(id) && pageIns.value?.comicId) getComicPages(pageIns.value.comicId, id)
 }, { immediate: true })
 onBeforeRouteLeave(stopPreloadWatch)
+
+//reload
+const isReloadingAll = shallowRef(false)
+const reloadAll = async () => {
+  isReloadingAll.value = true
+  await pageIns.value?.reloadAll()
+  isReloadingAll.value = false
+}
 </script>
 
 <template>
-  <template v-if="comic != false">
-    <TopInfo :comic="comic ?? (preload as ProPlusComic)" />
-    <VanRow>
-      <VanCol span="12">
-        <VanButton class="w-full van-multi-ellipsis--l2" type="primary" round :disabled="isEmpty(comicStore.comic.eps)"
-          @click="!isEmpty(preload) && $router.force.push(isEmpty(history) ? `/comic/${preload?._id}/read/1` : `/comic/${preload._id}/read/${history[0]}#${history[2] + 1}`)">
-          {{ readButtonText }}
-        </VanButton>
-      </VanCol>
-      <VanCol span="4" class="justify-center !flex items-center">
-        <van-badge :content="comic?.likesCount">
-          <van-icon name="like" size="30px" color="var(--van-primary-color)" v-if="comic && comic.isLiked"
-            @click="comic?.like()" />
-          <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="comic?.like()" />
-        </van-badge>
-      </VanCol>
-      <VanCol span="4" class="justify-center !flex items-center">
-        <van-icon name="star" size="30px" color="var(--van-primary-color)" v-if="comic && comic.isFavourite"
-          @click="preload?.favourt()" />
-        <van-icon name="star-o" size="30px" v-else color="var(--van-text-color)" @click="preload?.favourt()" />
-      </VanCol>
-      <VanCol span="4" class="justify-center !flex items-center"
-        @click="comic?.allowComment && $router.force.push(`/comic/${preload?._id}/comments`)">
-        <van-badge v-if="comic && comic.allowComment" :content="comic.commentsCount">
-          <van-icon name="chat-o" size="30px" color="var(--van-text-color)" />
-        </van-badge>
-        <van-icon name="chat-o" size="30px" color="var(--van-text-color-2)" v-else />
-      </VanCol>
-    </VanRow>
-    <Uploader :comic />
-    <Eps :id="preload?._id ?? ''" :state="comicStore.comic.epsStateContent" :eps="comicStore.comic.eps" />
-    <Likes :likes="comicStore.comic.likeComic" :state="comicStore.comic.likeComicStateContent" />
-  </template>
-  <NResult status="error" title="错误" description="审核中" v-else class="mb-1">
-    <template #footer>
-      <VanButton type="danger" @click="$router.back()">返回</VanButton>
+  <VanPullRefresh @refresh="reloadAll()" v-model="isReloadingAll">
+    <template v-if="pageIns?.vailed.value != false">
+      <TopInfo :comic="union" />
+      <VanRow>
+        <VanCol span="12">
+          <VanButton class="w-full van-multi-ellipsis--l2" type="primary" round
+            :disabled="pageIns?.epsStateContent.value.isEmpty"
+            @click="!isEmpty(preload) && $router.force.push(isEmpty(history) ? `/comic/${preload?._id}/read/1` : `/comic/${pageIns?.comicId}/read/${history[0]}#${history[2] + 1}`)">
+            {{ readButtonText }}
+          </VanButton>
+        </VanCol>
+        <VanCol span="4" class="justify-center !flex items-center">
+          <van-badge :content="union?.likesCount">
+            <van-icon name="like" size="30px" color="var(--van-primary-color)" v-if="union?.isLiked"
+              @click="union?.like()" />
+            <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="union?.like()" />
+          </van-badge>
+        </VanCol>
+        <VanCol span="4" class="justify-center !flex items-center">
+          <van-icon name="star" size="30px" color="var(--van-primary-color)" v-if="union?.isFavourite"
+            @click="union?.favourt()" />
+          <van-icon name="star-o" size="30px" v-else color="var(--van-text-color)" @click="union?.favourt()" />
+        </VanCol>
+        <VanCol span="4" class="justify-center !flex items-center"
+          @click="detail?.allowComment && $router.force.push(`/comic/${preload?._id}/comments`)">
+          <van-badge v-if="detail?.allowComment" :content="detail.commentsCount">
+            <van-icon name="chat-o" size="30px" color="var(--van-text-color)" />
+          </van-badge>
+          <van-icon name="chat-o" size="30px" color="var(--van-text-color-2)" v-else />
+        </VanCol>
+      </VanRow>
+      <Uploader :comic="detail" />
+      <Eps :id="pageIns?.comicId ?? ''" :eps="pageIns?.epsStateContent.value" />
+      <Likes :likes="recommend" :state="pageIns?.recommendComicStateContent.value" />
     </template>
-  </NResult>
+    <NResult status="error" title="错误" description="审核中" v-else class="mb-1">
+      <template #footer>
+        <VanButton type="danger" @click="$router.back()">返回</VanButton>
+      </template>
+    </NResult>
+  </VanPullRefresh>
 </template>

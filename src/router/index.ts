@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, type RouteLocationRaw, isNavigationFailure, NavigationFailureType } from "vue-router"
 import { isEmpty, noop } from "lodash-es"
-import { getComicEps, getComicInfo, getComicLikeOthers, } from '@/api'
+import { getComicEps, getComicInfo, getRecommendComics, } from '@/api'
 import { useComicStore } from "@/stores/comic"
 import { SmartAbortController, useStateContent } from "@/utils/requset"
 import { AxiosError, isCancel } from "axios"
@@ -9,6 +9,7 @@ import { getGameInfo } from "@/api/game"
 import { useAppStore } from "@/stores"
 import symbol from "@/symbol"
 import eventBus from "@/utils/eventBus"
+import { delay } from "@/utils/delay"
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -168,12 +169,13 @@ router.beforeEach(async (to, from) => {
   try {
     const comicStore = useComicStore()
     const id = to.params.id.toString()
-    if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.lastsComics.get(id) ? comicStore.$load(comicStore.lastsComics.get(id)!) : comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
-    if (comicStore.comic.preload?._id != id) comicStore.$clear()
-    if (isEmpty(comicStore.comic.comic)) comicStore.comic.infoStateContent = useStateContent(getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)))
-    if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
-    if (isEmpty(comicStore.comic.eps)) comicStore.comic.epsStateContent = useStateContent(getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps))
-    if (isEmpty(comicStore.comic.likeComic)) comicStore.comic.likeComicStateContent = useStateContent(getComicLikeOthers(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes), v => v[0] == undefined)
+    comicStore.$load(id)
+    // if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.lastsComics.get(id) ? comicStore.$load(comicStore.lastsComics.get(id)!) : comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
+    // if (comicStore.comic.preload?._id != id) comicStore.$clear()
+    // if (isEmpty(comicStore.comic.comic)) comicStore.comic.infoStateContent = useStateContent(getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)))
+    // if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
+    // if (isEmpty(comicStore.comic.eps)) comicStore.comic.epsStateContent = useStateContent(getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps))
+    // if (isEmpty(comicStore.comic.likeComic)) comicStore.comic.likeComicStateContent = useStateContent(getRecommendComics(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes), v => v[0] == undefined)
   } catch (error) {
     console.error(error)
     if (!isCancel(error)) throw error
@@ -207,4 +209,12 @@ export default router
 
 eventBus.on('networkError_unauth', () => {
   router.force.replace('/auth/login')
+})
+
+const stopSetupWatch = router.afterEach(async () => {
+  const el = document.getElementById('setup')
+  if (!el) return stopSetupWatch()
+  el.style.opacity = '0'
+  await delay(300)
+  el.remove()
 })

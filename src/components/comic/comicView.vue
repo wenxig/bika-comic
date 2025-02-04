@@ -197,7 +197,7 @@ const copier = useClipboard({ legacy: true })
         {{ app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
       </div>
       <VanCell title="复制图片地址" icon="records-o" clickable
-        @click="copier.copy(`${config['bika.proxy.image']}${images[page]}`).then(() => $window.$message.success('成功复制！'))">
+        @click="copier.copy(images[page]).then(() => $window.$message.success('成功复制！'))">
       </VanCell>
       <VanCell title="全屏" icon="enlarge" clickable @click="fullscreen.enter()"></VanCell>
       <VanCell title="小窗播放" icon="shrink" v-if="config['bika.smallWindow.enable']" clickable @click="openSmWindow">

@@ -29,7 +29,7 @@ const comicStore = useComicStore()
 const info = shallowRef<HTMLDivElement>()
 const { height: contentHeight } = useElementSize(info)
 defineSlots<{
-  cover(arg: { src: string }): any
+  cover?(arg: { src: string }): any
   default(): any
 }>()
 </script>
@@ -39,7 +39,7 @@ defineSlots<{
     class="overflow-hidden w-full van-hairline--bottom flex bg-center bg-[--van-background-2] text-[--van-text-color] border-none relative active:bg-gray p-0 items-start"
     :style="{ [resizeable ? 'minHeight' : 'height']: `${((resizeable ? max([contentHeight, height]) : height) ?? 0)}px` }"
     :class="[{ 'van-haptics-feedback': !disabled, 'shadow-sm': type == 'big' }, { '!w-[calc(50%-2px)] rounded-lg shadow-sm !block': type == 'small' }]"
-    @click="$props.whenClick ? $props.whenClick() : (() => { comic instanceof ProPlusMaxComic ? comicStore.$setupComic(comic) : comicStore.$setupPreload(comic); $router.force[mode](`/comic/${comic._id}/info`) })()"
+    @click="$props.whenClick ? $props.whenClick() : (() => { $router.force[mode](`/comic/${comic._id}/info`); comicStore.$load(comic._id, comic) })()"
     :disabled>
     <Image :src="comic.thumb" v-if="type == 'big'" class="blur-lg absolute top-0 left-0 w-full h-full" fit="cover" />
     <Image :src="comic.thumb" v-if="type != 'small' && !$slots.cover" class="ml-[2%] w-[30%] h-full z-[2]"

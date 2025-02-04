@@ -1,14 +1,14 @@
 <script setup lang='ts'>
 import Image from '@/components/image.vue'
 import { isEmpty, isUndefined, last } from 'lodash-es'
-import { ProPlusComic } from '@/api'
 import { spiltAnthors, toCn } from '@/utils/translater'
-import { ProPlusMaxComic } from '@/api'
+import { ProComic, ProPlusMaxComic } from '@/api'
 import { useAppStore } from '@/stores'
 import symbol from '@/symbol'
 import { computed } from 'vue'
+import { PreloadValue } from '@/stores/comic'
 const $props = withDefaults(defineProps<{
-  comic?: ProPlusMaxComic | ProPlusComic
+  comic?: PreloadValue
   mode?: 'push' | 'replace'
 }>(), {
   mode: 'push'
@@ -40,7 +40,8 @@ const $window = window
           <span v-if="comic?.finished" class="text-[--van-primary-color]">[完结]</span>
           <span v-if="(comic instanceof ProPlusMaxComic)" class="text-[--p-color]">[{{ comic.pagesCount }}p]</span>
           <span v-if="(comic instanceof ProPlusMaxComic)" class="text-[--p-color]">[{{ comic.epsCount }}ep]</span>
-          {{ comic?.title }}
+          <span :class="[thirdParty.isHave && 'underline underline-offset-4']" class="ml-1">{{ comic?.title }}</span>
+          <span v-if="thirdParty.isHave" class="text-[--van-text-color-3] text-xs italic font-thin"># 1个相关页面</span>
         </VanSkeleton>
       </div>
       <VanSkeleton class="!px-0 !pb-1" :loading="!comic" v-if="(comic?.author != undefined) && !isEmpty(comic?.author)">
@@ -54,7 +55,7 @@ const $window = window
         </div>
       </VanSkeleton>
       <VanSkeleton class="!px-0 !pb-1" :loading="!comic"
-        v-if="(comic?.chineseTeam != undefined) && !isEmpty(comic?.chineseTeam) && comic?.chineseTeam != 'null'">
+        v-if="!(comic instanceof ProComic) && (comic?.chineseTeam != undefined) && !isEmpty(comic?.chineseTeam) && comic?.chineseTeam != 'null'">
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
         </template>
@@ -93,19 +94,21 @@ const $window = window
     </VanCol>
   </VanRow>
   <VanRow>
-    <VanSkeleton :loading="!comic?.tags" class="!p-0 w-full !py-1 flex flex-wrap *:!mt-0">
+    <VanSkeleton :loading="!(comic instanceof ProComic) && !comic?.tags"
+      class="!p-0 w-full !py-1 flex flex-wrap *:!mt-0">
       <template #template>
         <VanSkeletonParagraph class="m-1" row-width="40px" />
         <VanSkeletonParagraph class="m-1" row-width="40px" />
         <VanSkeletonParagraph class="m-1" row-width="40px" />
       </template>
-      <van-tag type="primary" v-for="tag of comic?.tags" class="m-1 text-nowrap van-haptics-feedback" size="medium"
+      <van-tag type="primary" v-for="tag of !(comic instanceof ProComic) ? comic?.tags : []"
+        class="m-1 text-nowrap van-haptics-feedback" size="medium"
         @click="$router.force[mode]({ path: `/search`, query: { keyword: encodeURIComponent(tag), mode: 'tag' } })">{{ toCn(tag) }}</van-tag>
     </VanSkeleton>
   </VanRow>
   <VanRow class="*:text-xs p-1 text-[--van-text-color-2]">
     <VanSkeleton class="!p-0 !pb-1 w-full" :row="2" :loading="!comic">
-      <template v-if="comic?.description">
+      <template v-if="!(comic instanceof ProComic) && comic?.description">
         <div class="w-[98%] bg-red-500 bg-opacity-20 rounded-lg px-2 text-[--van-text-color]" style="margin: 0 auto;"
           v-if="comic?.description.includes(symbol.hardToReadText)">
           <h2 class="!text-red-500">重口警告</h2>

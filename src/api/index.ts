@@ -679,7 +679,10 @@ export class Ep {
   }
 }
 type Eps = Result<RawEp>
-export const getComicEps = (async (id: string, config: AxiosRequestConfig = {}) => {
+export type ComicEps = Ep[] & {
+  id?: string
+}
+export const getComicEps = (async (id: string, config: AxiosRequestConfig = {}): Promise<ComicEps> => {
   const ep = new Array<Eps>()
   const baseEps = (await api.get<RawData<{ eps: Eps }>>(`/comics/${id}/eps?page=1`)).data.data.eps
   ep.push(baseEps)
@@ -689,7 +692,10 @@ export const getComicEps = (async (id: string, config: AxiosRequestConfig = {}) 
   return result
 })
 
-export const getComicLikeOthers = async (id: string, config: AxiosRequestConfig = {}) => {
+export type RecommendComics = ProComic[] & {
+  id?: string
+}
+export const getRecommendComics = async (id: string, config: AxiosRequestConfig = {}): Promise<RecommendComics> => {
   const result = (await api.get<RawData<{ comics: RawProComic[] }>>(`/comics/${id}/recommendation`, config)).data.data.comics.map(v => new ProComic(v)) as ProComic[] & { id?: string }
   result.id = id
   return result

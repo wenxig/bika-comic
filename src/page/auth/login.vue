@@ -2,7 +2,7 @@
 import { Login, login } from '@/api'
 import { login as chatLogin } from '@/api/chat'
 import { shallowReactive, shallowRef } from 'vue'
-import loginImage from '@/assets/images/login-bg.png'
+import loginImage from '@/assets/images/login-bg.webp'
 import { createLoadingMessage } from '@/utils/message'
 import { useMessage } from 'naive-ui'
 import { joinInPlusPlan } from '@/api/plusPlan'
@@ -43,8 +43,8 @@ async function submit() {
       <van-cell-group inset>
         <van-field :disabled="isLoginning" v-model="formValue.email" name="用户名" label="用户名" placeholder="用户名"
           :rules="[{ required: true, message: '请填写用户名' }]" />
-        <van-field :disabled="isLoginning" v-model="formValue.password" type="password" name="密码" label="密码" placeholder="密码"
-          :rules="[{ required: true, message: '请填写密码' }]" />
+        <van-field :disabled="isLoginning" v-model="formValue.password" type="password" name="密码" label="密码"
+          placeholder="密码" :rules="[{ required: true, message: '请填写密码' }]" />
       </van-cell-group>
       <div class="w-[calc(100%-40px)] flex justify-between px-5 items-center">
         <span @click="$router.force.push('/auth/signup')"
