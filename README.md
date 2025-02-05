@@ -4,6 +4,7 @@
 1. <bika-comic.vercel.app>
 2. <bika-comic.surge.sh>
 3. <bika-comic.pages.dev>
+3. <wenxig-bika-comic.github.io>
 
 与手机端对比没有实现的功能:
 1. <del>&nbsp;下载&nbsp;</del>(_CORS策略阻止_)
