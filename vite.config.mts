@@ -43,7 +43,8 @@ export default defineConfig({
           purpose: "any",
         }],
         theme_color: '#000000',
-        display: 'standalone'
+        display: 'standalone',
+        lang: 'zh-cn'
       },
       injectRegister: 'script',
       registerType: 'autoUpdate',
