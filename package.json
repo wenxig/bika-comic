@@ -16,6 +16,7 @@
     "@vant/use": "^1.6.0",
     "@vercel/speed-insights": "^1.0.12",
     "@vueuse/core": "^10.11.0",
+    "@xmit.co/xmit": "0.3.5-0",
     "axios": "^1.7.8",
     "crypto-js": "^4.2.0",
     "dayjs": "latest",
@@ -31,7 +32,8 @@
     "vue": "^3.5.13",
     "vue-json-pretty": "latest",
     "vue-picture-cropper": "latest",
-    "vue-router": "^4.4.0"
+    "vue-router": "^4.4.0",
+    "xmit": "^0.1.67"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "latest",

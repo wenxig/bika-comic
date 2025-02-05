@@ -1,10 +1,12 @@
 # bika-comic
 
 分流:
-1. <bika-comic.vercel.app>
-2. <bika-comic.surge.sh>
-3. <bika-comic.pages.dev>
-3. <wenxig-bika-comic.github.io>
+1. <https://bika-comic.vercel.app>
+2. <https://bika-comic.surge.sh>
+3. <https://bika-comic.pages.dev>
+4. <https://bika-comic.xmit.dev>
+5. <https://wenxig-bika-comic.github.io>
+6. <https://bika-comic-cdkae.kinsta.page/>
 
 与手机端对比没有实现的功能:
 1. <del>&nbsp;下载&nbsp;</del>(_CORS策略阻止_)
