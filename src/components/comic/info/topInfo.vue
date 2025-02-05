@@ -1,12 +1,13 @@
 <script setup lang='ts'>
 import Image from '@/components/image.vue'
-import { isEmpty, isUndefined, last } from 'lodash-es'
+import { isEmpty, isUndefined, last, union } from 'lodash-es'
 import { spiltAnthors, toCn } from '@/utils/translater'
 import { ProComic, ProPlusMaxComic } from '@/api'
 import { useAppStore } from '@/stores'
 import symbol from '@/symbol'
 import { computed } from 'vue'
 import { PreloadValue } from '@/stores/comic'
+import { useClipboard } from '@vueuse/core'
 const $props = withDefaults(defineProps<{
   comic?: PreloadValue
   mode?: 'push' | 'replace'
@@ -19,6 +20,8 @@ const thirdParty = computed(() => ({
   linkToUser: `https://www.pixiv.net/users/${last($props.comic?.title?.match(/\d{6,}/ig))}`,
 }))
 const $window = window
+
+const clipboard = useClipboard({ legacy: true })
 </script>
 
 <template>
@@ -33,7 +36,7 @@ const $window = window
     </VanCol>
     <VanCol span="15" class="ml-1 flex flex-col *:text-sm">
       <div class="font-bold text-[--van-text-color]" @click="thirdParty.isHave && $window.open(thirdParty.linkToUser)">
-        <VanSkeleton class="!px-0 !pb-1" :loading="!comic">
+        <VanSkeleton class="!px-0 !pb-1" :loading="!comic" row="1">
           <template #template>
             <VanSkeletonParagraph />
           </template>
@@ -54,7 +57,7 @@ const $window = window
             @click="comic && $router.force[mode](`/search?keyword=${author}&mode=anthor`)">{{ author }}</span>
         </div>
       </VanSkeleton>
-      <VanSkeleton class="!px-0 !pb-1" :loading="!comic"
+      <VanSkeleton class="!px-0 !pb-1" :loading="!comic" row="1"
         v-if="!(comic instanceof ProComic) && (comic?.chineseTeam != undefined) && !isEmpty(comic?.chineseTeam) && comic?.chineseTeam != 'null'">
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
@@ -66,12 +69,21 @@ const $window = window
         </div>
       </VanSkeleton>
       <div class="text-[--van-text-color-2]">
-        <VanSkeleton :loading="!comic?.categories" class="!px-0 !pb-1">
+        <VanSkeleton :loading="!comic?.categories" class="!px-0 !pb-1" row="1">
           <template #template>
             <VanSkeletonParagraph class="!p-0" row-width="50%" />
           </template>
           分类:<span v-for="c of comic?.categories" class="ml-1 van-haptics-feedback"
             @click="$router.force[mode]({ path: `/search`, query: { keyword: encodeURIComponent(c.toString()), mode: 'categories' }, replace: true })">{{ toCn(c.toString()) }}</span>
+        </VanSkeleton>
+      </div>
+      <div class="text-[--van-text-color-2] my-1 text-nowrap">
+        <VanSkeleton row="1" :loading="!comic?._id" class="!px-0 !pb-1">
+          <div v-if="comic?._id" @click="clipboard.copy(`###${comic._id}`).then(() => $window.$message.success('成功！'))">
+            <VanIcon name="records-o"></VanIcon>
+            <span>ID:</span>
+            <span>{{ comic._id }}</span>
+          </div>
         </VanSkeleton>
       </div>
       <div class="w-full flex text-[--van-text-color]">

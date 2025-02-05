@@ -40,7 +40,7 @@ const selectPage = shallowRef($route.path.split('/')[3])
 const showAlert = shallowRef(false)
 
 const beforeChange = async (t: string) => {
-  console.log('home index', t)
+  console.log('home top selected name', t)
 
   const loading = createLoadingMessage()
   isShowNavBar.value = true

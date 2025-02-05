@@ -114,9 +114,9 @@ export const useStateContent = <T extends Promise<any>>(promise: T, _isEmpty: (v
   })
   return v
 }
-export const createStateContentData = <T>(data?: T, isLoading = false, isEmpty = true, isError = false): StateContentData<T> => ({
+export const createStateContentData = <T>(data?: T, isLoading = false, _isEmpty = data && isEmpty(data), isError = false): StateContentData<T> => ({
   isError,
-  isEmpty,
+  isEmpty: _isEmpty,
   isLoading,
   data
 })

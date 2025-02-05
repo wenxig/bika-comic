@@ -1,6 +1,5 @@
 <script setup lang='ts'>
 import { Login, login } from '@/api'
-import { login as chatLogin } from '@/api/chat'
 import { shallowReactive, shallowRef } from 'vue'
 import loginImage from '@/assets/images/login-bg.webp'
 import { createLoadingMessage } from '@/utils/message'
@@ -22,7 +21,6 @@ async function submit() {
   try {
     userLoginData.value = formValue
     const { data: { data: { token } } } = await login(formValue)
-    await chatLogin()
     localStorage.setItem(symbol.loginToken, token)
     await joinInPlusPlan()
     config.value['bika.plusPlan'] = true

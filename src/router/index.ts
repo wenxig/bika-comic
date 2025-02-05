@@ -1,8 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationRaw, isNavigationFailure, NavigationFailureType } from "vue-router"
 import { isEmpty, noop } from "lodash-es"
-import { getComicEps, getComicInfo, getRecommendComics, } from '@/api'
 import { useComicStore } from "@/stores/comic"
-import { SmartAbortController, useStateContent } from "@/utils/requset"
+import { SmartAbortController } from "@/utils/requset"
 import { AxiosError, isCancel } from "axios"
 import { useGameStore } from "@/stores/game"
 import { getGameInfo } from "@/api/game"
@@ -57,14 +56,6 @@ const router = createRouter({
       }, {
         path: 'subscribe',
         component: () => import('@/page/main/subscribe.vue'),
-      }, {
-        path: 'chat',
-        component: () => import('@/page/main/chat/index.vue'),
-        redirect: '/main/chat/room',
-        children: [{
-          path: 'room',
-          component: () => import('@/page/main/chat/room.vue'),
-        }]
       }, {
         path: 'find',
         component: () => import('@/page/main/home/find.vue'),
@@ -123,9 +114,6 @@ const router = createRouter({
         path: 'comments',
         component: () => import('@/page/comic/comments.vue'),
       }]
-    }, {
-      path: '/chat/room/:id',
-      component: () => import('@/page/chat/room.vue')
     }, {
       path: '/comic/:id/read/:ep',
       component: () => import('@/page/comic/read.vue')

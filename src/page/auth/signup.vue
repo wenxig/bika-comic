@@ -10,7 +10,6 @@ import { useMessage } from 'naive-ui'
 import Popup from '@/components/popup.vue'
 import symbol from '@/symbol'
 import { useLocalStorage } from '@vueuse/core'
-import { login as chatLogin } from '@/api/chat'
 const toDay = new Date()
 const formValue = shallowReactive<SignUp & Record<string, string>>({
   email: '',
@@ -43,7 +42,6 @@ async function submit() {
       email: formValue.email,
       password: formValue.password
     })
-    await chatLogin()
     localStorage.setItem(symbol.loginToken, token)
     await joinInPlusPlan()
     config.value['bika.plusPlan'] = true

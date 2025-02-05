@@ -68,7 +68,7 @@ defineExpose({
       :is-requesting :end="searchDone" v-slot="{ data: { item }, height }" @next="nextLoad"
       @reload="then => handleReloadCommit().then(then)">
       <CommentRow :comment="item" :height show-children-comment @click="() => {
-        console.log('click comment')
+        console.log('click comment', item)
         _father = item
         childrenComments?.show(item._id)
       }" @show-user="previewUser?.show" :ellipsis="3">

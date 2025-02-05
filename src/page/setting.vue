@@ -12,7 +12,6 @@ import { NScrollbar } from 'naive-ui'
 import { version } from '../../package.json'
 import { onBeforeRouteLeave } from 'vue-router'
 import localforage from 'localforage'
-import { clearChatDb } from '@/api/chat'
 import { clearComicPagesTemp } from '@/api'
 import { uniq } from 'lodash-es'
 const $window = window
@@ -33,7 +32,6 @@ const clearDb = () => (createDialog({
   document.cookie = ''
   await Promise.all([
     ...(await caches.keys()).map(key => caches.delete(key)),
-    clearChatDb(),
     localforage.clear(),
     clearComicPagesTemp()
   ])

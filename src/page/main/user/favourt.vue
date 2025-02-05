@@ -27,8 +27,9 @@ class BatchRemoveFavourt {
     BatchRemoveFavourt.isSetecting.value = false
     try {
       await Promise.all(BatchRemoveFavourt.list.map((v, index) => {
-        console.log('batch remove:', v, index, app.user()?.favourite.docs.value[index])
-        if (v) return (app.user()?.favourite.docs.value ?? [])[index].favourt({}, false)
+        const favourtComicList = app.user()?.favourite.docs.value
+        console.log('batch remove:', v, index, favourtComicList?.[index])
+        if (v) return (favourtComicList ?? [])[index].favourt({}, false)
       }))
       await app.$reload.me()
       BatchRemoveFavourt.list.splice(0, Infinity)

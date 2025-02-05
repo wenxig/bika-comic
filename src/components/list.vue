@@ -51,7 +51,7 @@ const refreshing = () => $emit('reload', () => isRefreshing.value = false)
 
 const isReq = shallowRef(false)
 watch(() => $props.data, () => {
-  console.only(`<list> data changed; goBottom:`, $props.goBottom)
+  console.log(`<list> data changed; goBottom:`, $props.goBottom)
   if ($props.goBottom) vList.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
 }, { flush: 'post', deep: true })
 watch([() => $props.data, isReq], ([data]) => {

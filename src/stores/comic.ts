@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { getComicEps, getRecommendComics, ProPlusMaxComic, type ProComic, type ProPlusComic, getComicInfo, type RecommendComics, type ComicEps } from '@/api'
-import { computed, ref, shallowReactive, shallowRef, watch } from 'vue'
+import { computed, ref, shallowReactive, shallowRef } from 'vue'
 import { isBoolean } from 'lodash-es'
 import { useStateContentWithResolvers } from '@/utils/requset'
 export type PreloadValue = ProComic | ProPlusComic | ProPlusMaxComic | undefined
@@ -10,12 +10,12 @@ export const useComicStore = defineStore('comic', () => {
   const $load = (id: string, perload?: PreloadValue | false) => {
     if (pageHistory.has(id)) {
       now.value = pageHistory.get(id)!
-      console.log('page cache hit')
+      console.log('page cache hit', now.value)
 
     } else {
       now.value = new ComicPage(perload, id, false)
       pageHistory.set(id, now.value)
-      console.log('page cache miss')
+      console.log('page cache miss', now.value)
     }
     now.value.loadAll()
   }

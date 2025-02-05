@@ -12,15 +12,15 @@ import { useMainPageLevelComicShows } from '@/utils/requset'
 const swipe = 50
 const $router = useRouter()
 const stream = random.stream ??= new RandomComicStream()
-const { docs, isRequesting, done, isErr, errCause } = stream
+const { docs: data, isRequesting, done, isErr, errCause } = stream
 onMounted(async () => {
-  if (!isEmpty(docs.value)) {
-    console.log(random.scroll)
+  if (!isEmpty(data.value)) {
+    console.log('scroll top px value:', random.scroll)
     await nextTick()
     list.value?.listInstanse?.scrollTo({ top: random.scroll })
   }
 })
-if (isEmpty(docs.value)) {
+if (isEmpty(data.value)) {
   stream.next()
 }
 const nextLoad = async () => {
@@ -48,7 +48,7 @@ const topComics = useMainPageLevelComicShows()
 </script>
 
 <template>
-  <List :item-height="260" :data="chunk(docs, 2)" class="h-full w-full" :is-requesting :end="done" reloadable
+  <List :item-height="260" :data="chunk(data, 2)" class="h-full w-full" :is-requesting :end="done" reloadable
     @reload="then => { stream.reload(); stream.next().then(then) }" v-slot="{ height, data: { item: comics, index } }"
     @next="nextLoad()" @retry="stream.retry()" ref="list" :isErr :errCause retriable>
     <div :style="{ height: `${height}px` }" class="w-full mt-1 flex justify-center *:w-[98%]">

@@ -380,10 +380,10 @@ export interface Stream<T> {
   retry(): Promise<void | undefined>
 }
 
-export interface ComicStream<T = ProPlusComic> extends Stream<T> {
+export interface ComicStreamI<T = ProPlusComic> extends Stream<T> {
   sort: SortType
 }
-export abstract class PlusComicStream<T = ProPlusComic> implements ComicStream<T> {
+export abstract class ComicStream<T = ProPlusComic> implements ComicStreamI<T> {
   protected stopC = new SmartAbortController()
   public docs = shallowRef<T[]>([])
   protected addValue(value: T[]) {
@@ -432,7 +432,7 @@ export abstract class PlusComicStream<T = ProPlusComic> implements ComicStream<T
     this.stopC.abort()
   }
 }
-export class RandomComicStream extends PlusComicStream<ProComic> {
+export class RandomComicStream extends ComicStream<ProComic> {
   protected stopC = new SmartAbortController()
   public docs = shallowRef<ProComic[]>([])
   protected addValue(value: ProComic[]) {
@@ -490,7 +490,7 @@ export const searchComics = async (keyword: string, page = 1, sort: SortType = '
     pages: max([data_TW.pages, data_CN.pages])!
   }
 }
-export class ComicStreamWithKeyword extends PlusComicStream {
+export class ComicStreamWithKeyword extends ComicStream {
   public docs = shallowRef<ProPlusComic[]>([])
   protected addValue(value: RawProPlusComic[]) {
     this.docs.value.push(...value.map(v => new ProPlusComic(v)))
@@ -549,7 +549,7 @@ export const searchComicsWithAuthor = async (author: string, page = 1, sort: Sor
   data.docs = data.docs.filter(v => spiltAnthors(v.author).includes(author.trim()))
   return data
 }
-export class ComicStreamWithAuthor extends PlusComicStream {
+export class ComicStreamWithAuthor extends ComicStream {
   constructor(public author: string, sort: SortType = 'dd') { super(author, sort, searchComicsWithAuthor) }
 }
 
@@ -559,25 +559,25 @@ export const searchComicsWithTranslater = async (translater: string, page = 1, s
   data.docs = data.docs.filter(v => v.chineseTeam == translater)
   return data
 }
-export class ComicStreamWithTranslater extends PlusComicStream {
+export class ComicStreamWithTranslater extends ComicStream {
   constructor(public translater: string, sort: SortType = 'dd') { super(translater, sort, searchComicsWithTranslater) }
 }
 
 export const searchComicsWithUploader = async (id: string, page = 1, sort: SortType = 'dd', config: AxiosRequestConfig = {}) => createClass((await api.get<RawData<{ comics: SearchResult<RawProComic> }>>(`/comics?page=${page}&ca=${id}&s=${sort}`, config)).data.data.comics, ProComic)
-export class ComicStreamWithUploader extends PlusComicStream<ProComic> {
+export class ComicStreamWithUploader extends ComicStream<ProComic> {
   constructor(public id: string, sort: SortType = 'dd') { super(id, sort, searchComicsWithUploader) }
 }
 export const searchComicsWithCategories = async (categorie: string, page = 1, sort: SortType = 'dd', config: AxiosRequestConfig = {}) => createClass((await api.get<RawData<{ comics: SearchResult<RawProComic> }>>(`/comics?page=${page}&c=${encodeURIComponent(categorie)}&s=${sort}`, config)).data.data.comics, ProComic)
-export class ComicStreamWithCategories extends PlusComicStream<ProComic> {
+export class ComicStreamWithCategories extends ComicStream<ProComic> {
   constructor(public categorie: string, sort: SortType = 'dd') { super(categorie, sort, searchComicsWithCategories) }
 }
 
 export const searchComicsWithTag = async (tag: string, page = 1, sort: SortType = 'dd', config: AxiosRequestConfig = {}) => createClass((await api.get<RawData<{ comics: SearchResult<RawProComic> }>>(`/comics?page=${page}&t=${encodeURIComponent(tag)}&s=${sort}`, config)).data.data.comics, ProComic)
-export class ComicStreamWithTag extends PlusComicStream<ProComic> {
+export class ComicStreamWithTag extends ComicStream<ProComic> {
   constructor(tag: string, sort: SortType = 'dd') { super(tag, sort, searchComicsWithTag) }
 }
 
-export class ComicStreamWithId extends PlusComicStream {
+export class ComicStreamWithId extends ComicStream {
   constructor(id: string, sort: SortType = 'dd') { super(id, sort) }
   public async next() {
     if (this.isRequesting.value) return
@@ -600,13 +600,32 @@ export class ComicStreamWithId extends PlusComicStream {
   public done = computed(() => this.docs.value.length == 1)
 }
 
-export class ComicStreamWithNoop extends PlusComicStream {
+export class ComicStreamWithNoop extends ComicStream {
   constructor(id: string, sort: SortType = 'dd') { super(id, sort) }
   public async next(): Promise<undefined> {
     this.docs.value = []
     this.pages.value = 1
   }
   public done = computed(() => true)
+}
+interface RawCommenUser {
+  _id: string
+  gender: UserSex
+  name: string
+  verified: boolean
+  exp: number
+  level: number
+  characters: string[]
+  role?: string
+  title: string
+  slogan: string
+
+}
+export interface CommenUser extends RawCommenUser {
+
+  get id(): string
+  get avatar(): Image
+  set avatar(v:Image)
 }
 
 export type UserSex = 'f' | 'm' | 'bot'
@@ -623,7 +642,7 @@ interface RawUser {
   title: string
   slogan: string
 }
-export class User {
+export class User implements CommenUser {
   public _id!: string
   public gender!: UserSex
   public name!: string
@@ -648,6 +667,53 @@ export class User {
     setValue(this, v)
   }
 }
+
+interface RawUserProfile {
+  _id: string
+  birthday: string
+  email: string
+  gender: UserSex
+  name: string
+  slogan: string
+  title: string
+  verified: boolean
+  exp: number
+  level: number
+  characters: string[]
+  created_at: string
+  avatar: RawImage
+  isPunched: boolean
+}
+// @ts-ignore ts抽风，`_avatar`没有任何问题
+export class UserProfile implements CommenUser {
+  public _id!: string
+  public birthday!: string
+  public email!: string
+  public gender!: UserSex
+  private _avatar?: Image
+  public name!: string
+  public slogan!: string
+  public title!: string
+  public verified!: boolean
+  public exp!: number
+  public level!: number
+  public characters!: string[]
+  public created_at!: string
+  public get created_time() {
+    return new Date(this.created_at)
+  }
+  public get avatar() {
+    return this._avatar!
+  }
+  public set avatar(v) {
+    this._avatar = new Image(v)
+  }
+  public isPunched!: boolean
+  constructor(v: RawUserProfile) {
+    setValue(this, v)
+  }
+}
+
 
 const infoStore = new Map<string, ProPlusMaxComic | false>()
 export const getComicInfo = async (id: string, config: AxiosRequestConfig = {}) => {
@@ -737,7 +803,7 @@ export const getComicPages = async (id: string, index: number, config: AxiosRequ
     otherPages.push(firstPage)
     otherPages.push(...await Promise.all(times(firstPage.pages - 1, i => getComicPage(id, index, i + 2, config))))
     const pages = flatten(sortBy(otherPages, 'page').map(v => v.docs.map(v => new Page(v))))
-    console.log(pages)
+    console.log('comic images', pages)
     r(pages)
     await comicsPagesDB.setItem<Pages[]>(key, sortBy(otherPages, 'page'))
   })
@@ -770,7 +836,7 @@ interface RawComment {
 export class Comment {
   public _id!: string
   public content!: string
-  private __user?: User
+  private __user?: CommenUser
   public get _user() {
     return this.__user!
   }
@@ -795,7 +861,7 @@ export class Comment {
   public likesCount!: number
   public commentsCount!: number
   public isLiked!: boolean
-  constructor(v: RawComment) {
+  constructor(v: RawComment & any) {
     setValue(this, v)
   }
   public async like() {
@@ -914,50 +980,6 @@ export const sendComment = async (id: string, content: string, config: AxiosRequ
 export const sendChildComment = async (id: string, content: string, config: AxiosRequestConfig = {}) => (await api.post<RawData<never>>(`/comments/${id}`, { content }, config))
 
 
-interface RawUserProfile {
-  _id: string
-  birthday: string
-  email: string
-  gender: UserSex
-  name: string
-  slogan: string
-  title: string
-  verified: boolean
-  exp: number
-  level: number
-  characters: string[]
-  created_at: string
-  avatar: RawImage
-  isPunched: boolean
-}
-export class UserProfile {
-  public _id!: string
-  public birthday!: string
-  public email!: string
-  public gender!: UserSex
-  public name!: string
-  public slogan!: string
-  public title!: string
-  public verified!: boolean
-  public exp!: number
-  public level!: number
-  public characters!: string[]
-  public created_at!: string
-  public get created_time() {
-    return new Date(this.created_at)
-  }
-  private _avatar?: Image
-  public get avatar() {
-    return this._avatar!
-  }
-  public set avatar(v) {
-    this._avatar = new Image(v)
-  }
-  public isPunched!: boolean
-  constructor(v: RawUserProfile) {
-    setValue(this, v)
-  }
-}
 interface RawUserSentComment {
   _id: string
   content: string
@@ -1022,7 +1044,7 @@ export class Me {
 
 export const getMyProfile = async (config: AxiosRequestConfig = {}) => new UserProfile((await api.get<RawData<{ user: RawUserProfile }>>(`/users/profile`, config)).data.data.user)
 
-export class MyFavourtComicStream extends PlusComicStream<ProComic> {
+export class MyFavourtComicStream extends ComicStream<ProComic> {
   constructor() {
     super('', 'dd', async (_k, page, sort, config) => createClass((await api.get<RawData<{ comics: Result<RawProComic> }>>(`/users/favourite?s=${sort}&page=${page}`, config)).data.data.comics, ProComic))
   }

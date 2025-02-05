@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ComicStreamWithKeyword, ComicStreamWithAuthor, ComicStreamWithTranslater, ComicStreamWithTag, ComicStreamWithUploader, ComicStreamWithCategories, ComicStreamWithId, ComicStream, ComicStreamWithNoop, ProPlusComic, ProComic } from '@/api'
+import { ComicStreamWithKeyword, ComicStreamWithAuthor, ComicStreamWithTranslater, ComicStreamWithTag, ComicStreamWithUploader, ComicStreamWithCategories, ComicStreamWithId, ComicStreamI, ComicStreamWithNoop, ProPlusComic, ProComic } from '@/api'
 import { shallowRef, onMounted, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ComicCard from '@/components/comic/comicCard.vue'
@@ -29,7 +29,7 @@ useTitle(computed(() => `${decodeURIComponent($route.query.keyword as string ?? 
 function createStream(keyword: string, sort: SortType) {
   const storeKey = keyword + "\u1145" + searchMode.value
   if (lastSearchResult.has(storeKey)) return lastSearchResult.get(storeKey)!
-  type Stream = ComicStream<ProPlusComic | ProComic>
+  type Stream = ComicStreamI<ProPlusComic | ProComic>
   switch (searchMode.value) {
     case 'id': {
       try {
@@ -103,6 +103,7 @@ const nextSearch = async (then?: VoidFunction) => {
   const loadingText = computed(() => loadTimes.value > 1 ? `已加载${loadTimes.value}页无结果` : '加载中')
   const loading = createLoadingMessage(loadingText)
   const loadNext = async () => {
+    if (comicStream.value.done.value) return
     loadTimes.value++
     const oldLen = listData.value.length
     await comicStream.value.next()

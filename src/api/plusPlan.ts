@@ -210,28 +210,7 @@ export class UserConfig {
   public 'bika.smallWindow.enable': boolean
   public 'bika.smallWindow.openOnQuit': boolean
   constructor(config: typeof UserConfig.default) {
-    this['bika.read.preloadIamgeNumbers'] = config['bika.read.preloadIamgeNumbers']
-    this['bika.read.watchFullscreen'] = config['bika.read.watchFullscreen']
-    this['bika.read.vertical'] = config['bika.read.vertical']
-    this['bika.read.twoImage'] = config['bika.read.twoImage']
-    this['bika.read.rtl'] = config['bika.read.rtl']
-    this['bika.read.imageQuality'] = config['bika.read.imageQuality']
-    this['bika.search.sort'] = config['bika.search.sort']
-    this['bika.search.fillerTags'] = config['bika.search.fillerTags']
-    this['bika.search.showAIProject'] = config['bika.search.showAIProject']
-    this['bika.proxy.interface'] = config['bika.proxy.interface']
-    this['bika.proxy.image'] = config['bika.proxy.image']
-    this['bika.proxy.db'] = config['bika.proxy.db']
-    this['bika.proxy.chat'] = config['bika.proxy.chat']
-    this['bika.subscribe.updateTime'] = config['bika.subscribe.updateTime']
-    this['bika.info.unsortComic'] = config['bika.info.unsortComic']
-    this['bika.plusPlan'] = config['bika.plusPlan']
-    this['bika.devMode'] = config['bika.devMode']
-    this['bika.darkMode'] = config['bika.darkMode']
-    this['bika.game.search.fillerTags'] = config['bika.game.search.fillerTags']
-    this['bika.smallWindow.enable'] = config['bika.smallWindow.enable']
-    this['bika.smallWindow.openOnQuit'] = config['bika.smallWindow.openOnQuit']
-
+    setValue(this, config)
   }
   static default = {
     'bika.read.preloadIamgeNumbers': 2,
@@ -295,7 +274,7 @@ export class Subscribe {
       set subscribes(v: Subscribe[]) {
         this._subscribes.splice(0, Infinity)
         this._subscribes.push(...v)
-        console.log('change subscribes')
+        console.log('change subscribes', v)
       },
       get subscribes() {
         return this._subscribes
@@ -439,7 +418,9 @@ export class YestdayUpdateComics {
       updated_at: this.updated_at
     })
   }
-  public static async getFromNet(config: AxiosRequestConfig = {}) {
+  public static async getFromNet(config: AxiosRequestConfig = {}) { 
+    // bot挂了
+    
     // const news = await newUpdates.get<string>(`/${dayjs().format(`YYYY-MM-DD`)}.data`, config)
     // const processd = news.data.split('\r\n').filter(Boolean).map(t => {
     //   try {
@@ -449,7 +430,7 @@ export class YestdayUpdateComics {
     //     return jsonObject
     //   } catch {}
     // }).filter(Boolean).map(v => new YestdayUpdateComics(v))
-    return []// processd.map(pdata => pdata.toProPlusComic())
+    return [] // processd.map(pdata => pdata.toProPlusComic())
   }
 }
 window.$api.enc = enc

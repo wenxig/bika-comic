@@ -28,11 +28,15 @@ useTitle(title)
 const preloadIds = new Set<number>()
 const stopPreloadWatch = watch(eps, eps => {
   if (!eps || !pageIns.value?.comicId) return
-  console.log(eps[0].order, last(eps)!.order, history[1]?._id && Number(history[0]))
+  const firstIndex = eps[0].order
+  const lastIndex = last(eps)!.order
+  const historyIndex = Number(history[0])
+  
+  console.log('perload comic pages index list:', firstIndex, lastIndex, historyIndex)
 
-  preloadIds.add(eps[0].order) // 首个
-  preloadIds.add(last(eps)!.order) // 最后一个
-  preloadIds.add(Number(history[0])) // 历史记录
+  preloadIds.add(firstIndex) // 首个
+  preloadIds.add(lastIndex) // 最后一个
+  preloadIds.add(historyIndex) // 历史记录
   for (const id of preloadIds.values()) if (!isNaN(id) && pageIns.value?.comicId) getComicPages(pageIns.value.comicId, id)
 }, { immediate: true })
 onBeforeRouteLeave(stopPreloadWatch)

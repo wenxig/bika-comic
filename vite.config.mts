@@ -12,7 +12,6 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import _package from './package.json'
 import tailwindConfig from './tailwind.config.ts'
-import TurboConsole from "vite-plugin-turbo-console"
 
 enum BuildFlag {
   production,
@@ -31,9 +30,6 @@ export default defineConfig({
         NaiveUiResolver()
       ],
     }),
-    // TurboConsole({
-    //   disableLaunchEditor:true,
-    // }),
     VitePWA({
       includeAssets: [],
       manifest: {
@@ -67,7 +63,7 @@ export default defineConfig({
               networkTimeoutSeconds: 5000
             },
           }, {
-            urlPattern: /\.(webp|jpg|jpeg|webp|ico)/ig, // 静态资源缓存
+            urlPattern: /\.(webp|jpg|jpeg|png|ico)/ig, // 静态资源缓存
             handler: 'CacheFirst',
             options: {
               cacheName: 'assets-cache'
@@ -114,7 +110,7 @@ export default defineConfig({
             "ie >= 8",
           ]
         }),
-      ],
+      ] as any,
     },
   },
   build: {

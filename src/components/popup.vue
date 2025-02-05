@@ -9,7 +9,7 @@ const $router = useRouter()
 const $props = withDefaults(defineProps<Partial<PopupProps & {
   noBorder?: boolean,
   useTurlyShow: boolean
-  style?:StyleValue
+  style?: StyleValue
 }>>(), {
   position: 'center',
   noBorder: false
@@ -23,7 +23,7 @@ const [zIndex, isLast] = useZIndex(computed(() => $props.useTurlyShow ? turlySho
 let stopRouter = noop
 watch(show, _show => {
   if (_show) stopRouter = $router.beforeEach(() => {
-    console.log('popup:', isLast.value, show.value)
+    console.log('popup:\n', 'isLast:', isLast.value, 'show:', show.value)
     if (isLast.value) {
       if (show.value) {
         return show.value = false

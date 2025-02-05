@@ -14,6 +14,7 @@ import CommentVue from '@/components/comment/comment.vue'
 import FloatPopup from '@/components/floatPopup.vue'
 import Await from '@/components/await.vue'
 import { onBeforeRouteLeave } from 'vue-router'
+import { createStateContentData } from '@/utils/requset'
 document.title = '刷漫画 | bika'
 const swEl = shallowRef<InstanceType<typeof Swiper>>()
 const swiper = computed<SwiperClass | undefined>(() => swEl.value?.$el?.swiper)
@@ -87,7 +88,7 @@ const onInit = async () => {
   setTimeout(async () => {
     do {
       swiper.value?.slideTo(initialSlide, 0)
-      console.log('init', initialSlide)
+      console.log('init page index', initialSlide)
     } while (index.value != initialSlide)
   }, 0)
 }
@@ -123,10 +124,10 @@ window.$api.swiper = swiper
     @slideChangeTransitionEnd="onSlideChangeEnd">
     <SwiperSlide v-for="(comic, index) of stream.docs.value" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full" :data-history="comic._id">
-      <BrushView :comic :eps="preloadEps.get(comic._id)" :firstPages="preloadPages.get(comic._id)" @sub="showSubAnBar"
-        @comment="comment?.show()" :info="preloaInfo.get(comic._id)" @send-comment="sendCommnetShow" :showMenu
-        @info="showComicInfo" :ref="(comp: any) => instanceOfView[comic._id] = comp" @dbclick="activeComic.like()"
-        @click="isSliding || swiper?.animating || (showMenu = !showMenu)" />
+      <BrushView :id="comic._id" :comic :eps="preloadEps.get(comic._id)" :firstPages="preloadPages.get(comic._id)"
+        @sub="showSubAnBar" @comment="comment?.show()" :info="preloaInfo.get(comic._id)" @send-comment="sendCommnetShow"
+        :showMenu @info="showComicInfo" :ref="(comp: any) => instanceOfView[comic._id] = comp"
+        @dbclick="activeComic.like()" @click="isSliding || swiper?.animating || (showMenu = !showMenu)" />
     </SwiperSlide>
     <div class="absolute top-0 left-0 w-full h-10 z-[2] pointer-events-none flex items-center text-white">
       <VanIcon name="arrow-left" size="1.5rem" color="white" class="ml-2 pointer-events-auto" @click="$router.back()" />
@@ -154,7 +155,7 @@ window.$api.swiper = swiper
         </VanTab>
         <VanTab title="选集">
           <Await :promise="preloadEps.get(comicInfo[1])!" v-slot="{ result }">
-            <Eps :eps="result" :id="comicInfo[1]" v-if="result" />
+            <Eps :eps="createStateContentData(result)" :id="comicInfo[1]" v-if="result" />
             <div class="w-full flex justify-center items-center" v-else>
               <van-loading size="24px">加载中...</van-loading>
             </div>

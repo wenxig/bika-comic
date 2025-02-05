@@ -65,11 +65,11 @@ const toSmallestMode = () => {
   isInAdmin.value = true
   timerStoper()
   const timer = setTimeout(() => {
-    console.log('time end')
+    console.log('smail animation timer end')
     isInAdmin.value = false
   }, 500)
   timerStoper = () => {
-    console.log('stop')
+    console.log('smail animation timer stop')
     clearTimeout(timer)
   }
   offset.value = {
@@ -83,11 +83,11 @@ const toNomralMode = () => {
   isInAdmin.value = true
   timerStoper()
   const timer = setTimeout(() => {
-    console.log('time end')
+    console.log('smail animation timer end')
     isInAdmin.value = false
   }, 500)
   timerStoper = () => {
-    console.log('stop')
+    console.log('smail animation timer stop')
     clearTimeout(timer)
   }
 
@@ -107,7 +107,7 @@ const onInit = async () => {
     initTimes++
     if (initTimes > 10) return clearInterval(id)
     swiper.value?.slideTo(initialSlide, 0)
-    console.log('init', initialSlide)
+    console.log('sm window init', initialSlide)
     if (page.value == initialSlide) clearInterval(id)
   }, 0)
 }

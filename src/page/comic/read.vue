@@ -2,7 +2,7 @@
 import { getComicPages, Image as RawImageData } from '@/api'
 import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { toNumber,  isEmpty, remove, isNumber } from 'lodash-es'
+import { toNumber, isEmpty, remove, isNumber } from 'lodash-es'
 import { useAppStore } from '@/stores'
 import { useTitle } from '@vueuse/core'
 import { createLoadingMessage } from '@/utils/message'
@@ -67,10 +67,11 @@ const lastPagesLength = shallowRef<number>();
       getComicPages(comicId, epId), // 当前
       (epId - 1 == 0) ? undefined : getComicPages(comicId, epId - 1), // 上一
     ])
-    console.log(v.map(v => v.media))
 
     rawImages.value = v.map(v => v.media)
     images.value = v.map(v => v.media.getUrl())
+
+    console.log('image list:', rawImages.value, 'image url list:', images.value)
     if (!v2) return loading
     lastPagesLength.value = v2.map(v => v.media).length
     return loading

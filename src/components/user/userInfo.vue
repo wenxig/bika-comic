@@ -1,11 +1,11 @@
 <script setup lang='ts'>
 import { computed } from 'vue'
-import { User, UserProfile } from '@/api'
+import { CommenUser, User, UserProfile } from '@/api'
 import userIcon from '@/assets/images/userIcon.webp?url'
 import { ChatUserProfile } from '@/api/chat'
 import { userCharactersTranslater } from '@/utils/translater'
 const $props = defineProps<{
-  user: User | ChatUserProfile | UserProfile | undefined
+  user: User | ChatUserProfile | UserProfile | CommenUser | undefined
   hideSlogan?: boolean
   class?: any
   small?: boolean
@@ -15,7 +15,11 @@ const needExp = computed(() => {
   const level = $props.user?.level ?? 1
   return (((level + 1) * 2 - 1) ** 2 - 1) * 25 // 要知道我翻了20分钟bkapp(2.3)源码
 })
-const avatar = computed(() => (<any>$props.user)?.avatar || (<any>$props.user)?.avatarUrl || userIcon)
+const avatar = computed(() => {
+  if ($props.user instanceof ChatUserProfile) {
+    return $props.user.avatarUrl
+  }
+})
 </script>
 
 <template>

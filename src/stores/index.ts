@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { AnnouncementStream, getLevelboard, getMyProfile } from '@/api'
-import { Collection, Categories, HotTag, ProPlusComic, Me, ComicStream, Levelboard, ProComic } from '@/api'
+import { Collection, Categories, HotTag, ProPlusComic, Me, ComicStreamI, Levelboard, ProComic } from '@/api'
 import { markRaw, ref, shallowRef, watch } from 'vue'
 import { getWatchHitory, isInPlusPlan, getFavourtImages, putFavourtImages, SearchHistory, Subscribe, WatchHistory, YestdayUpdateComics } from '@/api/plusPlan'
 import { SmartAbortController } from '@/utils/requset'
@@ -72,7 +72,7 @@ export const useAppStore = defineStore('app', () => {
   const favourtIamgesSac = new SmartAbortController()
   let isFavourtImagesSetup = false
   watch(favourtImages, v => {
-    console.log('change favourt images')
+    console.log('change favourt images', v)
     if (!isFavourtImagesSetup) return isFavourtImagesSetup = true
     favourtIamgesSac.abort()
     putFavourtImages(<FavourtImage[]>v, { signal: favourtIamgesSac.signal })
