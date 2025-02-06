@@ -19,6 +19,10 @@ const avatar = computed(() => {
   if ($props.user instanceof ChatUserProfile) {
     return $props.user.avatarUrl
   }
+   if ($props.user?.avatar) {
+     return $props.user.avatar.getUrl()
+   }
+  return userIcon
 })
 </script>
 

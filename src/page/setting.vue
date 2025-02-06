@@ -35,7 +35,7 @@ const clearDb = () => (createDialog({
     localforage.clear(),
     clearComicPagesTemp()
   ])
-  location.reload()
+  location.pathname = '/'
 }))
 
 const showSetPreloadImageNumbers = shallowRef(false)
@@ -68,7 +68,7 @@ const Url = URL
 
 const quitLogin = () => {
   localStorage.clear()
-  location.reload()
+  location.pathname = '/'
 }
 const showAddSelfImageProxy = shallowRef(false)
 const selfImageProxyInputerText = shallowRef('')

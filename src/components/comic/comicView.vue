@@ -5,8 +5,8 @@ import 'swiper/css/virtual'
 import 'swiper/css/zoom'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Zoom, HashNavigation, } from 'swiper/modules'
-import { reactive, shallowRef, watch } from 'vue'
-import { inRange } from 'lodash-es'
+import { onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
+import { inRange, isNaN, noop } from 'lodash-es'
 import config, { fullscreen } from '@/config'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores'
@@ -15,8 +15,9 @@ import { Icon as VanIcon } from 'vant'
 import FloatPopup from '@/components/floatPopup.vue'
 import { useSmallWindowContext } from '@/stores/smallWindow'
 import { Image_ } from '@/utils/image'
-import { LoaingMask, MenuButton } from './helper'
-import { useClipboard } from '@vueuse/core'
+import { AutoPlayConfig, baseAutoPlayConfig, LoaingMask, MenuButton } from './helper'
+import { useClipboard, useInterval, useIntervalFn } from '@vueuse/core'
+import { triggerRef } from 'vue'
 const $props = withDefaults(defineProps<{
   images: string[],
   startPosition?: number,
@@ -43,7 +44,7 @@ const $emit = defineEmits<{
   addFavourtImage: [src: string, time: number]
   removeFavourtImage: [src: string]
 }>()
-defineSlots<{
+const slots = defineSlots<{
   menu(arg: { MenuButton: typeof MenuButton }): any
   left(arg: { width: string, MenuButton: typeof MenuButton }): any
   right(arg: { width: string, MenuButton: typeof MenuButton }): any
@@ -92,10 +93,43 @@ const openSmWindow = () => {
   }, {
     begin: page.value
   })
-  // $emit('back')
 }
 const $window = window
 const copier = useClipboard({ legacy: true })
+
+// autoPlay
+const showAutoPlayPopup = shallowRef(false)
+const pausedAutoPlay = shallowRef(false)
+watch(pausedAutoPlay, pausedAutoPlay => {
+  if (pausedAutoPlay) {
+    if (!isNaN(autoPlayTimerId)) {
+      clearInterval(autoPlayTimerId)
+    }
+  } else if (autoPlayConfig.value.enable) {
+    const id = setInterval(() => {
+      if (autoPlayConfig.value.reverse) swiper.value?.slidePrev()
+      else swiper.value?.slideNext()
+    }, autoPlayConfig.value.speedSecond * 1000)
+    autoPlayTimerId = id
+    console.log('autoPlayTimerId', autoPlayTimerId)
+  }
+})
+const autoPlayConfig = shallowRef<AutoPlayConfig>(baseAutoPlayConfig)
+let autoPlayTimerId = NaN
+const setAutoPlayConfig = (v: AutoPlayConfig) => {
+  autoPlayConfig.value = v
+  if (!isNaN(autoPlayTimerId)) {
+    clearInterval(autoPlayTimerId)
+  }
+  pausedAutoPlay.value = false
+  triggerRef(pausedAutoPlay)
+}
+onUnmounted(() => {
+  setAutoPlayConfig(baseAutoPlayConfig)
+  if (!isNaN(autoPlayTimerId)) {
+    clearInterval(autoPlayTimerId)
+  }
+})
 </script>
 
 <template>
@@ -183,19 +217,32 @@ const copier = useClipboard({ legacy: true })
         ({{ (page + 1) || 1 }}/{{ images.length }})
       </div>
     </div>
+    <Transition name="van-slide-up" v-if="!showMenu">
+      <NButton type="primary" v-show="autoPlayConfig.enable" class="absolute bottom-5 block left-1 z-[1]" round
+        size="tiny" @click="pausedAutoPlay = !pausedAutoPlay">
+        <span v-if="pausedAutoPlay">
+          自动翻页停
+          <van-icon name="pause" />
+        </span>
+        <span v-else>
+          自动翻页中
+          <van-icon name="arrow-double-right" class="loop-fade-animation" />
+        </span>
+      </NButton>
+    </Transition>
   </Teleport>
   <!-- 设置 -->
   <Popup v-model:show="settingShow" class="h-1/2" position="bottom" round>
     <van-cell-group>
-      <div class="van-cell van-haptics-feedback" @click="() => {
-        app.favourtImages.find(v => v.src == images[page])
-          ? $emit('removeFavourtImage', images[page])
-          : $emit('addFavourtImage', images[page], Date.now())
-      }">
-        <van-icon :name="app.favourtImages.find(v => v.src == images[page]) ? 'minus' : 'plus'"
-          class="van-cell__left-icon" />
-        {{ app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏' }}
-      </div>
+      <VanCell title="自动翻页" icon="play-circle-o" clickable @click="showAutoPlayPopup = true"></VanCell>
+
+      <VanCell :title="app.favourtImages.find(v => v.src == images[page]) ? '从图片收藏移除' : '添加至图片收藏'"
+        :icon="app.favourtImages.find(v => v.src == images[page]) ? 'minus' : 'plus'" clickable @click="() => {
+          app.favourtImages.find(v => v.src == images[page])
+            ? $emit('removeFavourtImage', images[page])
+            : $emit('addFavourtImage', images[page], Date.now())
+        }">
+      </VanCell>
       <VanCell title="复制图片地址" icon="records-o" clickable
         @click="copier.copy(images[page]).then(() => $window.$message.success('成功复制！'))">
       </VanCell>
@@ -228,7 +275,10 @@ const copier = useClipboard({ legacy: true })
     <Image :use-list="imageStore" :src="images[page + index]" v-if="images[page + index]" class="hidden" />
   </template>
 
-
+  <Popup v-model:show="showAutoPlayPopup" position="bottom" round>
+    <AutoPlay
+      @submit="v => { setAutoPlayConfig(v); console.log('<comicView> handle <AutoPlay> submit event', v); showAutoPlayPopup = false }" />
+  </Popup>
 
 </template>
 
@@ -247,5 +297,28 @@ const copier = useClipboard({ legacy: true })
 
 .use-bg {
   @apply bg-black bg-opacity-50;
+}
+
+@keyframes fade-loop {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.loop-fade-animation {
+  animation-name: fade-loop;
+  animation-direction: alternate;
+  animation-timing-function: linear;
+  animation-delay: 0s;
+  animation-iteration-count: infinite;
+  animation-duration: 1s;
 }
 </style>

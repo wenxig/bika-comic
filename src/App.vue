@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { SpeedInsights } from "@vercel/speed-insights/vue"
-import config, { isOnline } from './config'
-import { UserConfig } from "./api/plusPlan"
+import config, { isOnline, UserConfig } from './config'
 import { nextTick, watch, shallowRef, provide } from "vue"
 import { SmartAbortController } from "./utils/requset"
 import symbol from "./symbol"
@@ -52,7 +51,7 @@ if (isSetup) UserConfig.getFromNet().then(async v => {
   await nextTick()
   isSetup = false
 })
-const loadTheme = () => {
+const loadTheme = () => { 
   const el = document.querySelector<HTMLMetaElement>("meta[name=theme-color]")
   el?.setAttribute('content', window.getComputedStyle(document.body).getPropertyValue('--van-background-2'))
 }

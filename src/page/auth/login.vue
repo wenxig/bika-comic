@@ -3,11 +3,11 @@ import { Login, login } from '@/api'
 import { shallowReactive, shallowRef } from 'vue'
 import loginImage from '@/assets/images/login-bg.webp'
 import { createLoadingMessage } from '@/utils/message'
-import { useMessage } from 'naive-ui'
 import { joinInPlusPlan } from '@/api/plusPlan'
 import config from '@/config'
 import symbol from '@/symbol'
 import { useLocalStorage } from '@vueuse/core'
+import { isAxiosError } from 'axios'
 const formValue = shallowReactive<Login>({
   email: '',
   password: ''
@@ -28,7 +28,14 @@ async function submit() {
     location.pathname = '/'
   } catch (err: any) {
     loading.fail()
-    if (err?.error) useMessage().error(err.error)
+    if (isAxiosError(err) && err.response) {
+      if (err.response.data.message) {
+        window.$message.error(err.response.data.message)
+      }
+      if (err.response.data.detail) {
+        window.$message.error(err.response.data.detail)
+      }
+    }
   }
   isLoginning.value = false
 }
@@ -36,7 +43,7 @@ async function submit() {
 
 <template>
   <div class="w-full h-full flex flex-col items-center overflow-y-auto">
-    <Image :src="loginImage" alt="login-bg" fit="contain" />
+    <Image :src="loginImage" fit="contain" />
     <van-form @submit="submit" class="mt-5 w-full">
       <van-cell-group inset>
         <van-field :disabled="isLoginning" v-model="formValue.email" name="用户名" label="用户名" placeholder="用户名"

@@ -9,3 +9,14 @@ export const MenuButton: FunctionalComponent<{ baseIcon?: string, icon?: string,
     <span>{ctx.slots.default()}</span>
   </div >
 )
+
+export type AutoPlayConfig = {
+  enable: boolean
+  reverse: boolean
+  speedSecond: number
+}
+export const baseAutoPlayConfig: AutoPlayConfig = {
+  enable: false,
+  reverse: false,
+  speedSecond: 3
+}

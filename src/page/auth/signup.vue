@@ -10,6 +10,7 @@ import { useMessage } from 'naive-ui'
 import Popup from '@/components/popup.vue'
 import symbol from '@/symbol'
 import { useLocalStorage } from '@vueuse/core'
+import { isAxiosError } from 'axios'
 const toDay = new Date()
 const formValue = shallowReactive<SignUp & Record<string, string>>({
   email: '',
@@ -30,6 +31,7 @@ document.title = '注册 | bika'
 const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 const isSignupping = shallowRef(false)
 async function submit() {
+  if (isSignupping.value) return
   isSignupping.value = true
   const loading = createLoadingMessage('注册中')
   try {
@@ -47,9 +49,18 @@ async function submit() {
     config.value['bika.plusPlan'] = true
     loading.success()
     location.pathname = '/'
-  } catch (err: any) {
+  } catch (err) {
     loading.fail()
-    if (err?.error) useMessage().error(err.error)
+    console.log('err', err)
+
+    if (isAxiosError(err) && err.response) {
+      if (err.response.data.message) {
+        window.$message.error(err.response.data.message)
+      }
+      if (err.response.data.detail) {
+        window.$message.error(err.response.data.detail)
+      }
+    }
   }
   isSignupping.value = false
 }
@@ -66,7 +77,7 @@ const showPicker = shallowRef(false)
 
 <template>
   <div class="w-full h-full flex flex-col items-center overflow-y-auto">
-    <Image :src="loginImage" alt="login-bg" fit="contain" />
+    <Image :src="loginImage" fit="contain" />
     <van-form @submit="submit" class="w-full">
       <van-cell-group inset>
         <van-field :disabled="isSignupping" v-model="formValue.email" name="账号" label="账号" placeholder="账号"

@@ -1,14 +1,23 @@
 <script setup lang='ts'>
 import { random } from '@/stores/temp'
 import { createLoadingMessage } from '@/utils/message'
-import { chunk, isEmpty } from 'lodash-es'
+import { chunk, flatten, isEmpty, uniqBy } from 'lodash-es'
 import { inject, nextTick, onMounted, shallowRef, watch } from 'vue'
 import List from '@/components/list.vue'
 const list = shallowRef<GenericComponentExports<typeof List>>()
 import { useRouter } from 'vue-router'
 import { RandomComicStream } from '@/api'
 import symbol from '@/symbol'
-import { useMainPageLevelComicShows } from '@/utils/requset'
+import { useAppStore } from '@/stores'
+import { reactiveComputed } from '@vueuse/core'
+ const useMainPageLevelComicShows = () => {
+  const app = useAppStore()
+  const comicBoard = reactiveComputed(() => app.levelBoard.comics)
+  return reactiveComputed(() => uniqBy(flatten(comicBoard.map(v => v.filter((_v, i) => i <= 2).map(comic => ({
+    comic,
+    level: comicBoard.map(v => v.findIndex(v => v._id == comic._id))
+  })))), v => v.comic._id))
+}
 const swipe = 50
 const $router = useRouter()
 const stream = random.stream ??= new RandomComicStream()

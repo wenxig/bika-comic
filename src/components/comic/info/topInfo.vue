@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import Image from '@/components/image.vue'
-import { isEmpty, isUndefined, last, union } from 'lodash-es'
+import { isEmpty, isUndefined, last } from 'lodash-es'
 import { spiltAnthors, toCn } from '@/utils/translater'
 import { ProComic, ProPlusMaxComic } from '@/api'
 import { useAppStore } from '@/stores'
@@ -79,7 +79,7 @@ const clipboard = useClipboard({ legacy: true })
       </div>
       <div class="text-[--van-text-color-2] my-1 text-nowrap">
         <VanSkeleton row="1" :loading="!comic?._id" class="!px-0 !pb-1">
-          <div v-if="comic?._id" @click="clipboard.copy(`###${comic._id}`).then(() => $window.$message.success('成功！'))">
+          <div v-if="comic?._id" class="flex *:block items-center" @click="clipboard.copy(`###${comic._id}`).then(() => $window.$message.success('成功！'))">
             <VanIcon name="records-o"></VanIcon>
             <span>ID:</span>
             <span>{{ comic._id }}</span>

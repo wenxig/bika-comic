@@ -29,7 +29,7 @@ const anchors = computed(() => [0, (contentBoxHeight.value || Math.floor(window.
       <div ref="contentBox" class="w-full flex justify-center items-start backdrop-blur-lg van-hairline--bottom">
         <UserInfo :user class="min-h-[20vh]" />
       </div>
-      <VanCell title="查看该上传者作品" icon="search-o" is-link
+      <VanCell title="查看此人上传作品" icon="search-o" is-link
         @click="user && $router.force.push(`/search?mode=uploader&keyword=${user._id}`)" />
     </div>
   </FloatPopup>

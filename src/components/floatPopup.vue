@@ -15,9 +15,7 @@ const $props = withDefaults(defineProps<{
   anchors: 'high',
   lockScroll: false
 })
-const height = shallowRef(0)
 const show = shallowRef(false)
-const [zIndex, isLast] = useZIndex(() => height.value > 0)
 const { height: windowHeight } = useWindowSize()
 const anchors = computed(() => isArray($props.anchors) ? $props.anchors : ($props.anchors == 'high' ? [
   0,
@@ -30,6 +28,8 @@ const anchors = computed(() => isArray($props.anchors) ? $props.anchors : ($prop
   Math.round(0.6 * windowHeight.value),
   Math.round(0.9 * windowHeight.value),
 ]))
+const height = shallowRef(0)
+const [zIndex, isLast] = useZIndex(() => height.value > 0)
 
 
 

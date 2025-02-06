@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AnthorSp: typeof import('./src/components/comic/anthorSp.vue')['default']
+    AutoPlay: typeof import('./src/components/comic/autoPlay.vue')['default']
     Await: typeof import('./src/components/await.vue')['default']
     BrushView: typeof import('./src/components/comic/brush/brushView.vue')['default']
     Card: typeof import('./src/components/subscribe/card.vue')['default']
@@ -81,6 +82,7 @@ declare module 'vue' {
     VanSkeletonImage: typeof import('vant/es')['SkeletonImage']
     VanSkeletonParagraph: typeof import('vant/es')['SkeletonParagraph']
     VanSlider: typeof import('vant/es')['Slider']
+    VanStepper: typeof import('vant/es')['Stepper']
     VanSwipe: typeof import('vant/es')['Swipe']
     VanSwipeCell: typeof import('vant/es')['SwipeCell']
     VanSwipeItem: typeof import('vant/es')['SwipeItem']

@@ -3,7 +3,8 @@ import { max, times, uniqBy, flatten, sortBy, values, isEmpty, isFunction } from
 import { computed, ref, shallowRef, triggerRef, type Ref } from 'vue'
 import { spiltAnthors, toCn, toTw } from '@/utils/translater'
 import config, { isOnline } from '@/config'
-import { SmartAbortController, errorReturn, getBikaApiHeaders, setValue } from '@/utils/requset'
+import { SmartAbortController, errorReturn, setValue } from '@/utils/requset'
+import { HmacSHA256, enc } from "crypto-js"
 import { delay } from '@/utils/delay'
 import { RawImage, Image } from '@/utils/image'
 import { useAppStore } from '@/stores'
@@ -17,6 +18,36 @@ const createClass = <T extends Result<any>, C>(v: T, Class: new (data: T['docs']
   v.docs = v.docs.map(v => new Class(v))
   return v
 }
+
+export function getBikaApiHeaders(pathname: string, method: string) {
+  type Headers = [name: string, value: string][]
+  pathname = pathname.substring(1)
+  const requestTime = (new Date().getTime() / 1000).toFixed(0)
+  let nonce = localStorage.getItem(symbol.loginNonce)
+  if (!nonce) {
+    const chars = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678"
+    nonce = Array.from({ length: 32 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('').toLowerCase()
+    localStorage.setItem(symbol.loginNonce, nonce)
+  }
+  const rawSignature = `${pathname}${requestTime}${nonce}${method}C69BAF41DA5ABD1FFEDC6D2FEA56B`.toLowerCase()
+  const headers: Headers = [
+    ['app-channel', '1'],
+    ['app-uuid', 'webUUID'],
+    ['accept', 'application/vnd.picacomic.com.v1+json'],
+    ['app-platform', 'android'],
+    ['Content-Type', 'application/json; charset=UTF-8'],
+    ['time', requestTime],
+    ['nonce', nonce],
+    ['image-quality', config.value["bika.read.imageQuality"]],
+    ['signature', HmacSHA256(rawSignature, '~d}$Q7$eIni=V)9\\RK/P.RM4;9[7|@/CA}b~OW!3?EV`:<>M7pddUBL5n|0/*Cn').toString(enc.Hex)],
+    ['Raw-Signature', rawSignature]
+  ]
+  const token = localStorage.getItem(symbol.loginToken)
+  if (token) headers.push(['authorization', token])
+  return headers
+}
+
+
 const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 eventBus.on('networkError_unauth', () => {
   localStorage.removeItem(symbol.loginToken)
@@ -54,6 +85,10 @@ export const api = (() => {
     await delay(3000)
     if (isCancel(err) || !isAxiosError<RawData<{ error: string }>>(err)) return Promise.reject(err)
 
+    if (err?.response?.status.toString().startsWith('4')) {
+      return Promise.reject(err)
+    }
+
     if (err?.response?.status == 401 && userLoginData.value.email) {
       localStorage.setItem(symbol.loginToken, (await login(userLoginData.value)).data.data.token)
       if (err.config) for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
@@ -78,6 +113,8 @@ export const api = (() => {
       if (["/", ''].includes(v.config.url ?? '')) return v
 
       if (/post/ig.test(v.config.method ?? '')) return v
+
+      if (v.config.url?.includes('/users/profile') && /put/ig.test(v.config.method ?? '')) return v
       if (true) return errorReturn(v.data, '异常数据返回')
     }
     return v
@@ -625,7 +662,7 @@ export interface CommenUser extends RawCommenUser {
 
   get id(): string
   get avatar(): Image
-  set avatar(v:Image)
+  set avatar(v: Image)
 }
 
 export type UserSex = 'f' | 'm' | 'bot'
