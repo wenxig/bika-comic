@@ -5,7 +5,8 @@ import { useImagesStore } from '@/stores/images'
 import { Image, Image_, showImagePreview } from '@/utils/image'
 import { isString } from 'lodash-es'
 const $props = withDefaults(defineProps<{
-  src?: Image_,
+  src?: Image_
+  alt?: string
   previewable?: boolean
   infiniteRetry?: boolean
   round?: boolean
@@ -50,8 +51,8 @@ const beginReload = () => {
 }
 watch(src, beginReload)
 defineSlots<{
-  loading(): any
-  fail(): any
+  loading?(): any
+  fail?(): any
 }>()
 const imageComp = shallowRef<HTMLImageElement>()
 defineExpose({
@@ -61,7 +62,7 @@ defineExpose({
 </script>
 
 <template>
-  <NImage @error="reload" v-bind="$props" :object-fit="fit" preview-disabled
+  <NImage @error="reload" v-bind="$props" :object-fit="fit" preview-disabled :alt
     :img-props="{ ...(imgProp ?? {}), class: 'w-full', ['fetchpriority' as any]: $props.fetchpriority }"
     :class="[{ '!rounded-full': !!round }, inline ? 'inline-flex' : 'flex', $props.class]" :style
     v-show="!images.error.has(src) && images.loaded.has(src)" v-if="show" @load="(...e) => {

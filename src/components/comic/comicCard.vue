@@ -62,7 +62,7 @@ defineSlots<{
     </div>
     <div class="w-full h-[20%] overflow-hidden flex flex-col text-[--van-text-color]" v-if="type == 'small'">
       <div class="flex flex-nowrap">
-        <span class="text-[--p-color]" v-if="(comic instanceof ProComic)">[{{ comic.pagesCount }}p]</span>
+        <span class="text-[--p-color]" v-if="comic && !(comic instanceof ProPlusComic)">[{{ comic.pagesCount }}p]</span>
         <span class="font-bold van-ellipsis">{{ comic.title }}</span>
       </div>
       <div class=" my-1 w-full h-auto flex-nowrap flex">
@@ -74,19 +74,24 @@ defineSlots<{
     <div class="w-[62%] min-h-[98%] *:text-sm flex absolute right-[2%] flex-col *:text-justify" ref="info" v-else>
       <span class="font-bold" :class="[!resizeable && 'van-ellipsis']">
         <template v-if="!hideEpInfo">
-          <span v-if="(comic instanceof ProComic)" class="text-[--p-color]">[{{ comic.pagesCount }}p]</span>
-          <span v-if="(comic instanceof ProComic)" class="text-[--p-color]">[{{ comic.epsCount }}ep]</span>
+          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1">
+            {{ comic.pagesCount }}p
+          </VanTag>
+          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1">
+            {{ comic.epsCount }}ep
+          </VanTag>
         </template>
         {{ comic.title }}
       </span>
       <div class="text-[--van-primary-color] flex flex-wrap *:text-nowrap" :class="[!resizeable && 'van-ellipsis']">
-        <span>作者：</span>
+        <span class="font-medium mr-1">作者:</span>
         <span v-for=" author of spiltAnthors(comic?.author)" class="mr-2 van-haptics-feedback underline"
           @click="comic && $router.force[mode](`/search?keyword=${author}&mode=anthor`)">{{ author }}</span>
       </div>
       <span class="text-[--van-text-color-2]" :class="[!resizeable && 'van-ellipsis']"
-        v-if="(comic instanceof ProPlusComic) && !isEmpty(comic.chineseTeam)">
-        汉化：{{ comic.chineseTeam }}
+        v-if="comic && !(comic instanceof ProComic) && !isEmpty(comic.chineseTeam)">
+        <span class="font-medium mr-1">汉化:</span>
+        <span>{{ comic.chineseTeam }}</span>
       </span>
       <div class="my-1 w-full h-auto">
         <van-tag type="primary" v-for="tag of comic.categories.slice(0, symbol.comicCardMaxTagsShow)"

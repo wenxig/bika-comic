@@ -17,6 +17,7 @@ import { toCn } from '@/utils/translater'
 import { cloneDeep } from 'lodash-es'
 import { createLoadingMessage } from '@/utils/message'
 import Popup from '@/components/popup.vue'
+import noneSearchTextIcon from '@/assets/images/none-search-text-icon.webp';
 
 const sorter = shallowRef<InstanceType<typeof Sorter>>()
 const list = shallowRef<GenericComponentExports<typeof List>>()
@@ -143,7 +144,7 @@ const toSearchInHideMode = async () => {
         <van-icon name="sort" size="1.5rem" class="sort-icon" />排序
         <span class="text-[--p-color] text-xs">-{{
           sorterValue.find(v => v.value == config['bika.search.sort'])?.text
-        }}</span>
+          }}</span>
       </div>
       <div class="text-sm h-full ml-2 van-haptics-feedback flex justify-start items-center">
         <VanSwitch v-model="config['bika.search.showAIProject']" size="1rem" />展示AI作品
@@ -179,7 +180,12 @@ const toSearchInHideMode = async () => {
       </template>
     </div>
   </Popup>
-  <NResult status="info" title="未输入搜索字段" description="尝试输入一些吧" v-if="isEmpty($route.query.keyword)"></NResult>
+  <NResult status="info" title="无搜索" class="h-[80vh] flex items-center flex-col justify-center"
+    description="请输入" v-if="isEmpty($route.query.keyword)">
+    <template #icon>
+      <Image :src="noneSearchTextIcon" />
+    </template>
+  </NResult>
   <List :itemHeight="160" :data="listData" reloadable @reload="then => reload().then(then)" v-else
     :is-requesting="isNaN(comicStream.pages.value) && comicStream.isRequesting.value" :is-err="comicStream.isErr.value"
     :err-cause="comicStream.errCause.value" retriable @retry="comicStream.retry()"

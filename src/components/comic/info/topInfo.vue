@@ -2,7 +2,7 @@
 import Image from '@/components/image.vue'
 import { isEmpty, isUndefined, last } from 'lodash-es'
 import { spiltAnthors, toCn } from '@/utils/translater'
-import { ProComic, ProPlusMaxComic } from '@/api'
+import { ProComic, ProPlusComic } from '@/api'
 import { useAppStore } from '@/stores'
 import symbol from '@/symbol'
 import { computed } from 'vue'
@@ -40,10 +40,14 @@ const clipboard = useClipboard({ legacy: true })
           <template #template>
             <VanSkeletonParagraph />
           </template>
-          <span v-if="comic?.finished" class="text-[--van-primary-color]">[完结]</span>
-          <span v-if="(comic instanceof ProPlusMaxComic)" class="text-[--p-color]">[{{ comic.pagesCount }}p]</span>
-          <span v-if="(comic instanceof ProPlusMaxComic)" class="text-[--p-color]">[{{ comic.epsCount }}ep]</span>
-          <span :class="[thirdParty.isHave && 'underline underline-offset-4']" class="ml-1">{{ comic?.title }}</span>
+          <VanTag plain type="primary" v-if="comic?.finished" class="mr-1">完结</VanTag>
+          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1">
+            {{ comic.pagesCount }}p
+          </VanTag>
+          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1">
+            {{ comic.epsCount }}ep
+          </VanTag>
+          <span :class="[thirdParty.isHave && 'underline underline-offset-4']" class="">{{ comic?.title }}</span>
           <span v-if="thirdParty.isHave" class="text-[--van-text-color-3] text-xs italic font-thin"># 1个相关页面</span>
         </VanSkeleton>
       </div>
@@ -52,20 +56,20 @@ const clipboard = useClipboard({ legacy: true })
           <VanSkeletonParagraph row-width="50%" />
         </template>
         <div class="text-[--van-primary-color] *:text-nowrap flex flex-wrap">
-          <span>作者：</span>
+          <span class="font-medium mr-1">作者:</span>
           <span v-for="author of spiltAnthors(comic?.author)" class="mr-2 van-haptics-feedback underline"
             @click="comic && $router.force[mode](`/search?keyword=${author}&mode=anthor`)">{{ author }}</span>
         </div>
       </VanSkeleton>
       <VanSkeleton class="!px-0 !pb-1" :loading="!comic" row="1"
-        v-if="!(comic instanceof ProComic) && (comic?.chineseTeam != undefined) && !isEmpty(comic?.chineseTeam) && comic?.chineseTeam != 'null'">
+        v-if="!(comic instanceof ProComic) && !isEmpty(comic?.chineseTeam) && comic?.chineseTeam != 'null'">
         <template #template>
           <VanSkeletonParagraph row-width="50%" />
         </template>
         <div class="text-[--van-primary-color] van-haptics-feedback"
-          @click="comic && $router.force[mode](`/search?keyword=${comic.chineseTeam}&mode=translater`)">汉化：{{
-            comic?.chineseTeam
-          }}
+          @click="comic && $router.force[mode](`/search?keyword=${comic.chineseTeam}&mode=translater`)">
+          <span class="font-medium mr-1">汉化:</span>
+          <span>{{ comic?.chineseTeam }}</span>
         </div>
       </VanSkeleton>
       <div class="text-[--van-text-color-2]">
@@ -73,15 +77,17 @@ const clipboard = useClipboard({ legacy: true })
           <template #template>
             <VanSkeletonParagraph class="!p-0" row-width="50%" />
           </template>
-          分类:<span v-for="c of comic?.categories" class="ml-1 van-haptics-feedback"
+          <span class="font-medium mr-1">分类:</span>
+          <span v-for="c of comic?.categories" class="van-haptics-feedback"
             @click="$router.force[mode]({ path: `/search`, query: { keyword: encodeURIComponent(c.toString()), mode: 'categories' }, replace: true })">{{ toCn(c.toString()) }}</span>
         </VanSkeleton>
       </div>
       <div class="text-[--van-text-color-2] my-1 text-nowrap">
         <VanSkeleton row="1" :loading="!comic?._id" class="!px-0 !pb-1">
-          <div v-if="comic?._id" class="flex *:block items-center" @click="clipboard.copy(`###${comic._id}`).then(() => $window.$message.success('成功！'))">
+          <div v-if="comic?._id" class="flex *:block items-center"
+            @click="clipboard.copy(`###${comic._id}`).then(() => $window.$message.success('成功！'))">
             <VanIcon name="records-o"></VanIcon>
-            <span>ID:</span>
+            <span class="font-medium">ID:</span>
             <span>{{ comic._id }}</span>
           </div>
         </VanSkeleton>
@@ -150,3 +156,14 @@ const clipboard = useClipboard({ legacy: true })
     </VanCol>
   </VanRow>
 </template>
+<style scoped lang='scss'>
+:deep(.n-statistic) {
+  .n-statistic-value {
+    padding-left: 1rem;
+  }
+
+  .n-statistic__label {
+    padding-left: 0.5rem;
+  }
+}
+</style>

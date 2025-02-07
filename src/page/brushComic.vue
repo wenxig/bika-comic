@@ -118,10 +118,9 @@ window.$api.swiper = swiper
 </script>
 
 <template>
-  <!-- need pull reloader -->
-  <Swiper :modules="[Virtual, Pagination, Keyboard]" @init="onInit" ref="swEl" class="w-full h-full bg-black relative"
-    virtual direction="vertical" keyboard @slideChangeTransitionStart="onSlideChangeStart"
-    @slideChangeTransitionEnd="onSlideChangeEnd">
+  <Swiper :modules="[Virtual, Pagination, Keyboard]" :initialSlide @init="onInit" ref="swEl"
+    class="w-full h-full bg-black relative" virtual direction="vertical" keyboard
+    @slideChangeTransitionStart="onSlideChangeStart" @slideChangeTransitionEnd="onSlideChangeEnd">
     <SwiperSlide v-for="(comic, index) of stream.docs.value" :key="index" :virtualIndex="index" :data-hash="index + 1"
       class="overflow-hidden w-full h-full" :data-history="comic._id">
       <BrushView :id="comic._id" :comic :eps="preloadEps.get(comic._id)" :firstPages="preloadPages.get(comic._id)"

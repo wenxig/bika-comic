@@ -38,7 +38,7 @@ const goSearch = () => $router.force.push(`/search?keyword=${$props.subscribe.ty
       <Image :src="subscribe.src ?? userIcon" round class="w-[40px] h-[40px] mx-2" @click="goSearch" />
       <span @click="goSearch">{{ subscribe.name }}</span>
       <SubscribeButton :is-subscribes="true" :size="24" class="ml-1 p-1" @delete-subscribe="deleteSubscribe()" />
-      <NTime v-if="(comic instanceof ProPlusComic)" :time="new Date(comic.updated_at)"
+      <NTime v-if="comic && !(comic instanceof ProComic)" :time="new Date(comic.updated_at)"
         class="block top-1 right-1 absolute text-[--van-text-color-2]" />
     </div>
     <ComicCard :height="height - 40" :comic />

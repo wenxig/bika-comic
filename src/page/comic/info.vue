@@ -52,44 +52,44 @@ const reloadAll = async () => {
 
 <template>
   <VanPullRefresh @refresh="reloadAll()" v-model="isReloadingAll">
-    <template v-if="pageIns?.vailed.value != false">
-      <TopInfo :comic="union" />
-      <VanRow>
-        <VanCol span="12">
-          <VanButton class="w-full van-multi-ellipsis--l2" type="primary" round
-            :disabled="pageIns?.epsStateContent.value.isEmpty"
-            @click="!isEmpty(preload) && $router.force.push(isEmpty(history) ? `/comic/${preload?._id}/read/1` : `/comic/${pageIns?.comicId}/read/${history[0]}#${history[2] + 1}`)">
-            {{ readButtonText }}
-          </VanButton>
-        </VanCol>
-        <VanCol span="4" class="justify-center !flex items-center">
-          <van-badge :content="union?.likesCount">
-            <van-icon name="like" size="30px" color="var(--van-primary-color)" v-if="union?.isLiked"
-              @click="union?.like()" />
-            <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="union?.like()" />
-          </van-badge>
-        </VanCol>
-        <VanCol span="4" class="justify-center !flex items-center">
-          <van-icon name="star" size="30px" color="var(--van-primary-color)" v-if="union?.isFavourite"
-            @click="union?.favourt()" />
-          <van-icon name="star-o" size="30px" v-else color="var(--van-text-color)" @click="union?.favourt()" />
-        </VanCol>
-        <VanCol span="4" class="justify-center !flex items-center"
-          @click="detail?.allowComment && $router.force.push(`/comic/${preload?._id}/comments`)">
-          <van-badge v-if="detail?.allowComment" :content="detail.commentsCount">
-            <van-icon name="chat-o" size="30px" color="var(--van-text-color)" />
-          </van-badge>
-          <van-icon name="chat-o" size="30px" color="var(--van-text-color-2)" v-else />
-        </VanCol>
-      </VanRow>
-      <Uploader :comic="detail" />
-      <Eps :id="pageIns?.comicId ?? ''" :eps="pageIns?.epsStateContent.value" />
-      <Likes :likes="recommend" :state="pageIns?.recommendComicStateContent.value" />
-    </template>
-    <NResult status="error" title="错误" description="审核中" v-else class="mb-1">
-      <template #footer>
-        <VanButton type="danger" @click="$router.back()">返回</VanButton>
+      <template v-if="pageIns?.vailed.value != false">
+        <TopInfo :comic="union" />
+        <VanRow>
+          <VanCol span="12">
+            <VanButton class="w-full van-multi-ellipsis--l2" type="primary" round
+              :disabled="pageIns?.epsStateContent.value.isEmpty"
+              @click="!isEmpty(preload) && $router.force.push(isEmpty(history) ? `/comic/${preload?._id}/read/1` : `/comic/${pageIns?.comicId}/read/${history[0]}#${history[2] + 1}`)">
+              {{ readButtonText }}
+            </VanButton>
+          </VanCol>
+          <VanCol span="4" class="justify-center !flex items-center">
+            <van-badge :content="union?.likesCount">
+              <van-icon name="like" size="30px" color="var(--van-primary-color)" v-if="union?.isLiked"
+                @click="union?.like()" />
+              <van-icon name="like-o" size="30px" v-else color="var(--van-text-color)" @click="union?.like()" />
+            </van-badge>
+          </VanCol>
+          <VanCol span="4" class="justify-center !flex items-center">
+            <van-icon name="star" size="30px" color="var(--van-primary-color)" v-if="union?.isFavourite"
+              @click="union?.favourt()" />
+            <van-icon name="star-o" size="30px" v-else color="var(--van-text-color)" @click="union?.favourt()" />
+          </VanCol>
+          <VanCol span="4" class="justify-center !flex items-center"
+            @click="detail?.allowComment && $router.force.push(`/comic/${preload?._id}/comments`)">
+            <van-badge v-if="detail?.allowComment" :content="detail.commentsCount">
+              <van-icon name="chat-o" size="30px" color="var(--van-text-color)" />
+            </van-badge>
+            <van-icon name="chat-o" size="30px" color="var(--van-text-color-2)" v-else />
+          </VanCol>
+        </VanRow>
+        <Uploader :comic="detail" />
+        <Eps :id="pageIns?.comicId ?? ''" :eps="pageIns?.epsStateContent.value" />
+        <Likes :likes="recommend" :state="pageIns?.recommendComicStateContent.value" />
       </template>
-    </NResult>
+      <NResult status="error" title="错误" description="审核中" v-else class="mb-1">
+        <template #footer>
+          <VanButton type="danger" @click="$router.back()">返回</VanButton>
+        </template>
+      </NResult>
   </VanPullRefresh>
 </template>
