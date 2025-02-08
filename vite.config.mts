@@ -46,7 +46,7 @@ export default defineConfig({
         display: 'standalone',
         lang: 'zh-cn'
       },
-      injectRegister: 'script',
+      injectRegister: 'inline',
       registerType: 'autoUpdate',
       workbox: {
         runtimeCaching: [
@@ -71,6 +71,7 @@ export default defineConfig({
             },
           }
         ],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
         maximumFileSizeToCacheInBytes: 1024 * 1024 * 1024
       },
       injectManifest: {

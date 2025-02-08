@@ -52,11 +52,11 @@ defineSlots<{
         class="absolute w-full h-6 text-white bg-[linear-gradient(transparent,rgba(0,0,0,0.3))] bottom-0 flex items-end justify-start">
         <span class="mr-1 !text-sm">
           <VanIcon name="eye-o" size="1rem" />
-          {{ comic.totalViews }}
+          <span>{{ comic.totalViews }}</span>
         </span>
-        <span class=" !text-sm">
+        <span class="!text-sm">
           <VanIcon name="like-o" size="1rem" />
-          {{ comic.totalLikes }}
+          <span>{{ comic.totalLikes }}</span>
         </span>
       </div>
     </div>
@@ -74,14 +74,14 @@ defineSlots<{
     <div class="w-[62%] min-h-[98%] *:text-sm flex absolute right-[2%] flex-col *:text-justify" ref="info" v-else>
       <span class="font-bold" :class="[!resizeable && 'van-ellipsis']">
         <template v-if="!hideEpInfo">
-          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1">
+          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1 !bg-transparent">
             {{ comic.pagesCount }}p
           </VanTag>
-          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1">
+          <VanTag plain type="primary" v-if="comic && !(comic instanceof ProPlusComic)" class="mr-1 !bg-transparent">
             {{ comic.epsCount }}ep
           </VanTag>
         </template>
-        {{ comic.title }}
+        <span>{{ comic.title }}</span>
       </span>
       <div class="text-[--van-primary-color] flex flex-wrap *:text-nowrap" :class="[!resizeable && 'van-ellipsis']">
         <span class="font-medium mr-1">作者:</span>

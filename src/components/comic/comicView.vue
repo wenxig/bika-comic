@@ -5,8 +5,8 @@ import 'swiper/css/virtual'
 import 'swiper/css/zoom'
 import type { Swiper as SwiperClass } from 'swiper/types/index.d.ts'
 import { Virtual, Zoom, HashNavigation, } from 'swiper/modules'
-import { onUnmounted, reactive, ref, shallowRef, watch } from 'vue'
-import { inRange, isNaN, noop } from 'lodash-es'
+import { onUnmounted, reactive, shallowRef, watch } from 'vue'
+import { inRange, isNaN } from 'lodash-es'
 import config, { fullscreen } from '@/config'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores'
@@ -16,7 +16,7 @@ import FloatPopup from '@/components/floatPopup.vue'
 import { useSmallWindowContext } from '@/stores/smallWindow'
 import { Image_ } from '@/utils/image'
 import { AutoPlayConfig, baseAutoPlayConfig, LoaingMask, MenuButton } from './helper'
-import { useClipboard, useInterval, useIntervalFn } from '@vueuse/core'
+import { useClipboard } from '@vueuse/core'
 import { triggerRef } from 'vue'
 const $props = withDefaults(defineProps<{
   images: string[],
@@ -153,72 +153,84 @@ onUnmounted(() => {
       </SwiperSlide>
     </Swiper>
 
-
     <div class="fixed z-[1] top-0 left-0 w-[--aside-width] h-[100vh] flex items-center"
       @click="inRange(page - 1, 0, images.length) ? swiper?.slidePrev() : $emit('lastEp')">
-      <div class="use-bg w-full flex-col flex *:text-white" v-if="showMenu" @click.stop>
-        <slot :MenuButton name="left" width="var(--aside-width)" />
-      </div>
+      <Transition name="van-slide-left">
+        <div class="w-full flex-col flex *:text-white" v-show="showMenu" @click.stop>
+          <slot :MenuButton name="left" width="var(--aside-width)" />
+        </div>
+      </Transition>
     </div>
 
     <div class="fixed z-[1] top-0 right-0 w-[--aside-width] h-[100vh] flex items-center"
       @click="inRange(page + 1, 0, images.length) ? swiper?.slideNext() : $emit('nextEp')">
-      <div class="use-bg w-full flex-col flex *:text-white" v-if="showMenu" @click.stop>
-        <slot :MenuButton name="right" width="var(--aside-width)" />
-      </div>
+      <Transition name="van-slide-right">
+        <div class="w-full flex-col flex *:text-white" v-show="showMenu" @click.stop>
+          <slot :MenuButton name="right" width="var(--aside-width)" />
+        </div>
+      </Transition>
     </div>
 
-    <div class="fixed z-[1] top-0 use-bg left-0 w-[100vw] h-[3rem] *:text-white flex items-center" v-if="showMenu">
-      <div @click="$emit('back')">
-        <VanIcon name="close" size="2rem" class=" ml-1" />
+    <Transition name="van-slide-down">
+      <div class="fixed z-[1] top-0 use-bg left-0 w-[100vw] h-[3rem] *:text-white flex items-center" v-if="showMenu">
+        <div @click="$emit('back')">
+          <VanIcon name="close" size="2rem" class=" ml-1" />
+        </div>
+        <div class="flex flex-col h-full ml-1 w-full">
+          <div class="text-[--p-color] text-lg van-ellipsis">{{ comicTitle }}</div>
+          <div class="text-sm">{{ epTitle }} ({{ (page + 1) || 1 }}/{{ images.length }})</div>
+        </div>
       </div>
-      <div class="flex flex-col h-full ml-1 w-full">
-        <div class="text-[--p-color] text-lg van-ellipsis">{{ comicTitle }}</div>
-        <div class="text-sm">{{ epTitle }} ({{ (page + 1) || 1 }}/{{ images.length }})</div>
-      </div>
-    </div>
+    </Transition>
     <div v-if="!showMenu" @click="showMenu = true" class="!fixed z-[1] top-0 left-0 w-[100vw] h-[3rem]"></div>
-    <div v-if="showMenu" class="fixed z-[1] bottom-0 use-bg left-0 w-[100vw] flex flex-col">
-      <VanSlider v-model="selectPage" @change="v => (page != v) && swiper?.slideTo(v, 0)" :min="0"
-        :max="((images.length - 1) > 0) ? (images.length - 1) : selectPage + 1"
-        @drag-start="showSliderButtonNumber = true" @drag-end="showSliderButtonNumber = false"
-        class="!w-[calc(100%-1rem)] !mx-2 !my-[calc(var(--van-slider-button-height)/2)]">
-        <template #button>
-          <div
-            class="flex justify-center relative items-center w-[--van-slider-button-width] h-[--van-slider-button-height] rounded-full bg-[--van-background-2] shadow-md">
-            <div v-if="showSliderButtonNumber"
-              class="slider-button-number w-6 absolute text-center p-[2px] z-[200000] bottom-[calc(var(--van-slider-button-width)+10px)] use-bg rounded-lg text-white h-5 before:content-[''] before:bg-opacity-50 before:bg-black before:absolute before:left-1/2 before:bottom-0 before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:w-2 before:h-2">
-              {{ selectPage + 1 }}
+
+
+    <Transition name="van-slide-up">
+      <div v-show="showMenu" class="fixed z-[1] bottom-0 use-bg left-0 w-[100vw] flex flex-col">
+        <VanSlider v-model="selectPage" @change="v => (page != v) && swiper?.slideTo(v, 0)" :min="0"
+          :max="((images.length - 1) > 0) ? (images.length - 1) : selectPage + 1"
+          @drag-start="showSliderButtonNumber = true" @drag-end="showSliderButtonNumber = false"
+          class="!w-[calc(100%-1rem)] !mx-2 !my-[calc(var(--van-slider-button-height)/2)]">
+          <template #button>
+            <div
+              class="flex justify-center relative items-center w-[--van-slider-button-width] h-[--van-slider-button-height] rounded-full bg-[--van-background-2] shadow-md">
+              <div v-if="showSliderButtonNumber"
+                class="slider-button-number w-6 absolute text-center p-[2px] z-[200000] bottom-[calc(var(--van-slider-button-width)+10px)] use-bg rounded-lg text-white h-5 before:content-[''] before:bg-opacity-50 before:bg-black before:absolute before:left-1/2 before:bottom-0 before:-translate-x-1/2 before:translate-y-1/2 before:rotate-45 before:w-2 before:h-2">
+                {{ selectPage + 1 }}
+              </div>
             </div>
-          </div>
-        </template>
-      </VanSlider>
-      <div
-        class="h-[3rem] *:text-white justify-evenly flex items-center *:flex *:w-[3rem] *:justify-center *:items-center *:flex-col *:h-[3rem]">
-        <slot name="menu" :MenuButton />
-        <MenuButton @click="settingShow = true" icon="more-o">
-          更多
-        </MenuButton>
-        <MenuButton @click="showMenu = false" icon="arrow-down">
-          收起
-        </MenuButton>
+          </template>
+        </VanSlider>
+        <div
+          class="h-[3rem] *:text-white justify-evenly flex items-center *:flex *:w-[3rem] *:justify-center *:items-center *:flex-col *:h-[3rem]">
+          <slot name="menu" :MenuButton />
+          <MenuButton @click="settingShow = true" icon="more-o">
+            更多
+          </MenuButton>
+          <MenuButton @click="showMenu = false" icon="arrow-down">
+            收起
+          </MenuButton>
+        </div>
       </div>
-    </div>
-    <div v-if="!showMenu" @click="showMenu = true" class="!fixed z-[1] bottom-0 left-0 w-[100vw] h-[3rem]">
-      <div class="h-4 w-auto items-center flex flex-nowrap use-bg text-white absolute bottom-0 px-1 left-0 text-xs"
-        @click.stop="app.showDevPupop = true">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"
-          class="w-3 block text-white" v-if="config['bika.devMode']">
-          <path d="M31 16l-7 7l-1.41-1.41L28.17 16l-5.58-5.59L24 9l7 7z" fill="currentColor"></path>
-          <path d="M1 16l7-7l1.41 1.41L3.83 16l5.58 5.59L8 23l-7-7z" fill="currentColor"></path>
-          <path d="M12.419 25.484L17.639 6l1.932.518L14.35 26z" fill="currentColor"></path>
-        </svg>
-        {{ epTitle }}
-        ({{ (page + 1) || 1 }}/{{ images.length }})
+    </Transition>
+
+    <Transition name="van-slide-up">
+      <div v-show="!showMenu" @click="showMenu = true" class="!fixed z-[1] bottom-0 left-0 w-[100vw] h-[3rem]">
+        <div class="h-4 w-auto items-center flex flex-nowrap use-bg text-white absolute bottom-0 px-1 left-0 text-xs"
+          @click.stop="app.showDevPupop = true">
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"
+            class="w-3 block text-white" v-if="config['bika.devMode']">
+            <path d="M31 16l-7 7l-1.41-1.41L28.17 16l-5.58-5.59L24 9l7 7z" fill="currentColor"></path>
+            <path d="M1 16l7-7l1.41 1.41L3.83 16l5.58 5.59L8 23l-7-7z" fill="currentColor"></path>
+            <path d="M12.419 25.484L17.639 6l1.932.518L14.35 26z" fill="currentColor"></path>
+          </svg>
+          {{ epTitle }}
+          ({{ (page + 1) || 1 }}/{{ images.length }})
+        </div>
       </div>
-    </div>
+    </Transition>
     <Transition name="van-slide-up" v-if="!showMenu">
-      <NButton type="primary" v-show="autoPlayConfig.enable" class="absolute bottom-5 block left-1 z-[1]" round
+      <NButton type="primary" v-show="autoPlayConfig.enable" class="absolute bottom-[20px] block left-1 z-[1]" round
         size="tiny" @click="pausedAutoPlay = !pausedAutoPlay">
         <span v-if="pausedAutoPlay">
           自动翻页停
