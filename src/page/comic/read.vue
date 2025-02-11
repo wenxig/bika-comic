@@ -123,22 +123,27 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
         评论
       </component :is="MenuButton">
     </template>
+
     <template #left="{ width, MenuButton }">
-      <component :is="MenuButton" size="small" icon="notes-o" @click="showComicInfo = true" :width>
+      <component :is="MenuButton" class="rounded-tr-lg" size="small" icon="notes-o" @click="showComicInfo = true"
+        :width>
         关于
       </component>
-      <component :is="MenuButton" size="small" icon="arrow-double-left" @click="toLastEp" :width>
+      <component :is="MenuButton" class="rounded-br-lg" size="small" icon="arrow-double-left" @click="toLastEp" :width>
         上一章
       </component>
     </template>
+
     <template #right="{ width, MenuButton }">
-      <component :is="MenuButton" size="small" icon="list-switch" @click="showComicLike = true" :width>
+      <component :is="MenuButton" class="rounded-tl-lg" size="small" icon="list-switch" @click="showComicLike = true"
+        :width>
         推荐
       </component>
-      <component :is="MenuButton" size="small" icon="arrow-double-right" @click="toNextEp" :width>
+      <component :is="MenuButton" class="rounded-bl-lg" size="small" icon="arrow-double-right" @click="toNextEp" :width>
         下一章
       </component>
     </template>
+
   </ComicView>
 
   <!-- 章节选择 -->
