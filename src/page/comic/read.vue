@@ -108,20 +108,20 @@ const toLastEp = () => epId - 1 > 0 ? (lastPagesLength.value && $router.force.re
     @add-favourt-image="(src, time) => detail && app.favourtImages.push(new FavourtImage({ src, time, comic: detail }))"
     @remove-favourt-image="src => remove(app.favourtImages, { src })" @last-ep="toLastEp" @next-ep="toNextEp">
     <template #menu="{ MenuButton }">
-      <component :is="MenuButton" icon="list-switch" @click="epSelectShow = true">
+      <component :is="MenuButton" noBg icon="list-switch" @click="epSelectShow = true">
         章节
-      </component :is="MenuButton">
+      </component>
       <template v-if="union">
-        <component :is="MenuButton" baseIcon="like" :primary="union?.isLiked" @click="union?.like()">
+        <component :is="MenuButton" noBg baseIcon="like" :primary="union?.isLiked" @click="union?.like()">
           点赞
-        </component :is="MenuButton">
-        <component :is="MenuButton" baseIcon="star" :primary="union?.isFavourite" @click="union?.favourt()">
+        </component>
+        <component :is="MenuButton" noBg baseIcon="star" :primary="union?.isFavourite" @click="union?.favourt()">
           收藏
-        </component :is="MenuButton">
+        </component>
       </template>
-      <component :is="MenuButton" icon="chat-o" v-if="detail?.allowComment" @click="comment?.show()">
+      <component :is="MenuButton" noBg icon="chat-o" v-if="detail?.allowComment" @click="comment?.show()">
         评论
-      </component :is="MenuButton">
+      </component>
     </template>
 
     <template #left="{ width, MenuButton }">

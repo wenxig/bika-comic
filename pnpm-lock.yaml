@@ -68,6 +68,9 @@ importers:
       vue-router:
         specifier: ^4.5.0
         version: 4.5.0(vue@3.5.13(typescript@5.7.3))
+      xmit:
+        specifier: ^0.1.67
+        version: 0.1.67
     devDependencies:
       '@rollup/plugin-node-resolve':
         specifier: latest
@@ -1319,6 +1322,9 @@ packages:
     resolution: {integrity: sha512-bMxMKAjg13EBSVscxTaYA4mRc5t1UAXa2kXiGTNfZ079HIWXEkKmkgFrh/nJqamaLSrXO5H4WFFkPEaLJWbs3A==}
     engines: {node: '>= 0.4'}
 
+  asap@1.0.0:
+    resolution: {integrity: sha512-Ej9qjcXY+8Tuy1cNqiwNMwFRXOy9UwgTeMA8LxreodygIPV48lx8PU1ecFxb5ZeU1DpMKxiq6vGLTxcitWZPbA==}
+
   async-validator@4.2.5:
     resolution: {integrity: sha512-7HhHjtERjqlNbZtqNqy2rckN/SpOOlmDliet+lP7k+eKZEjPk3DgyeU9lIXLdeLz0uBbbVp+9Qdow9wJWgwwfg==}
 
@@ -2075,6 +2081,9 @@ packages:
   lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
 
+  loggingtofile@0.0.2:
+    resolution: {integrity: sha512-4BF4ASCml73s3Rpi5nArQsqN23Vt7LkKIQ0rsl6f33yIAFr0uNOhZk7eAcRZC3hu2XaNtvhxtT0B712szeiDHA==}
+
   lru-cache@10.2.0:
     resolution: {integrity: sha512-2bIM8x+VAf6JT4bKAljS1qUWgMsqZRPGJS6FSahIMPVvctcNhyVp7AJu7quxOW9jwkryBReKZY5tY5JYv2n/7Q==}
     engines: {node: 14 || >=16.14}
@@ -2146,6 +2155,9 @@ packages:
 
   mitt@3.0.1:
     resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
+
+  mix_factory@0.0.1:
+    resolution: {integrity: sha512-IbXSt0ZhDfd8KuloM6AlXVXEfcXZt8Q4uDBVfDyyutbhiOKlEysnmfYcLMTiWCjtVY/xiuZpQtxVzbljblMAjg==}
 
   mkdirp@3.0.1:
     resolution: {integrity: sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg==}
@@ -2344,6 +2356,9 @@ packages:
   pretty-bytes@6.1.1:
     resolution: {integrity: sha512-mQUvGU6aUFQ+rNvTIAcZuWGRT9a6f6Yrg9bHs4ImKF+HZCEK+plBvnAZYSIQztknZF2qnzNtr6F8s0+IuptdlQ==}
     engines: {node: ^14.13.1 || >=16.0.0}
+
+  promise@6.1.0:
+    resolution: {integrity: sha512-O+uwGKreKNKkshzZv2P7N64lk6EP17iXBn0PbUnNQhk+Q0AHLstiTrjkx3v5YBd3cxUe7Sq6KyRhl/A0xUjk7Q==}
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
@@ -2908,6 +2923,9 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  xmit@0.1.67:
+    resolution: {integrity: sha512-93W7+3wgH+zgG+sZ7Efs0hbr6+Rw/ge8WoY9hBWFQrOUTidJUvqyMyL2JDqKbLhDteV/w5BYHU8x6J2TY88eHw==}
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -4178,6 +4196,8 @@ snapshots:
       is-array-buffer: 3.0.4
       is-shared-array-buffer: 1.0.3
 
+  asap@1.0.0: {}
+
   async-validator@4.2.5: {}
 
   async@3.2.6: {}
@@ -4923,6 +4943,8 @@ snapshots:
 
   lodash@4.17.21: {}
 
+  loggingtofile@0.0.2: {}
+
   lru-cache@10.2.0: {}
 
   lru-cache@5.1.1:
@@ -4985,6 +5007,8 @@ snapshots:
       rimraf: 5.0.10
 
   mitt@3.0.1: {}
+
+  mix_factory@0.0.1: {}
 
   mkdirp@3.0.1: {}
 
@@ -5171,6 +5195,10 @@ snapshots:
   pretty-bytes@5.6.0: {}
 
   pretty-bytes@6.1.1: {}
+
+  promise@6.1.0:
+    dependencies:
+      asap: 1.0.0
 
   proxy-from-env@1.1.0: {}
 
@@ -5874,6 +5902,12 @@ snapshots:
       strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
+
+  xmit@0.1.67:
+    dependencies:
+      loggingtofile: 0.0.2
+      mix_factory: 0.0.1
+      promise: 6.1.0
 
   yallist@3.1.1: {}
 

@@ -204,10 +204,10 @@ onUnmounted(() => {
         <div
           class="h-[3rem] *:text-white justify-evenly flex items-center *:flex *:w-[3rem] *:justify-center *:items-center *:flex-col *:h-[3rem]">
           <slot name="menu" :MenuButton />
-          <MenuButton @click="settingShow = true" icon="more-o">
+          <MenuButton noBg @click="settingShow = true" icon="more-o">
             更多
           </MenuButton>
-          <MenuButton @click="showMenu = false" icon="arrow-down">
+          <MenuButton noBg @click="showMenu = false" icon="arrow-down">
             收起
           </MenuButton>
         </div>
