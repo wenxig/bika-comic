@@ -7,7 +7,7 @@
     "dev:s": "cd ../server; bun dev",
     "build": "vite build",
     "preview": "vite preview",
-    "bu": "./script/build_upload.sh",
+    "bu": "bun ./script/build_upload.sh",
     "update_lib": "./script/update_lib.sh",
     "typecheck": "vue-tsc --noEmit -p ./tsconfig.json --composite false"
   },

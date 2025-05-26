@@ -1,4 +1,4 @@
-sh ./script/build.sh
+bun ./script/build.sh
 git add .
 git commit -m `bun ./script/getVersion.ts`
 git push origin main
