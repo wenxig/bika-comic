@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body,
+html,
+#app {
+  width: 100vw;
+  height: 100vh;
+  background: var(--van-background) !important;
+  overflow-x: hidden;
+}
+
+$pColor: #db547c;
+$lightPColor: lighten($pColor, 8);
+$superLightPColor: lighten($lightPColor, 8);
+$pressedPColor: darken($pColor, 8);
+:root:root {
+  --primary-color: #{$pColor};
+  --primary-color-pressed: #{$pressedPColor};
+  --primary-color-hover: #{$lightPColor};
+  --primary-color-light: #{$superLightPColor};
+  --van-primary-color: var(--primary-color) !important;
+  --van-blue: var(--primary-color) !important;
+  --p-color: var(--primary-color);
+  --n-bezier: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.van-floating-panel__header-bar {
+  pointer-events: none;
+}
+
+.v-binder-follower-container {
+  z-index: 1000000 !important;
+}
+
+#messages {
+  position: fixed;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+  top: 0px;
+  left: 0px;
+  z-index: 2147483647;
+  * {
+    pointer-events: all;
+  }
+}
+
+.user-page #app *:not(.van-switch *),
+.setting-page #app *:not(.van-switch *) {
+  --bezier: cubic-bezier(0.4, 0, 0.2, 1);
+  --text-bezier: cubic-bezier(0.17, 0.15, 0.2, 1);
+  transition:
+    0.1s color var(--text-bezier),
+    0.3s border-color var(--text-bezier),
+    0.3s background-color var(--bezier) !important;
+}

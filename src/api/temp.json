@@ -1,0 +1,9 @@
+[
+  {
+    "type": "DELETE_MESSAGE_ACTION",
+    "isBlocked": false,
+    "data": {
+      "id": "668e1845ad7241fdf6a596b3"
+    }
+  }
+]

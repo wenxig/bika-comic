@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bika</title>
+  <meta name="description" content="就是你想的bika漫画">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <link rel="shortcut icon" href="/favicon.webp" type="image/x-icon">
+  <link rel="apple-touch-icon" href="/favicon.webp" type="image/x-icon">
+  <script>
+    window.$api = {}
+  </script>
+  <style>
+    #setup {
+      transition: opacity 300ms !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="bg-black overflow-hidden"></div>
+  <div id="setup"
+    style="all: unset !important;position: fixed !important;top: 0 !important;left: 0 !important;display: flex !important;justify-content: center !important;width: 100vw !important; height: 100vh !important;background-color: white !important;overflow: hidden !important;z-index: 1145141919810 !important;">
+    <img
+      style="all: unset !important;width: 60vw !important;object-fit: scale-down !important;margin-top: -40vw !important;"
+      src="/setup-bg.webp" alt="">
+    <div
+      style="all: unset !important;position: absolute !important;bottom: 3rem !important;font-weight: 600 !important;font-size: 1.5rem !important;color: #db547c !important;font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif !important;line-height: 1rem !important;">
+      PicAcg</div>
+  </div>
+  <div id="comic-views"></div>
+  <div id="popups" class="relative z-[100]"></div>
+  <div id="small-window" class="fixed top-0 left-0 pointer-events-none z-[114514]"></div>
+  <div id="messages"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

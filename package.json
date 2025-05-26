@@ -1,0 +1,68 @@
+{
+  "name": "bika-comic",
+  "version": "4.5.5",
+  "license": "LGPL-3.0-or-later",
+  "scripts": {
+    "dev": "vite",
+    "dev:s": "cd ../server; bun dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "bu": "./script/build_upload.sh",
+    "update_lib": "./script/update_lib.sh",
+    "typecheck": "vue-tsc --noEmit -p ./tsconfig.json --composite false"
+  },
+  "dependencies": {
+    "@vant/touch-emulator": "^1.4.0",
+    "@vant/use": "^1.6.0",
+    "@vercel/speed-insights": "^1.2.0",
+    "@vueuse/core": "^13.1.0",
+    "axios": "^1.9.0",
+    "crypto-js": "^4.2.0",
+    "dayjs": "^1.11.11",
+    "localforage": "^1.10.0",
+    "lodash-es": "^4.17.21",
+    "marked": "^13.0.2",
+    "mitt": "^3.0.1",
+    "naive-ui": "^2.41.0",
+    "opencc-js": "^1.0.5",
+    "pinia": "^3.0.2",
+    "swiper": "^11.2.2",
+    "vant": "^4.9.19",
+    "vue": "^3.5.14",
+    "vue-json-pretty": "^2.4.0",
+    "vue-picture-cropper": "^0.7.0",
+    "vue-router": "^4.5.1",
+    "xmit": "^0.1.67"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "latest",
+    "@types/crypto-js": "latest",
+    "@types/lodash-es": "latest",
+    "@types/node": "latest",
+    "@types/opencc-js": "latest",
+    "@types/postcss-pxtorem": "latest",
+    "@vant/auto-import-resolver": "^1.2.1",
+    "@vitejs/plugin-legacy": "^6.0.1",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue-jsx": "^4.1.1",
+    "@vue/tsconfig": "^0.7.0",
+    "@xmit.co/xmit": "0.3.5-0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "postcss-pxtorem": "^6.1.0",
+    "sass": "^1.77.8",
+    "tailwindcss": "^3.4.4",
+    "terser": "latest",
+    "typescript": "^5.8.3",
+    "unplugin-vue-components": "^0.27.2",
+    "vite": "^6.3.4",
+    "vite-plugin-pwa": "^1.0.0",
+    "vue-component-type-helpers": "^2.2.0",
+    "vue-tsc": "^2.2.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@vercel/speed-insights"
+    ]
+  }
+}
