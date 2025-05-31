@@ -12,7 +12,7 @@ import { createLoadingMessage } from '@/utils/message'
 import { noop } from 'lodash-es'
 import { SearchInstance } from 'vant'
 import SubscribeButton from '@/components/subscribe/sButton.vue'
-import { searchModeMap, useSearchMode } from '@/utils/translater'
+import { getOriginalSearchContent, searchModeMap, useSearchMode } from '@/utils/translater'
 import { useZIndex } from '@/utils/layout'
 import SearchTag from './searchTag.vue'
 const $props = defineProps<{
@@ -34,11 +34,10 @@ const showHotTags = () => {
   isShowSearchPop.value = true
 }
 const searchMode = useSearchMode(searchText)
-const urlText = (str: string) => str.replace(/^[\@\#]+/g, '')
 const router = useRouter()
 const handleSearch = (value: string) => {
   app.searchHistory.unshift(value)
-  router.force.push(`/search?keyword=${encodeURIComponent(urlText(value))}&mode=${searchMode.value}`)
+  router.force.push(`/search?keyword=${encodeURIComponent(getOriginalSearchContent(value))}&mode=${searchMode.value}`)
   search.value?.blur()
   isShowSearchPop.value = false
 }

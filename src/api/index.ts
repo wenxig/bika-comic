@@ -151,6 +151,8 @@ export abstract class Comic {
     const obj: any = {}
     for (const key of keys) isFunction(this[key]) || (obj[key] = this[key])
     delete obj.picId
+    console.log('comic toJSON', obj)
+
     return obj
   }
   public async like(config: AxiosRequestConfig = {}, message = true) {
@@ -442,7 +444,7 @@ export abstract class ComicStream<T = ProPlusComic> implements ComicStreamI<T> {
   public pages = shallowRef(NaN)
   public total = computed(() => this.docs.value.length)
   public page = shallowRef(0)
-  public done = computed(() => this.page.value >= this.pages.value)
+  public done: Ref<boolean> = computed(() => this.page.value >= this.pages.value)
   public isRequesting = shallowRef(false)
   public reload(tag?: string, sort?: SortType) {
     this.tag = tag || this.tag
@@ -629,12 +631,8 @@ export const fetchGetRecommedApi = async <T = any>(path: string, config: { signa
   const baseInterface = getInterfaceConfig()
   const d = await (await fetch(`https://${baseInterface.recommendPart}.${baseInterface.url}${path}`, {
     headers: {
-      'app-channel': '1',
-      'app-uuid': 'webUUID',
-      'accept': 'application/vnd.picacomic.com.v1+json',
-      'app-platform': 'android',
-      'Content-Type': 'application/json; charset=UTF-8'
     },
+    method: 'GET',
     signal: config.signal,
   })).text()
   const r = Promise.withResolvers<T>()
@@ -645,17 +643,20 @@ export const fetchGetRecommedApi = async <T = any>(path: string, config: { signa
   }
   return r.promise
 }
-export const getComicPicId = async (id: string, config:  { signal?: AbortSignal }  = {}) => {
+export const getComicPicId = async (id: string, config: { signal?: AbortSignal } = {}) => {
   const result = await fetchGetRecommedApi<{ shareId: number }>(`/pic/share/set/?c=${id}`, config)
   const picId = result.shareId
   return picId
 }
-export const getComicIdFromPicId = async (picid: number, config:  { signal?: AbortSignal }  = {}) => {
-  const result = await fetchGetRecommedApi<{ cid: string }>(`/pic/share/get/?shareId=${picid}`, config)
+export const getComicIdFromPicId = async (picid: number, config: { signal?: AbortSignal } = {}) => {
+  const result = await fetchGetRecommedApi<{ cid: string, error?: string }>(`/pic/share/get/?shareId=${picid}`, config)
   const id = result.cid
+  if (result.error) {
+    throw new Error(result.error)
+  }
   return id
 }
-export const getComicFromPicId = async (picid: number, config:  { signal?: AbortSignal }  = {}) => {
+export const getComicFromPicId = async (picid: number, config: { signal?: AbortSignal } = {}) => {
   const id = await getComicIdFromPicId(picid, config)
   const data = await getComicInfo(id, config)
   return data
@@ -675,12 +676,12 @@ export class ComicStreamWithPicId extends ComicStream<ProPlusMaxComic> {
     } catch (err) {
       this.pages.value = 1
       this.docs.value = []
-      this.isErr.value = true
-      if (err instanceof Error) this.errCause.value = err.message || err.name
+      this.isErr.value = false
     }
     this.isRequesting.value = false
+    this.done.value = true
   }
-  public done = computed(() => this.docs.value.length == 1)
+  public done = shallowRef(false)
 }
 
 export class ComicStreamWithId extends ComicStream<ProPlusMaxComic> {
@@ -702,8 +703,9 @@ export class ComicStreamWithId extends ComicStream<ProPlusMaxComic> {
       if (err instanceof Error) this.errCause.value = err.message || err.name
     }
     this.isRequesting.value = false
+    this.done.value = true
   }
-  public done = computed(() => this.docs.value.length == 1)
+  public done = shallowRef(false)
 }
 
 export class ComicStreamWithNoop extends ComicStream {

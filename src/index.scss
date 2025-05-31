@@ -56,3 +56,36 @@ $pressedPColor: darken($pColor, 8);
     0.3s border-color var(--text-bezier),
     0.3s background-color var(--bezier) !important;
 }
+
+
+.page-slide-right-enter-active,
+.page-slide-left-enter-active,
+.page-slide-right-leave-active,
+.page-slide-left-leave-active {
+    box-shadow: -20px 0 20px 0px rgba(0, 0, 0, 0.1);
+    will-change: transform;
+    transition: all 0.3s ease-out;
+    position: absolute;
+}
+
+.page-slide-right-enter-from {
+    opacity: 0;
+    transform: translateX(-50%);
+}
+.page-slide-right-leave-to {
+    z-index: 100;
+    transform: translateX(102%);
+}
+
+.page-slide-right-leave-from {
+    box-shadow: -20px 0 20px 0px rgba(0, 0, 0, 0.1);
+}
+.page-slide-left-enter-from {
+    z-index: 100;
+    transform: translateX(100%);
+    box-shadow: -20px 0 20px 0px rgba(0, 0, 0, 0.1);
+}
+.page-slide-left-leave-to {
+    opacity: 0.4;
+    transform: translateX(-50%);
+}

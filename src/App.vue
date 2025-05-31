@@ -77,6 +77,46 @@ watch(config, (config, oldConfig) => {
 eventBus.on('networkError', ([cause]) => [
   window.$message?.error('网络错误:' + cause)
 ])
+
+
+
+
+
+const router = useCustomRouter()
+const needAnimate = useRouterAnimate()
+const transitionMode = ref("out-in")
+
+router.beforeEach((to, from) => {
+  // 这里通过router中设置的页面深度depth来判断动画的方向，这样不会收到刷新和浏览器前进后退的影响而导致动画执行错误
+  const toDepth = to.meta.depth
+  const fromDepth = from.meta.depth
+  if ((toDepth === 0 && fromDepth == void 0) || toDepth === fromDepth) {
+    return true
+  }
+  if (!from.name) {
+    return true
+  }
+
+  if (!needAnimate.value) {
+    // 处理 Safari 等浏览器自带手势切换页面时，不执行过渡动画
+    return true
+  }
+
+  if (GlobalData.animationMode.value === "slide") {
+    transitionMode.value = ""
+    to.meta.transitionName = toDepth < fromDepth ? "slide-right" : "slide-left"
+  } else {
+    transitionMode.value = "out-in"
+    to.meta.transitionName = "animation"
+  }
+
+  return true
+})
+
+router.afterEach((to, from) => {
+  // to and from are both route objects.
+  needAnimate.value = false
+})
 </script>
 
 <template>

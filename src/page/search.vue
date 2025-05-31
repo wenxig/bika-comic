@@ -33,9 +33,9 @@ function createStream(keyword: string, sort: SortType) {
   switch (searchMode.value) {
     case 'pid': {
       try {
-        var s: SearchStreamType = new ComicStreamWithPicId(Number(keyword), sort)
+        var s: SearchStreamType = new ComicStreamWithPicId(Number(searchText.value), sort)
       } catch {
-        var s: SearchStreamType = new ComicStreamWithNoop(keyword, sort)
+        var s: SearchStreamType = new ComicStreamWithNoop(searchText.value, sort)
       }
       break
     }

@@ -4,7 +4,7 @@ import { nextTick, provide, ref, shallowRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { toReactive, useCycleList } from '@vueuse/core'
 import Alert from './alert.vue'
-import { toCn, useSearchMode } from '@/utils/translater'
+import { getOriginalSearchContent, toCn, useSearchMode } from '@/utils/translater'
 import { createLoadingMessage } from '@/utils/message'
 import symbol from '@/symbol'
 import Image from '@/components/image.vue'
@@ -27,12 +27,11 @@ const $route = useRoute()
 const baseHeaderSearchHeight = shallowRef(54)
 const searchText = shallowRef('')
 const isSearching = shallowRef(false)
-const urlText = (str: string) => str.replace(/^[\@\#]+/g, '')
 
 const searchMode = useSearchMode(searchText)
 const handleSearch = (value: string) => {
   app.searchHistory.unshift(value)
-  $router.force.push(`/search?keyword=${encodeURIComponent(urlText(value))}&mode=${searchMode.value}`)
+  $router.force.push(`/search?keyword=${encodeURIComponent(getOriginalSearchContent(value))}&mode=${searchMode.value}`)
   isSearching.value = false
 }
 

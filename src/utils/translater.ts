@@ -17,7 +17,16 @@ export const searchModeMap = {
   keyword: '',
   pid: 'PICA',
 } as Record<SearchMode, string>
-
+export const getOriginalSearchContent = (searchText: string) => {
+  for (const _key in searchModeMap) {
+    const key = _key as SearchMode
+    if (Object.prototype.hasOwnProperty.call(searchModeMap, key)) {
+      const signalWord = searchModeMap[key]
+      searchText = searchText.replace(new RegExp(`^(${signalWord})`, 'i'), '').trim()
+    }
+  }
+  return searchText
+}
 export const useSearchMode = (val: MaybeRefOrGetter<string>) => {
   const data = toRef(val)
   return computed<SearchMode>(() => {
