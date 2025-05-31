@@ -21,6 +21,8 @@ const beforeChange = async (t: string) => {
     <VanTab title="骑士榜" name="user" />
   </VanTabs>
   <div class="h-[calc(100%-44px)] w-full">
-    <RouterView />
+    <RouterView v-slot="{ Component, route }">
+        <component :is="Component" />
+    </RouterView>
   </div>
 </template>

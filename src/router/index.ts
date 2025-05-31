@@ -126,7 +126,17 @@ const router = createRouter({
     }
   ]
 })
-
+let isBacking = false
+const routerBack = router.back
+router.back = () => {
+  console.log('router.back')
+  isBacking = true
+  routerBack()
+  const stop = router.afterEach(() => {
+    isBacking = false
+    stop()
+  })
+}
 let toFullPath: string
 router.beforeEach((to, from) => {
   if (from.path != to.path) {
@@ -158,12 +168,6 @@ router.beforeEach(async (to, from) => {
     const comicStore = useComicStore()
     const id = to.params.id.toString()
     comicStore.$load(id)
-    // if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.lastsComics.get(id) ? comicStore.$load(comicStore.lastsComics.get(id)!) : comicStore.$setupComic(await getComicInfo(id, { signal: comicAbort.signal }), id)
-    // if (comicStore.comic.preload?._id != id) comicStore.$clear()
-    // if (isEmpty(comicStore.comic.comic)) comicStore.comic.infoStateContent = useStateContent(getComicInfo(id, { signal: comicAbort.signal }).then(info => comicStore.$setComic(info)))
-    // if (from.path.startsWith('/comic') && from.path.endsWith('/info')) comicStore.$load(comicStore.lastsComics.get(id)!)
-    // if (isEmpty(comicStore.comic.eps)) comicStore.comic.epsStateContent = useStateContent(getComicEps(id, { signal: comicAbort.signal }).then(eps => comicStore.comic.eps = eps))
-    // if (isEmpty(comicStore.comic.likeComic)) comicStore.comic.likeComicStateContent = useStateContent(getRecommendComics(id, { signal: comicAbort.signal }).then(likes => comicStore.comic.likeComic = likes), v => v[0] == undefined)
   } catch (error) {
     console.error(error)
     if (!isCancel(error)) throw error
@@ -197,8 +201,8 @@ export default router
 
 eventBus.on('networkError_unauth', () => {
   router.force.replace('/auth/login')
-  console.log('unlogin');
-  
+  console.log('unlogin')
+
 })
 
 const stopSetupWatch = router.afterEach(async () => {
@@ -207,4 +211,7 @@ const stopSetupWatch = router.afterEach(async () => {
   el.style.opacity = '0'
   await delay(300)
   el.remove()
+})
+router.afterEach((to, from) => {
+  to.meta.transition = isBacking ? 'page-slide-right' : 'page-slide-left'
 })

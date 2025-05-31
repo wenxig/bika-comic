@@ -151,7 +151,9 @@ const leftBar = ref<InstanceType<typeof Popup>>()
   </div>
   <div class="w-full duration-200 transition-[height,transform]"
     :class="[isShowNavBar ? 'h-[calc(100%-98px)] translate-y-0' : '!h-[calc(100%-44px)] -translate-y-[54px]']">
-    <RouterView />
+    <RouterView v-slot="{ Component, route }">
+        <component :is="Component" />
+    </RouterView>
   </div>
   <Alert v-model="showAlert" />
 </template>

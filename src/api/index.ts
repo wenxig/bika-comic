@@ -349,7 +349,7 @@ export class ProPlusMaxComic extends Comic {
   declare public isFavourite: boolean
   declare public isLiked: boolean
   constructor(v: RawProPlusMaxComic) {
-    super(v._id)
+    super(v?._id ?? '')
     setValue(this, v)
   }
 }

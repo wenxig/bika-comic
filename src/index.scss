@@ -64,7 +64,7 @@ $pressedPColor: darken($pColor, 8);
 .page-slide-left-leave-active {
     box-shadow: -20px 0 20px 0px rgba(0, 0, 0, 0.1);
     will-change: transform;
-    transition: all 0.3s ease-out;
+    transition: all 0.25s ease-out;
     position: absolute;
 }
 

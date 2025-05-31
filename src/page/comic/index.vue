@@ -11,6 +11,8 @@ const title = computed(() => comicStore.now?.union.value?.title || '')
     @click-right="$router.force.replace('/')" />
   <div
     class="w-full h-[calc(100vh-var(--van-nav-bar-height))] overflow-x-hidden overflow-y-auto bg-[--van-background-2]">
-    <RouterView />
+    <RouterView v-slot="{ Component, route }">
+        <component :is="Component" />
+    </RouterView>
   </div>
 </template>
