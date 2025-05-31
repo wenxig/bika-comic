@@ -12,6 +12,7 @@ import { getVer } from './api/plusPlan'
 import Popup from '@/components/popup.vue'
 import Dev from '@/components/dev.vue'
 import packageJson from '../package.json'
+import proxyJson from './api/proxy.json'
 import eventBus from "./utils/eventBus"
 window.$message = useMessage()
 window.$loading = useLoadingBar()
@@ -47,6 +48,9 @@ watch(isOnline, isOnline => {
 let isSetup = true
 if (isSetup) UserConfig.getFromNet().then(async v => {
   if (!v) return
+  if (v["bika.proxy.interface"].startsWith('http')) {
+    v["bika.proxy.interface"] = proxyJson.interface[0].url
+  }
   localStorage.setItem(symbol.config, JSON.stringify(config.value = v))
   await nextTick()
   isSetup = false

@@ -1,19 +1,31 @@
 {
   "interface": [
-    "https://api.go2778.com",
-    "https://picapi.go2778.com",
-    "https://api.picacomic.com"
+    {
+      "url": "go2778.com",
+      "basePart": "api",
+      "recommendPart": "recommend"
+    },
+    {
+      "url": "picacomic.com",
+      "basePart": "api",
+      "recommendPart": "recommend"
+    },
+    {
+      "url": "pic2024a1.top",
+      "basePart": "api",
+      "recommendPart": "recommend"
+    }
   ],
   "image": [
-    "https://s3.picacomic.com/static", 
+    "https://s3.picacomic.com/static",
     "https://s3.go2778.com/static",
     "https://storage.diwodiwo.xyz/static"
   ],
-  "db":[
+  "db": [
     "https://raw.githubusercontent.com/bika-robot/picacg-database/main/data3",
     "https://raw.fastgit.org/bika-robot/picacg-database/main/data3"
   ],
-  "chat":[
+  "chat": [
     "wss://live-server.bidobido.xyz"
   ]
 }

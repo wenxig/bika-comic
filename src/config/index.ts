@@ -53,7 +53,7 @@ export class UserConfig {
     'bika.search.sort': 'dd' as SortType,
     'bika.search.fillerTags': new Array<FillerTag>(),
     'bika.search.showAIProject': true,
-    "bika.proxy.interface": proxyData.interface[0],
+    "bika.proxy.interface": proxyData.interface[0].url,
     "bika.proxy.image": proxyData.image[0],
     "bika.proxy.db": proxyData.db[0],
     "bika.proxy.chat": proxyData.chat[0],

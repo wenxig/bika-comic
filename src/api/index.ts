@@ -13,6 +13,7 @@ import { createLoadingMessage, createDialog } from '@/utils/message'
 import symbol from '@/symbol'
 import localforage from 'localforage'
 import eventBus from '@/utils/eventBus'
+import proxyJson from './proxy.json'
 export { type RawImage, Image } from '@/utils/image'
 const createClass = <T extends Result<any>, C>(v: T, Class: new (data: T['docs'][number]) => C): Result<C> => {
   v.docs = v.docs.map(v => new Class(v))
@@ -67,16 +68,22 @@ export interface RawData<T> {
 }
 
 
-
+const getInterfaceConfig = () => proxyJson.interface.find(v => v.url == config.value['bika.proxy.interface']) ?? {
+  url: config.value['bika.proxy.interface'],
+  recommendPart: 'recommend',
+  basePart: 'api'
+}
 
 export const api = (() => {
   const api = axios.create({
     baseURL: '',
+    adapter: ["fetch", "xhr", "http"],
     timeout: 5000
   })
   api.interceptors.request.use(async requestConfig => {
     if (values(requestConfig.data).includes(undefined)) throw Promise.reject('some values is undefined')
-    requestConfig.baseURL = config.value['bika.proxy.interface']
+    const baseInterface = getInterfaceConfig()
+    requestConfig.baseURL = `https://${baseInterface.basePart}.${baseInterface.url}`
     await until(isOnline).toBe(true)
     for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
     return requestConfig
@@ -125,6 +132,42 @@ export const api = (() => {
 })()
 window.$api.api = api
 
+export const recommendApi = (() => {
+  const api = axios.create({
+    baseURL: '',
+    adapter: ["fetch", "xhr", "http"],
+    timeout: 5000
+  })
+  api.interceptors.request.use(async requestConfig => {
+    if (values(requestConfig.data).includes(undefined)) throw Promise.reject('some values is undefined')
+    const baseInterface = getInterfaceConfig()
+    requestConfig.baseURL = `https://${baseInterface.recommendPart}.${baseInterface.url}`
+    await until(isOnline).toBe(true)
+    for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
+    return requestConfig
+  })
+  const handleError = async (err: any) => {
+    await delay(3000)
+    if (isCancel(err) || !isAxiosError(err)) return Promise.reject(err)
+    if (!err.config) return errorReturn(err, err.message)
+    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
+    err.config.__retryCount = err.config?.__retryCount ?? 0
+    err.config.__retryCount++
+    for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
+    return api(err.config)
+  }
+  api.interceptors.response.use(async v => {
+    if (!v.data.data) {
+      await delay(3000)
+      if (true) return errorReturn(v.data, '异常数据返回')
+    }
+    return v
+  }, handleError)
+  api.defaults.retry = 10 //重试次数
+  return api
+})()
+window.$api.api = api
+
 export const punch = (config: AxiosRequestConfig = {}) => api.post('/users/punch-in', undefined, config)
 punch()
 export abstract class Comic {
@@ -141,6 +184,7 @@ export abstract class Comic {
     })
     const obj: any = {}
     for (const key of keys) isFunction(this[key]) || (obj[key] = this[key])
+    delete obj.picId
     return obj
   }
   public async like(config: AxiosRequestConfig = {}, message = true) {
@@ -615,25 +659,19 @@ export class ComicStreamWithTag extends ComicStream<ProComic> {
   constructor(tag: string, sort: SortType = 'dd') { super(tag, sort, searchComicsWithTag) }
 }
 
-export const getComicPicId = async (id: string, _config: AxiosRequestConfig = {}) => {
-  const _h = config.value['bika.proxy.interface'].split('.')
-  _h.shift()
-  const host = `https://recommend.${_h.join('.')}`
-  const result = await api.get<{ shareId: number }>(`/pic/share/set/?c=${id}`, { baseURL: host, ..._config })
+export const getComicPicId = async (id: string, config: AxiosRequestConfig = {}) => {
+  const result = await recommendApi.get<{ shareId: number }>(`/pic/share/set/?c=${id}`, config)
   const picId = result.data.shareId
   return picId
 }
-export const getComicIdFromPicId = async (picid: number, _config: AxiosRequestConfig = {}) => {
-  const _h = config.value['bika.proxy.interface'].split('.')
-  _h.shift()
-  const host = `https://recommend.${_h.join('.')}`
-  const result = await api.get<{ cid: string }>(`https://recommend.${host}/pic/share/get/?shareId=${picid}`, { baseURL: host, ..._config })
+export const getComicIdFromPicId = async (picid: number, config: AxiosRequestConfig = {}) => {
+  const result = await recommendApi.get<{ cid: string }>(`/pic/share/get/?shareId=${picid}`, config)
   const id = result.data.cid
   return id
 }
-export const getComicFromPicId = async (picid: number, _config: AxiosRequestConfig = {}) => {
-  const id = await getComicIdFromPicId(picid, _config)
-  const data = await getComicInfo(id, _config)
+export const getComicFromPicId = async (picid: number, config: AxiosRequestConfig = {}) => {
+  const id = await getComicIdFromPicId(picid, config)
+  const data = await getComicInfo(id, config)
   return data
 }
 export class ComicStreamWithPicId extends ComicStream<ProPlusMaxComic> {
