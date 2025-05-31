@@ -643,9 +643,12 @@ export const fetchGetRecommedApi = async <T = any>(path: string, config: { signa
   }
   return r.promise
 }
+const picIdStore = new Map<string, number>()
 export const getComicPicId = async (id: string, config: { signal?: AbortSignal } = {}) => {
+  if (picIdStore.has(id)) return picIdStore.get(id)!
   const result = await fetchGetRecommedApi<{ shareId: number }>(`/pic/share/set/?c=${id}`, config)
   const picId = result.shareId
+  picIdStore.set(id, picId)
   return picId
 }
 export const getComicIdFromPicId = async (picid: number, config: { signal?: AbortSignal } = {}) => {
