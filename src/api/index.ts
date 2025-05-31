@@ -132,41 +132,7 @@ export const api = (() => {
 })()
 window.$api.api = api
 
-export const recommendApi = (() => {
-  const api = axios.create({
-    baseURL: '',
-    adapter: ["fetch", "xhr", "http"],
-    timeout: 5000
-  })
-  api.interceptors.request.use(async requestConfig => {
-    if (values(requestConfig.data).includes(undefined)) throw Promise.reject('some values is undefined')
-    const baseInterface = getInterfaceConfig()
-    requestConfig.baseURL = `https://${baseInterface.recommendPart}.${baseInterface.url}`
-    await until(isOnline).toBe(true)
-    for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
-    return requestConfig
-  })
-  const handleError = async (err: any) => {
-    await delay(3000)
-    if (isCancel(err) || !isAxiosError(err)) return Promise.reject(err)
-    if (!err.config) return errorReturn(err, err.message)
-    if (err.config.__retryCount && err.config.retry && err.config.__retryCount >= err.config.retry) return errorReturn(err, err?.response?.data.message ?? err.message)
-    err.config.__retryCount = err.config?.__retryCount ?? 0
-    err.config.__retryCount++
-    for (const value of getBikaApiHeaders(err.config.url ?? '/', err.config.method!.toUpperCase())) err.config.headers.set(...value)
-    return api(err.config)
-  }
-  api.interceptors.response.use(async v => {
-    if (!v.data.data) {
-      await delay(3000)
-      if (true) return errorReturn(v.data, '异常数据返回')
-    }
-    return v
-  }, handleError)
-  api.defaults.retry = 10 //重试次数
-  return api
-})()
-window.$api.api = api
+
 
 export const punch = (config: AxiosRequestConfig = {}) => api.post('/users/punch-in', undefined, config)
 punch()
@@ -659,17 +625,37 @@ export class ComicStreamWithTag extends ComicStream<ProComic> {
   constructor(tag: string, sort: SortType = 'dd') { super(tag, sort, searchComicsWithTag) }
 }
 
-export const getComicPicId = async (id: string, config: AxiosRequestConfig = {}) => {
-  const result = await recommendApi.get<{ shareId: number }>(`/pic/share/set/?c=${id}`, config)
-  const picId = result.data.shareId
+export const fetchGetRecommedApi = async <T = any>(path: string, config: { signal?: AbortSignal } = {}) => {
+  const baseInterface = getInterfaceConfig()
+  const d = await (await fetch(`https://${baseInterface.recommendPart}.${baseInterface.url}${path}`, {
+    headers: {
+      'app-channel': '1',
+      'app-uuid': 'webUUID',
+      'accept': 'application/vnd.picacomic.com.v1+json',
+      'app-platform': 'android',
+      'Content-Type': 'application/json; charset=UTF-8'
+    },
+    signal: config.signal,
+  })).text()
+  const r = Promise.withResolvers<T>()
+  try {
+    r.resolve(JSON.parse(d))
+  } catch (e) {
+    r.reject(e)
+  }
+  return r.promise
+}
+export const getComicPicId = async (id: string, config:  { signal?: AbortSignal }  = {}) => {
+  const result = await fetchGetRecommedApi<{ shareId: number }>(`/pic/share/set/?c=${id}`, config)
+  const picId = result.shareId
   return picId
 }
-export const getComicIdFromPicId = async (picid: number, config: AxiosRequestConfig = {}) => {
-  const result = await recommendApi.get<{ cid: string }>(`/pic/share/get/?shareId=${picid}`, config)
-  const id = result.data.cid
+export const getComicIdFromPicId = async (picid: number, config:  { signal?: AbortSignal }  = {}) => {
+  const result = await fetchGetRecommedApi<{ cid: string }>(`/pic/share/get/?shareId=${picid}`, config)
+  const id = result.cid
   return id
 }
-export const getComicFromPicId = async (picid: number, config: AxiosRequestConfig = {}) => {
+export const getComicFromPicId = async (picid: number, config:  { signal?: AbortSignal }  = {}) => {
   const id = await getComicIdFromPicId(picid, config)
   const data = await getComicInfo(id, config)
   return data
