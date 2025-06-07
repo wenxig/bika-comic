@@ -79,12 +79,25 @@ export class WatchHistory extends Array {
     return v
   }
   /** @description 漫画信息 */ public set [1](v: RawProPlusMaxComic) {
+    console.log('set watch history comic', v?._id, v,this.v)
+
     this.comic = new ProPlusMaxComic(v)
   }
   /** @description 观看页数 */ public [2]!: number
   /** @description 观看时间 */ public [3]!: number
-  constructor(v: RawWatchHistory) {
+  constructor(private v: RawWatchHistory) {
     super(4)
+    if (v[1] instanceof String){
+      // is base64
+      try {
+        const decodedWords = enc.Base64.parse(<string>v[1])
+        const decodedString = enc.Utf8.stringify(decodedWords)
+        v[1] = JSON.parse(decodedString) as RawProPlusMaxComic
+      } catch (e) {
+        console.error('Failed to decode watch history comic', e)
+        v[1] = {} as RawProPlusMaxComic // fallback to empty object if parsing fails
+      }
+    }
     this[0] = v[0]
     this[1] = v[1]
     this[2] = v[2] + 1

@@ -158,7 +158,7 @@ const changeToSelfImageProxy = () => {
     </VanCellGroup>
     <VanCellGroup title="分流设置">
       <van-cell title="接口分流" clickable
-        @click="showInterfaceProxySelect = true">{{ new Url(config['bika.proxy.interface']).host }}</van-cell>
+        @click="showInterfaceProxySelect = true">{{ config['bika.proxy.interface'] }}</van-cell>
       <van-cell title="图片分流" clickable
         @click="showImageProxySelect = true">{{ new Url(config['bika.proxy.image']).host }}</van-cell>
       <van-cell title="订阅分流" clickable
@@ -171,20 +171,20 @@ const changeToSelfImageProxy = () => {
 
   <Popup v-model:show="showImageProxySelect" round position="bottom">
     <van-picker class="van-hairline--bottom"
-      :columns="uniq(allProxies.image.concat([config['bika.proxy.image']])).map(v => ({ text: new Url(v).host, value: v }))"
+      :columns="uniq(allProxies.image.concat([config['bika.proxy.image']])).map(v => ({ text: v, value: v }))"
       @cancel="showImageProxySelect = false"
       @confirm="(v) => { config['bika.proxy.image'] = v.selectedValues[0]; showImageProxySelect = false }"
       v-model="_ImageProxy" />
     <VanCell clickable @click="showAddSelfImageProxy = true" border title="自定义"></VanCell>
   </Popup>
   <Popup v-model:show="showInterfaceProxySelect" round position="bottom">
-    <van-picker :columns="allProxies.interface.map(v => ({ text: new Url(v).host, value: v }))"
+    <van-picker :columns="allProxies.interface.map(v => ({ text: v.basePart, value: v.basePart }))"
       @cancel="showInterfaceProxySelect = false"
       @confirm="(v) => { config['bika.proxy.interface'] = v.selectedValues[0]; showInterfaceProxySelect = false }"
       v-model="_InterfaceProxy" />
   </Popup>
   <Popup v-model:show="showDbProxySelect" round position="bottom">
-    <van-picker :columns="allProxies.db.map(v => ({ text: new Url(v).host, value: v }))"
+    <van-picker :columns="allProxies.db.map(v => ({ text: v, value: v }))"
       @cancel="showDbProxySelect = false"
       @confirm="(v) => { config['bika.proxy.db'] = v.selectedValues[0]; showDbProxySelect = false }"
       v-model="_DbProxy" />

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import Popup from '@/components/popup.vue'
 import config, { isDark } from '@/config'
-import {  useAppStore } from '@/stores'
+import { useAppStore } from '@/stores'
 import { flatten, isArray, isBoolean, isError, isFunction, isMap, isNil, isNumber, isObject, isSet, isString } from 'lodash-es'
 import { shallowReactive, shallowRef, watch } from 'vue'
 import VueJsonPretty from 'vue-json-pretty'
@@ -35,7 +35,8 @@ const baseInfoFunction = window.console.info
 const baseErrorFunction = window.console.error
 const baseWarnFunction = window.console.error
 const baseDebugFunction = window.console.debug
-watch(() => config.value['bika.devMode'], devMode => {
+const isDEV = import.meta.env.DEV
+isDEV || watch(() => config.value['bika.devMode'], devMode => {
   console.log('devmode change', devMode)
   if (devMode) {
     window.console.log = (...value) => {
@@ -78,7 +79,7 @@ const getName = (v: object) => v.constructor.name
 </script>
 
 <template>
-  <template v-if="config['bika.devMode']">
+  <template v-if="!(isDEV) && config['bika.devMode']">
     <VanFloatingBubble axis="xy" v-if="!$route.path.includes('/read')" id="dev-button" @click="app.showDevPupop = true"
       style="z-index: 114514;color: #fff;">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32"

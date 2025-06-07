@@ -150,7 +150,11 @@ export abstract class Comic {
     })
     const obj: any = {}
     for (const key of keys) isFunction(this[key]) || (obj[key] = this[key])
-    delete obj.picId
+    for (const key in obj) {
+      if (obj[key] instanceof Promise) {
+        delete obj[key]
+      }
+    }
     return obj
   }
   public async like(config: AxiosRequestConfig = {}, message = true) {
@@ -347,7 +351,7 @@ export class ProPlusMaxComic extends Comic {
   declare public isFavourite: boolean
   declare public isLiked: boolean
   constructor(v: RawProPlusMaxComic) {
-    super(v._id)
+    super(v?._id)
     setValue(this, v)
   }
 }
@@ -625,9 +629,15 @@ export class ComicStreamWithTag extends ComicStream<ProComic> {
   constructor(tag: string, sort: SortType = 'dd') { super(tag, sort, searchComicsWithTag) }
 }
 
-export const fetchGetRecommedApi = async <T = any>(path: string, config: { signal?: AbortSignal } = {}) => {
+export const fetchGetRecommedApi = async <T = any>(path: string, config: { signal?: AbortSignal, retryTimes?: number } = {}) => {
+  if (import.meta.env.DEV) {
+    return {
+      shareId: 1145,
+      cid: '68415bf5b6cfa57f521f01aa'
+    }
+  }
   const baseInterface = getInterfaceConfig()
-  const d = await (await fetch(`https://${baseInterface.recommendPart}.${baseInterface.url}${path}`, {
+  const d = await axios.get<T>(`https://${baseInterface.recommendPart}.${baseInterface.url}${path}`, {
     headers: {
       'app-channel': '1',
       'app-uuid': 'webUUID',
@@ -636,26 +646,20 @@ export const fetchGetRecommedApi = async <T = any>(path: string, config: { signa
       'Content-Type': 'application/json; charset=UTF-8'
     },
     signal: config.signal,
-  })).text()
-  const r = Promise.withResolvers<T>()
-  try {
-    r.resolve(JSON.parse(d))
-  } catch (e) {
-    r.reject(e)
-  }
-  return r.promise
+  })
+  return d.data
 }
-export const getComicPicId = async (id: string, config:  { signal?: AbortSignal }  = {}) => {
+export const getComicPicId = async (id: string, config: { signal?: AbortSignal } = {}) => {
   const result = await fetchGetRecommedApi<{ shareId: number }>(`/pic/share/set/?c=${id}`, config)
   const picId = result.shareId
   return picId
 }
-export const getComicIdFromPicId = async (picid: number, config:  { signal?: AbortSignal }  = {}) => {
+export const getComicIdFromPicId = async (picid: number, config: { signal?: AbortSignal } = {}) => {
   const result = await fetchGetRecommedApi<{ cid: string }>(`/pic/share/get/?shareId=${picid}`, config)
   const id = result.cid
   return id
 }
-export const getComicFromPicId = async (picid: number, config:  { signal?: AbortSignal }  = {}) => {
+export const getComicFromPicId = async (picid: number, config: { signal?: AbortSignal } = {}) => {
   const id = await getComicIdFromPicId(picid, config)
   const data = await getComicInfo(id, config)
   return data

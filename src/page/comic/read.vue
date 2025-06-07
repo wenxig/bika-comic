@@ -34,10 +34,15 @@ const comicView = shallowRef<InstanceType<typeof ComicView>>()
 
 // 历史记录
 const createHistory = () => {
+  console.log('create history:', epId, detail.value, comicView.value?.index);
+  
   if (detail.value) return new WatchHistory([epId.toString(), detail.value, (comicView.value?.index ?? 0) - 1, new Date().getTime()])
   throw new Error('comic is not have value!!!')
 }
-const saveHistory = () => detail.value && patchWatchHitory({ [comicId]: createHistory() }).catch(() => window.$message.error('历史记录同步失败'))
+const saveHistory = () => detail.value && patchWatchHitory({ [comicId]: createHistory() }).catch((err) => {
+  console.error('save history error:', err)
+  window.$message.error('历史记录同步失败')
+})
 watch(() => comicView.value?.index, page => {
   if (isNumber(page) && detail.value) {
     app.readHistory[comicId] = createHistory()
