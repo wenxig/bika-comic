@@ -1,0 +1,30 @@
+{
+  "version": "0.0.1",
+  "scripts": {
+    "begin": "./begin.sh"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "hono": "^4.8.5",
+    "lodash-es": "^4.17.21",
+    "lz-string": "^1.5.0",
+    "zod": "^4.0.5"
+  },
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250719.0",
+    "@liuli-util/vite-plugin-node": "^0.10.0",
+    "@rollup/plugin-node-resolve": "latest",
+    "@types/node": "latest",
+    "typescript": "^5.8.3",
+    "vite": "npm:rolldown-vite@latest"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "npm:rolldown-vite@latest"
+    },
+    "onlyBuiltDependencies": [
+      "core-js"
+    ]
+  }
+}

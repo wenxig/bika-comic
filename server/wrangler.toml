@@ -1,0 +1,4 @@
+name = "bika-server"
+main = "dist/index.mjs"
+compatibility_date = "2023-05-18"
+compatibility_flags = [ "nodejs_compat" ]
