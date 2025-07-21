@@ -25,6 +25,10 @@ const injectStyle = computed(() => {
   return css
 })
 useStyleTag(injectStyle)
+
+
+import { Struct } from "./utils/data"
+window.$api.Struct = Struct
 </script>
 
 <template>

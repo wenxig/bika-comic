@@ -1,6 +1,7 @@
 {
   "name": "bika-comic",
   "version": "5.0.0-alpha.1",
+  "description": "Per Aspera, Ad Astra",
   "scripts": {
     "dev": "vite",
     "begin": "cd ./server && bun begin",
@@ -11,6 +12,11 @@
   "dependencies": {
     "@vercel/speed-insights": "^1.2.0",
     "@vueuse/core": "^13.1.0",
+    "@vueuse/integrations": "^13.5.0",
+    "axios": "^1.10.0",
+    "crypto-js": "^4.2.0",
+    "dayjs": "^1.11.13",
+    "idb-keyval": "^6.2.2",
     "localforage": "^1.10.0",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
@@ -22,6 +28,7 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "latest",
     "@tailwindcss/vite": "^4.1.11",
+    "@types/crypto-js": "^4.2.2",
     "@types/lodash-es": "latest",
     "@types/node": "latest",
     "@vitejs/plugin-legacy": "^6.0.1",

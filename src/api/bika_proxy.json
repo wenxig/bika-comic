@@ -1,0 +1,27 @@
+{
+  "interface": [
+    {
+      "url": "go2778.com",
+      "basePart": "api",
+      "recommendPart": "recommend",
+      "id": "go"
+    },
+    {
+      "url": "picacomic.com",
+      "basePart": "api",
+      "recommendPart": "recommend",
+      "id": "pic"
+    },
+    {
+      "url": "pic2024a1.top",
+      "basePart": "api",
+      "recommendPart": "recommend",
+      "id": "2024"
+    }
+  ],
+  "image": [
+    "https://s3.picacomic.com/static",
+    "https://s3.go2778.com/static",
+    "https://storage.diwodiwo.xyz/static"
+  ]
+}

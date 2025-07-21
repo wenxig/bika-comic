@@ -6,7 +6,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import tailwindcss from '@tailwindcss/vite'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import legacyPlugin from '@vitejs/plugin-legacy'
-import lightningcss from 'lightningcss'
+import { browserslistToTargets } from 'lightningcss'
 import browserslist from 'browserslist'
 
 export default defineConfig({
@@ -38,7 +38,7 @@ export default defineConfig({
   css: {
     transformer: 'lightningcss',
     lightningcss: {
-      targets: lightningcss.browserslistToTargets(browserslist('> 1%, last 2 versions, not ie <= 8'))
+      targets: browserslistToTargets(browserslist('> 1%, last 2 versions, not ie <= 8'))
     }
   },
   base: "/"
