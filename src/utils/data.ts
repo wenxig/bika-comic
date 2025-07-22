@@ -2,27 +2,32 @@ import { until } from "@vueuse/core"
 import { isEmpty, isError, last } from "lodash-es"
 import { ref, shallowReactive, shallowRef, type Ref, type ShallowReactive } from "vue"
 import { SmartAbortController } from "./request"
-import type { Response, RawStream } from "@/api/bika"
+import type { Response, RawStream, SortType } from "@/api/bika"
+import type { BaseComic } from "@/api/bika/comic"
 
-export class PromiseContent<T> extends Promise<T> {
-  constructor(promise: Promise<T>, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
-    super((resolve, reject) => {
-      promise.then(async val => {
-        resolve(val)
-        const v = await val
-        this.data = v
-        this.isLoading = false
-        this.isError = false
-        this.isEmpty = _isEmpty(v)
-      })
-      promise.catch(err => {
-        this.data = undefined
-        this.isLoading = false
-        this.isError = true
-        this.isEmpty = false
-        reject(err)
-      })
+export class PromiseContent<T> implements Promise<T> {
+  constructor(private promise: Promise<T>, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
+    this[Symbol.toStringTag] = promise[Symbol.toStringTag]
+    promise.then(async val => {
+      const v = await val
+      this.data = v
+      this.isLoading = false
+      this.isError = false
+      this.isEmpty = _isEmpty(v)
     })
+    promise.catch(err => {
+      this.data = undefined
+    })
+  }
+  [Symbol.toStringTag] = ''
+  public catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined): Promise<T | TResult> {
+    return this.promise.catch<TResult>(onrejected)
+  }
+  public then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined): Promise<TResult1 | TResult2> {
+    return this.promise.then<TResult1, TResult2>(onfulfilled)
+  }
+  public finally(onfinally?: (() => void) | null | undefined): Promise<T> {
+    return this.promise.finally(onfinally)
   }
   public data?: T
   public isLoading = true
@@ -33,7 +38,10 @@ export class PromiseContent<T> extends Promise<T> {
     return shallowReactive(v)
   }
   public static fromAsyncFunction<T extends (...args: any[]) => Promise<any>>(asyncFunction: T, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
-    return (...args: Parameters<T>): ShallowReactive<PromiseContent<Awaited<ReturnType<T>>>> => this.fromPromise(asyncFunction(...args))
+    return (...args: Parameters<T>): ShallowReactive<PromiseContent<Awaited<ReturnType<T>>>> => this.fromPromise((()=>{
+      console.log('called', asyncFunction)
+      return asyncFunction(...args)
+    })())
   }
 }
 export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
@@ -117,3 +125,20 @@ export const createClassFromResponse = async <T extends RawStream<any>, C>(v: Sh
   comics.docs = comics.docs.map(v => new box(v))
   return comics
 }
+
+export const createComicStream = <T extends BaseComic>(keyword: string, sort: SortType, fn: (keyword: string, page: number, sort: SortType, signal: AbortSignal) => ShallowReactive<PromiseContent<RawStream<T>>>) =>
+  new Stream(async function* (signal, that) {
+    const getComic = async () => {
+      const result = await fn(keyword, that.page.value, sort, signal)
+      that.pages.value = result.pages
+      that.total.value = result.total
+      that.pageSize.value = result.limit
+      that.page.value = Number(result.page)
+      return result.docs
+    }
+    while (true) {
+      if (that.pages.value == that.page.value) break
+      yield await getComic()
+    }
+    return await getComic()
+  })

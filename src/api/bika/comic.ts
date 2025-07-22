@@ -5,7 +5,7 @@ import { Image, type RawImage } from "./image"
 import { type RawUser, User } from "./user"
 export const spiltUsers = (userString = '') => userString.split(symbol.splitAuthorRegexp).filter(Boolean).map(v => v.trim()).filter(Boolean)
 
-interface RawBaseComic {
+export interface RawBaseComic {
   _id: string
   title: string
   author: string

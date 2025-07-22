@@ -40,9 +40,8 @@ export interface RawStream<T> {
 }
 
 
-const config = useConfig()
-const appStore = useAppStore()
 eventBus.on('networkError_unauth', () => {
+  const appStore = useAppStore()
   appStore.loginToken = ''
 })
 const getBikaApiHeaders = (pathname: string, method: string) => {
@@ -50,6 +49,7 @@ const getBikaApiHeaders = (pathname: string, method: string) => {
   pathname = pathname.substring(1)
   const requestTime = (new Date().getTime() / 1000).toFixed(0)
   const appStore = useAppStore()
+  const config = useConfig()
   const rawSignature = `${pathname}${requestTime}${appStore.nonce}${method}C69BAF41DA5ABD1FFEDC6D2FEA56B`.toLowerCase()
   const headers: Headers = [
     ['app-channel', '1'],
@@ -72,9 +72,14 @@ export const picapi = axios.create({
   timeout: 5000
 })
 picapi.interceptors.request.use(async requestConfig => {
+  console.log('begin request')
   if (values(requestConfig.data).includes(undefined)) return requestErrorResult('networkError_request', 'some values is undefined')
+  console.log('2 request')
+  const config = useConfig()
+  console.log(allProxy.interface, config)
   const baseInterface = allProxy.interface.find(v => config["bika.proxy.interfaceId"] == v.id)
   if (!baseInterface) return requestErrorResult('networkError_request', `Interface is empty (id=${config["bika.proxy.interfaceId"]})`)
+  console.log('3 request')
   requestConfig.baseURL = `https://${baseInterface.basePart}.${baseInterface.url}`
   await until(useOnline()).toBe(true)
   for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
@@ -91,6 +96,7 @@ picapi.interceptors.response.use(async (v: AxiosResponse<RawResponse>) => {
   return err
 })
 picapi.interceptors.response.use(undefined, requestErrorInterceptors.createCheckIsUnauth(picapi, async () => {
+  const appStore = useAppStore()
   if (isEmpty(appStore.loginData.email) || isEmpty(appStore.loginData.email)) return false
   try {
     const bikaApiAuth = await import('./api/auth')
@@ -113,6 +119,7 @@ export const recommend = axios.create({
 })
 recommend.interceptors.request.use(async requestConfig => {
   if (values(requestConfig.data).includes(undefined)) return requestErrorResult('networkError_request', 'some values is undefined')
+  const config = useConfig()
   const baseInterface = allProxy.interface.find(v => config["bika.proxy.interfaceId"] == v.id)
   if (!baseInterface) return requestErrorResult('networkError_request', `Interface is empty (id=${config["bika.proxy.interfaceId"]})`)
   requestConfig.baseURL = `https://${baseInterface.recommendPart}.${baseInterface.url}`
@@ -127,9 +134,9 @@ recommend.interceptors.response.use(undefined, requestErrorInterceptors.createAu
 import { PromiseContent } from "@/utils/data"
 import type { AxiosRequestConfig } from "axios"
 export namespace picapiRest {
-  export const get = <T>(url: string, config: AxiosRequestConfig = {}) => PromiseContent.fromPromise((async () => (await picapi.get<Response<T>>(url, config)).data)())
-  export const post = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromPromise((async () => (await picapi.post<Response<T>>(url, data, config)).data)())
-  export const put = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromPromise((async () => (await picapi.put<Response<T>>(url, data, config)).data)())
+  export const get = <T>(url: string, config: AxiosRequestConfig = {}) => PromiseContent.fromAsyncFunction((async () => (await picapi.get<Response<T>>(url, config)).data))()
+  export const post = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromAsyncFunction((async () => (await picapi.post<Response<T>>(url, data, config)).data))()
+  export const put = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromAsyncFunction((async () => (await picapi.put<Response<T>>(url, data, config)).data))()
 
 }
 export namespace recommendRest {

@@ -50,6 +50,13 @@
   "pnpm": {
     "overrides": {
       "vite": "npm:rolldown-vite@latest"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@tailwindcss/oxide",
+      "@vercel/speed-insights",
+      "core-js",
+      "esbuild"
+    ]
   }
 }
