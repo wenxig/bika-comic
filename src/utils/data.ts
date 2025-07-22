@@ -2,7 +2,7 @@ import { until } from "@vueuse/core"
 import { isEmpty, isError, last } from "lodash-es"
 import { ref, shallowReactive, shallowRef, type Ref, type ShallowReactive } from "vue"
 import { SmartAbortController } from "./request"
-import type { bika } from "@/api/bika"
+import type { Response, RawStream } from "@/api/bika"
 
 export class PromiseContent<T> extends Promise<T> {
   constructor(promise: Promise<T>, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
@@ -112,11 +112,7 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
     return this.isDone.value
   }
 }
-export const createClass = <T extends bika.RawStream<any>, C>(v: T, box: new (data: T['docs'][number]) => C): bika.RawStream<C> => {
-  v.docs = v.docs.map(v => new box(v))
-  return v
-}
-export const createClassFromResponse = async <T extends bika.RawStream<any>, C>(v: ShallowReactive<PromiseContent<bika.Response<{ comics: T }>>>, box: new (data: T['docs'][number]) => C): Promise<bika.RawStream<C>> => {
+export const createClassFromResponse = async <T extends RawStream<any>, C>(v: ShallowReactive<PromiseContent<Response<{ comics: T }>>>, box: new (data: T['docs'][number]) => C): Promise<RawStream<C>> => {
   const { data: { comics } } = await v
   comics.docs = comics.docs.map(v => new box(v))
   return comics
