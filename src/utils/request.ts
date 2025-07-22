@@ -1,10 +1,8 @@
-import { type AxiosInstance, isCancel, isAxiosError } from "axios"
+import { type AxiosInstance, isCancel, isAxiosError, type AxiosError } from "axios"
 import mitt from "mitt"
 import eventBus, { type EventBus } from "./eventBus"
 import type { bika } from "@/api/bika"
-import { useAppStore } from "@/stores"
-import { isEmpty } from "lodash-es"
-import type { AnyFn } from "@vueuse/core"
+import { delay } from "./delay"
 
 export class SmartAbortController implements AbortController {
   private _controller = new AbortController()
@@ -45,24 +43,23 @@ export namespace requestType {
   export const isGet = (v: { config: { method?: string } }) => /get/ig.test(v.config.method ?? '')
 }
 export namespace requestErrorHandleInterceptors {
-  export const createAutoRetry = (api: AxiosInstance, times = 3) => (err: any) => {
-    if (isCancel(err) || !isAxiosError<bika.RawResponse>(err)) return Promise.reject(err)
-    if (
-      !err.config ||
-      err.config.disretry ||
-      (err.config.__retryCount ?? 0) >= times
-    ) {
-      return requestErrorResult('networkError_response', err)
-    }
+  export const checkIsAxiosError = <T extends object>(err: any): err is AxiosError<T, any> => {
+    if ('__isAxiosError' in err) return <boolean>err.__isAxiosError
+    return err.__isAxiosError = !isCancel(err) && isAxiosError<bika.RawResponse>(err)
+  }
+  export const createAutoRetry = (api: AxiosInstance, times = 3) => async (err: any) => {
+    if (!checkIsAxiosError(err)) return Promise.reject(err)
+    if (!err.config || err.config.disretry || (err.config.__retryCount ?? 0) >= times) return requestErrorResult('networkError_response', err)
     err.config.__retryCount = (err.config.__retryCount ?? 0) + 1
+    await delay(500 * err.config.__retryCount)
     return api(err.config)
   }
-  export const createCheckIsUnauth = (api: AxiosInstance, relogin?: AnyFn) => {
+  export const createCheckIsUnauth = (api: AxiosInstance, relogin?: () => Promise<boolean>) => {
     return async (err: any) => {
-      if (isCancel(err) || !isAxiosError<bika.RawResponse>(err)) return Promise.reject(err)
+      if (!checkIsAxiosError(err)) return Promise.reject(err)
       if (err?.response?.status == 401) {
         if (relogin) {
-          await relogin()
+          if (!await relogin()) return requestErrorResult('networkError_unauth', err)
           return api(err.config ?? {})
         }
         else if (!location.pathname.includes('auth')) return requestErrorResult('networkError_unauth', err)
@@ -71,7 +68,7 @@ export namespace requestErrorHandleInterceptors {
     }
   }
   export const isClientError = (err: any) => {
-    if (isCancel(err) || !isAxiosError<bika.RawResponse>(err)) return Promise.reject(err)
+    if (!checkIsAxiosError(err)) return Promise.reject(err)
     if (err?.response?.status.toString().startsWith('4')) return requestErrorResult('networkError_response', err)
     return err.config
   }

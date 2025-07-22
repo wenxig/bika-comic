@@ -7,17 +7,16 @@ declare global {
     $api: Record<string, any>
   }
   interface Map<K, V> {
-    toJSON(): string
-    toJSONObject(): [K, V][]
+    toJSON(): [K, V][]
   }
   interface Set<T> {
-    toJSON(): string
-    toJSONObject(): T[]
+    toJSON(): T[]
   }
 }
 declare module 'axios' {
   interface AxiosRequestConfig {
     __retryCount?: number
     disretry?: boolean
+    allowEmpty?: boolean
   }
 }

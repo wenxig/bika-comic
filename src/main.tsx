@@ -5,30 +5,10 @@ import { router } from "./router"
 import "@/index.css"
 import { NConfigProvider, NMessageProvider, NDialogProvider, NLoadingBarProvider, zhCN } from 'naive-ui'
 Map.prototype.toJSON = function () {
-  return JSON.stringify([...this.entries()])
+  return ([...this.entries()])
 }
 Set.prototype.toJSON = function () {
-  return JSON.stringify([...this.values()])
-}
-Map.prototype.toJSONObject = function () {
-  return [...this.entries()]
-}
-Set.prototype.toJSONObject = function () {
-  return [...this.values()]
-}
-const rawDecodeURIComponent = window.decodeURIComponent
-window.decodeURIComponent = (url: string) => {
-  do {
-    url = rawDecodeURIComponent(url)
-  } while (url.includes('%'))
-  return url
-}
-const rawDecodeURI = window.decodeURI
-window.decodeURI = (url: string) => {
-  do {
-    url = rawDecodeURI(url)
-  } while (url.includes('%'))
-  return url
+  return ([...this.values()])
 }
 
 const app = createApp(

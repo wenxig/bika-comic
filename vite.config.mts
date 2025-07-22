@@ -41,5 +41,5 @@ export default defineConfig({
       targets: browserslistToTargets(browserslist('> 1%, last 2 versions, not ie <= 8'))
     }
   },
-  base: "/"
+  base: "/",
 })

@@ -1,3 +1,4 @@
+import type { bikaApiAuth } from '@/api/bika/api/auth'
 import symbol from '@/symbol'
 import { useLocalStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
@@ -10,6 +11,6 @@ export const useAppStore = defineStore('app', () => {
   )
 
   const loginToken = useLocalStorage(symbol.loginToken, '')
-  const loginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
+  const loginData = useLocalStorage<bikaApiAuth.LoginData>(symbol.loginData, { email: '', password: '' })
   return { nonce, loginData, loginToken }
 })

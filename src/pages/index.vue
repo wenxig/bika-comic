@@ -3,5 +3,7 @@
 </script>
 
 <template>
-
+  <div>
+    <NButton>click me</NButton>
+  </div>
 </template>

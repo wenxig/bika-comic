@@ -1,0 +1,149 @@
+import { isFunction } from "lodash-es"
+import dayjs from "dayjs"
+import symbol from "@/symbol"
+import { Image, type RawImage } from "./image"
+import { type RawUser, User } from "./user"
+export const spiltUsers = (userString = '') => userString.split(symbol.splitAuthorRegexp).filter(Boolean).map(v => v.trim()).filter(Boolean)
+
+interface RawBaseComic {
+  _id: string
+  title: string
+  author: string
+  totalViews: number
+  totalLikes: number
+  finished: boolean
+  categories: string[]
+  thumb: RawImage
+  likesCount: number
+}
+export abstract class BaseComic implements RawBaseComic {
+  public _id
+  public title
+  public author
+  public get $author() {
+    return spiltUsers(this.author)
+  }
+  public totalViews
+  public totalLikes
+  public finished
+  public categories
+  public likesCount
+  public thumb
+  public get $thumb() {
+    return new Image(this.thumb)
+  }
+  public toJSON() {
+    const keys = <(keyof this)[]>Object.keys(this).map(v => {
+      if (v.startsWith('__')) return v.substring(1)
+      if (v.startsWith('_$')) return v.substring(2)
+      return v
+    })
+    const obj: any = {}
+    for (const key of keys) isFunction(this[key]) || (obj[key] = this[key])
+    delete obj.picId
+    return obj
+  }
+  constructor(v: RawBaseComic) {
+    this._id = v._id
+    this.title = v.title
+    this.author = v.author
+    this.totalViews = v.totalViews
+    this.totalLikes = v.totalLikes
+    this.finished = v.finished
+    this.categories = v.categories
+    this.thumb = v.thumb
+    this.likesCount = v.likesCount
+  }
+}
+
+export interface RawLessComic extends RawBaseComic {
+  pagesCount: number
+  epsCount: number
+}
+export class LessComic extends BaseComic implements RawLessComic {
+  public pagesCount
+  public epsCount
+  constructor(v: RawLessComic) {
+    super(v)
+    this.pagesCount = v.pagesCount
+    this.epsCount = v.epsCount
+  }
+};
+
+export interface RawCommonComic extends RawBaseComic {
+  updated_at: string
+  description: string
+  chineseTeam: string
+  created_at: string
+  tags: string[]
+}
+export class CommonComic extends BaseComic implements RawCommonComic {
+  public updated_at
+  public get updated_time() {
+    return new Date(this.updated_at)
+  }
+  public description
+  public chineseTeam
+  public get $chineseTeam() {
+    return spiltUsers(this.chineseTeam)
+  }
+  public created_at
+  public get $created_at() {
+    return dayjs(this.created_at)
+  }
+  public tags
+  constructor(v: RawCommonComic) {
+    super(v)
+    this.updated_at = v.updated_at
+    this.description = v.description
+    this.chineseTeam = v.chineseTeam
+    this.created_at = v.created_at
+    this.tags = v.tags
+  }
+}
+
+export interface RawFullComic extends RawBaseComic {
+  _creator: RawUser
+  description: string
+  chineseTeam: string
+  tags: string[]
+  pagesCount: number
+  epsCount: number
+  updated_at: string
+  created_at: string
+  allowDownload: boolean
+  allowComment: boolean
+  totalComments: number
+  viewsCount: number
+  commentsCount: number
+  isFavourite: boolean
+  isLiked: boolean
+}
+export class FullComic extends CommonComic implements RawFullComic {
+  public _creator
+  public get $_creator() {
+    return new User(this._creator)
+  }
+  public pagesCount
+  public epsCount
+  public allowDownload
+  public allowComment
+  public totalComments
+  public viewsCount
+  public commentsCount
+  public isFavourite
+  public isLiked
+  constructor(v: RawFullComic) {
+    super(v)
+    this._creator = v._creator
+    this.pagesCount = v.pagesCount
+    this.epsCount = v.epsCount
+    this.allowDownload = v.allowDownload
+    this.allowComment = v.allowComment
+    this.totalComments = v.totalComments
+    this.viewsCount = v.viewsCount
+    this.commentsCount = v.commentsCount
+    this.isFavourite = v.isFavourite
+    this.isLiked = v.isLiked
+  }
+}

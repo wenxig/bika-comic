@@ -1,13 +1,13 @@
 import { computed, isRef, shallowRef, watch, type CSSProperties, type MaybeRefOrGetter } from "vue"
 import { delay } from "./delay"
 import { isFunction } from "lodash-es"
-import type { DialogOptions, DialogReactive, useMessage } from "naive-ui"
+import type { DialogOptions, DialogReactive } from "naive-ui"
 import { useZIndex } from "./layout"
 import { noop } from "@vueuse/core"
-import router from "@/router"
+import { router } from "@/router"
 
 export type LoadingInstance = ReturnType<typeof createLoadingMessage>
-export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中', api = window.$message as ReturnType<typeof useMessage>) => {
+export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中', api = window.$message) => {
   const data = computed(() => isRef(text) ? text.value : isFunction(text) ? text() : text)
   let loading = api.loading(data.value, {
     duration: 0,

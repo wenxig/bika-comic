@@ -13,7 +13,7 @@ export default Object.freeze({
   showNavBar: <InjectionKey<ShallowRef<boolean>>>Symbol('showNavBar'),
   chatRoomTemp: 'temp.chat.room',
   chatRoomUselessSlogan: '#### **此APP為僅限成人**\n> [泡泡官网]()https://bubble.bidobido.xyz\n\n---\n\n',
-  splitAuthorRegexp: /\,|，|\&|\||、|＆|(\sand\s)|(\s[xX]\s)/ig,
+  splitAuthorRegexp: /\,|，|\&|\||、|＆|(\sand\s)|(\s和\s)|(\s[xX]\s)/ig,
   sameAuthorRegexp: /\(|\)|（|）/g,
   iframeEl: <InjectionKey<ShallowRef<HTMLIFrameElement | undefined>>>Symbol('iframeEl'),
   userTemp: 'temp.user',

@@ -27,8 +27,8 @@ const injectStyle = computed(() => {
 useStyleTag(injectStyle)
 
 
-import { Struct } from "./utils/data"
-window.$api.Struct = Struct
+import { StructImpl } from "./utils/data"
+window.$api.Struct = StructImpl
 </script>
 
 <template>
