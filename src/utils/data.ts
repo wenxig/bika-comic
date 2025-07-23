@@ -17,6 +17,7 @@ export class PromiseContent<T> implements Promise<T> {
     })
     promise.catch(err => {
       this.data = undefined
+      this.errorCause = err
     })
   }
   [Symbol.toStringTag] = ''
@@ -24,7 +25,7 @@ export class PromiseContent<T> implements Promise<T> {
     return this.promise.catch<TResult>(onrejected)
   }
   public then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined): Promise<TResult1 | TResult2> {
-    return this.promise.then<TResult1, TResult2>(onfulfilled)
+    return this.promise.then<TResult1, TResult2>(onfulfilled, onrejected)
   }
   public finally(onfinally?: (() => void) | null | undefined): Promise<T> {
     return this.promise.finally(onfinally)
@@ -32,13 +33,14 @@ export class PromiseContent<T> implements Promise<T> {
   public data?: T
   public isLoading = true
   public isError = false
+  public errorCause: any
   public isEmpty = false
   public static fromPromise<T>(promise: Promise<T>, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
     const v = new this<T>(promise, _isEmpty)
     return shallowReactive(v)
   }
   public static fromAsyncFunction<T extends (...args: any[]) => Promise<any>>(asyncFunction: T, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
-    return (...args: Parameters<T>): ShallowReactive<PromiseContent<Awaited<ReturnType<T>>>> => this.fromPromise((()=>{
+    return (...args: Parameters<T>): ShallowReactive<PromiseContent<Awaited<ReturnType<T>>>> => this.fromPromise((() => {
       console.log('called', asyncFunction)
       return asyncFunction(...args)
     })())

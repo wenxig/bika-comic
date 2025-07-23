@@ -13,7 +13,7 @@ const injectStyle = computed(() => {
   let css = '*{\n'
   for (const key in cssVars.value) {
     const styleValue = cssVars.value[key as keyof typeof cssVars.value]
-    const styleKey = `--nn-${key
+    const styleKey = `--nui-${key
       .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
       .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
       .replace(/([a-zA-Z])([0-9])/g, '$1-$2')
@@ -38,4 +38,5 @@ useStyleTag(injectStyle)
       </div>
     </RouterView>
   </Suspense>
+  <VanImagePreview :show="false" v-once />
 </template>

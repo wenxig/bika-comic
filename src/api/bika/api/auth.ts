@@ -22,4 +22,4 @@ export interface SignupData {
   question2: string,
   question3: string
 }
-export const signUp = PromiseContent.fromAsyncFunction((data: SignupData, signal?: AbortSignal) => picapiRest.post('/auth/register', data, { allowEmpty: true, signal }))
+export const signUp = PromiseContent.fromAsyncFunction((data: SignupData, signal?: AbortSignal) => picapiRest.post<void>('/auth/register', data, { allowEmpty: true, signal }))

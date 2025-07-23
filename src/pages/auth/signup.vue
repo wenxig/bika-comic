@@ -1,18 +1,18 @@
 <script setup lang='ts'>
-import { SignUp, signUp, login } from '@/api'
-import { shallowReactive, shallowRef } from 'vue'
+import { SignupData, signUp, login } from '@/api/bika/api/auth'
+import {  shallowReactive, shallowRef } from 'vue'
 import loginImage from '@/assets/images/login-bg.webp'
 import { createLoadingMessage } from '@/utils/message'
-import { joinInPlusPlan } from '@/api/plusPlan'
-import config from '@/config'
 import { padStart } from 'lodash-es'
-import { useMessage } from 'naive-ui'
 import Popup from '@/components/popup.vue'
 import symbol from '@/symbol'
 import { useLocalStorage } from '@vueuse/core'
 import { isAxiosError } from 'axios'
+import { useMessage } from 'naive-ui'
+import { useAppStore } from '@/stores'
+const $message = useMessage()
 const toDay = new Date()
-const formValue = shallowReactive<SignUp & Record<string, string>>({
+const formValue = shallowReactive<SignupData & Record<string, string>>({
   email: '',
   password: '',
   name: '',
@@ -26,11 +26,10 @@ const formValue = shallowReactive<SignUp & Record<string, string>>({
   question3: ''
 })
 const repeatPassword = shallowRef('')
-
-document.title = '注册 | bika'
+const appStore = useAppStore()
 const userLoginData = useLocalStorage(symbol.loginData, { email: '', password: '' })
 const isSignupping = shallowRef(false)
-async function submit() {
+const submit = async () => {
   if (isSignupping.value) return
   isSignupping.value = true
   const loading = createLoadingMessage('注册中')
@@ -40,26 +39,19 @@ async function submit() {
       password: formValue.password
     }
     await signUp(formValue)
-    const { data: { data: { token } } } = await login({
+    const { data: { token } } = await login({
       email: formValue.email,
       password: formValue.password
     })
-    localStorage.setItem(symbol.loginToken, token)
-    await joinInPlusPlan()
-    config.value['bika.plusPlan'] = true
+    appStore.loginToken = token
     loading.success()
     location.pathname = '/'
   } catch (err) {
     loading.fail()
     console.log('err', err)
-
     if (isAxiosError(err) && err.response) {
-      if (err.response.data.message) {
-        window.$message.error(err.response.data.message)
-      }
-      if (err.response.data.detail) {
-        window.$message.error(err.response.data.detail)
-      }
+      if (err.response.data.message) $message.error(err.response.data.message)
+      if (err.response.data.detail) $message.error(err.response.data.detail)
     }
   }
   isSignupping.value = false
@@ -78,44 +70,44 @@ const showPicker = shallowRef(false)
 <template>
   <div class="w-full h-full flex flex-col items-center overflow-y-auto">
     <Image :src="loginImage" fit="contain" />
-    <van-form @submit="submit" class="w-full">
-      <van-cell-group inset>
-        <van-field :disabled="isSignupping" v-model="formValue.email" name="账号" label="账号" placeholder="账号"
+    <VanForm @submit="submit" class="w-full">
+      <VanCellGroup inset>
+        <VanField :disabled="isSignupping" v-model="formValue.email" name="账号" label="账号" placeholder="账号"
           :rules="[{ required: true, message: '请填写账号' }]" />
-        <van-field :disabled="isSignupping" v-model="formValue.name" name="用户名" label="用户名" placeholder="用户名"
+        <VanField :disabled="isSignupping" v-model="formValue.name" name="用户名" label="用户名" placeholder="用户名"
           :rules="[{ required: true, message: '请填写用户名' }]" />
-        <van-field :disabled="isSignupping" v-model="formValue.password" type="password" name="密码" label="密码"
+        <VanField :disabled="isSignupping" v-model="formValue.password" type="password" name="密码" label="密码"
           placeholder="密码" :rules="[{ required: true, message: '请填写密码' }]" />
-        <van-field v-model="repeatPassword" type="password" name="重复密码" label="重复密码" placeholder="重复密码" :rules="[{
+        <VanField v-model="repeatPassword" type="password" name="重复密码" label="重复密码" placeholder="重复密码" :rules="[{
           required: true, validator: repeatPasswordValid
         }]" :disabled="isSignupping" />
-        <van-field name="性别" label="性别">
+        <VanField name="性别" label="性别">
           <template #input>
-            <van-radio-group :disabled="isSignupping" v-model="formValue.gender" direction="horizontal">
-              <van-radio name="f">男</van-radio>
-              <van-radio name="m">女</van-radio>
-              <van-radio name="bot">无</van-radio>
-            </van-radio-group>
+            <VanRadioGroup :disabled="isSignupping" v-model="formValue.gender" direction="horizontal">
+              <VanRadio name="f">男</VanRadio>
+              <VanRadio name="m">女</VanRadio>
+              <VanRadio name="bot">无</VanRadio>
+            </VanRadioGroup>
           </template>
-        </van-field>
-        <van-field v-model="formValue.birthday" is-link readonly name="生日" label="生日" placeholder="点击选择生日时间"
+        </VanField>
+        <VanField v-model="formValue.birthday" is-link readonly name="生日" label="生日" placeholder="点击选择生日时间"
           @click="showPicker = true" :disabled="isSignupping" />
         <template v-for="index in 3">
-          <van-field :model-value="formValue[`question${index}`]" :disabled="isSignupping"
+          <VanField :model-value="formValue[`question${index}`]" :disabled="isSignupping"
             @update:model-value="v => formValue[`question${index}`] = v" type="text" :name="`${index}号密保问题`"
             :label="`${index}号密保问题`" :placeholder="`${index}号密保问题`" :rules="[{ required: true, message: '请填写问题' }]" />
-          <van-field :model-value="formValue[`answer${index}`]" :disabled="isSignupping"
+          <VanField :model-value="formValue[`answer${index}`]" :disabled="isSignupping"
             @update:model-value="v => formValue[`answer${index}`] = v" type="text" :name="`${index}号密保答案`"
             :label="`${index}号密保答案`" :placeholder="`${index}号密保答案`" :rules="[{ required: true, message: '请填写答案' }]" />
         </template>
-      </van-cell-group>
+      </VanCellGroup>
       <div class="m-4">
-        <van-button round block type="primary" native-type="submit" loading-text="注册中" :loading="isSignupping"
+        <NButton round class="!w-full" type="primary" attr-type="submit" :loading="isSignupping"
           :disabled="isSignupping">
           提交
-        </van-button>
+        </NButton>
       </div>
-    </van-form>
+    </VanForm>
   </div>
   <Popup v-model:show="showPicker" round closeable position="center" class="flex justify-center">
     <NDatePicker v-model:formatted-value="formValue.birthday" type="date" value-format="yyyy-MM-dd"

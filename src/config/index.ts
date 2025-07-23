@@ -1,9 +1,10 @@
 import dayjs from "dayjs"
 import { defineStore } from "pinia"
 import proxyData from '@/api/bika_proxy.json'
-import { useLocalStorage } from "@vueuse/core"
+import { useLocalStorage, usePreferredDark } from "@vueuse/core"
 import symbol from "@/symbol"
 import type { ImageQuality, SortType, FillerTag } from "@/api/bika"
+import { computed } from "vue"
 const defaultConfig = {
   'bika.read.preloadImageNumbers': 2,
   'bika.read.watchFullscreen': true,
@@ -27,5 +28,8 @@ export type ConfigType = typeof defaultConfig
 export const useConfig = defineStore('config', () => {
   const config = useLocalStorage(symbol.config, defaultConfig)
   console.log('config setup', config.value)
-  return {...config.value}
+  const isSystemDark = usePreferredDark()
+  const isDark = computed(() => config.value['bika.darkMode'] || isSystemDark.value)
+
+  return { ...config.value, isDark }
 })

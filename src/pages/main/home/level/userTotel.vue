@@ -20,7 +20,7 @@ watch(() => list.value?.scrollTop, async (scrollTop, old) => {
 </script>
 
 <template>
-  <List :item-height="100" :data="app.levelBoard?.users ?? []" class="h-full text-[--van-text-color] w-full" ref="list"
+  <List :item-height="100" :data="app.levelBoard?.users ?? []" class="h-full text-(--van-text-color) w-full" ref="list"
     :is-requesting="isEmpty(app.levelBoard?.users)" v-slot="{ data: { item: user, index }, height }">
     <div class="flex" :style="`height: ${height}px;`" @click="previewUser?.show(user)">
       <div
@@ -28,11 +28,11 @@ watch(() => list.value?.scrollTop, async (scrollTop, old) => {
         class="flex justify-center items-center text-3xl !w-[10%] van-hairline--top text-white">
         {{ index + 1 }}
       </div>
-      <div class="w-[90%] van-hairline--bottom bg-[--van-background-2] h-full flex items-center">
+      <div class="w-[90%] van-hairline--bottom bg-(--van-background-2) h-full flex items-center">
         <Image :src="user.avatar" class="h-[80px] w-[80px] ml-1" round />
         <div class="ml-3 w-[calc(100%-80px-(4px*3))] h-full flex flex-col ">
           <span class="text-xl font-bold">{{ user.name }}</span>
-          <span class="text-[--p-color] -mt-1">lv.{{ user.level }}</span>
+          <span class="text-(--p-color) -mt-1">lv.{{ user.level }}</span>
           <span class="text-gray-600 text-lg -mt-1">上传数:{{ user.comicsUploaded }}</span>
         </div>
       </div>

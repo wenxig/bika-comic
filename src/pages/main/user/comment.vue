@@ -41,7 +41,7 @@ const createComment = (comment: UserSentComment) => reactive(new Comment({ ...co
       _father = c
       children?.show(comment._id)
     }" :height :comment="createComment(comment)">
-      <span class="ml-1 text-[--p-color] max-w-[50vw] text-nowrap van-ellipsis"
+      <span class="ml-1 text-(--p-color] max-w-[50vw) text-nowrap van-ellipsis"
         @click.stop="$router.force.push(`/comic/${comment._comic._id}`)">{{ comment._comic.title }}</span>
     </CommentRow>
   </List>

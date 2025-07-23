@@ -7,17 +7,16 @@ import { login, LoginData } from '@/api/bika/api/auth'
 import { PromiseContent } from '@/utils/data'
 import { Response } from '@/api/bika'
 import { useAppStore } from '@/stores'
-import { FormInst, useMessage } from 'naive-ui'
+import { useMessage } from 'naive-ui'
 const appStore = useAppStore()
 const formValue = shallowReactive<LoginData>({
   email: '',
   password: ''
 })
 const $message = useMessage()
-const formRef = shallowRef<FormInst>()
 const loginIns = shallowRef<undefined | ShallowReactive<PromiseContent<Response<{ token: string }>>>>()
-async function submit() {
-  // await formRef.value?.validate().catch(() => $message.error('请检查输入内容'))
+const submit = async () => {
+  if (loginIns.value?.isLoading) return
   loginIns.value = login(appStore.loginData.value = formValue)
   try {
     const { data: { token } } = await createLoadingMessage('登陆中').bind(loginIns.value)
@@ -38,34 +37,24 @@ async function submit() {
 
 <template>
   <div class="w-full h-full flex flex-col items-center overflow-y-auto">
-    <!-- <Image :src="loginImage" fit="contain" /> -->
-    <NForm ref="formRef" class="mt-5 w-full" :rules="{
-      email: {
-        required: true,
-        message: '请输入用户名',
-        trigger: 'blur'
-      },
-      password: {
-        required: true,
-        message: '请输入密码',
-        trigger: 'blur'
-      }
-    }" :model="formValue">
-      <NFormItem label="用户名" path="email">
-        <NInput v-model="formValue.email" placeholder="用户名" />
-      </NFormItem>
-      <NFormItem label="密码" path="password">
-        <NInput v-model="formValue.password" type="password" placeholder="密码" />
-      </NFormItem>
-      <div class="w-[calc(100%-40px)] flex justify-between px-5 items-center">
-        <NButton text @click="$router.push('/auth/signup')">注册</NButton>
-        <NButton text @click="$message.error('请自求多福')">忘记密码</NButton>
+    <Image :src="loginImage" fit="contain" />
+    <VanForm @submit="submit" class="mt-5 w-full">
+      <VanCellGroup inset>
+        <VanField :disabled="loginIns?.isLoading" v-model="formValue.email" name="用户名" label="用户名" placeholder="用户名"
+          :rules="[{ required: true, message: '请填写用户名' }]" />
+        <VanField :disabled="loginIns?.isLoading" v-model="formValue.password" type="password" name="密码" label="密码"
+          placeholder="密码" :rules="[{ required: true, message: '请填写密码' }]" />
+      </VanCellGroup>
+      <div class="w-[calc(100%-40px)] flex justify-between mx-auto mt-1 items-center">
+        <NButton text type="primary" @click="$router.push('/auth/signup')"> 注册</NButton>
+        <NButton text type="primary" @click="$message.error('请自求多福')">忘记密码</NButton>
       </div>
       <div class="m-4">
-        <NButton @click="submit" round type="primary">
+        <NButton round class="!w-full" size="large" type="primary" attr-type="submit" :loading="loginIns?.isLoading"
+          :disabled="loginIns?.isLoading">
           提交
         </NButton>
       </div>
-    </NForm>
+    </VanForm>
   </div>
 </template>

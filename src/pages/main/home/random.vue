@@ -10,7 +10,7 @@ import { RandomComicStream } from '@/api'
 import symbol from '@/symbol'
 import { useAppStore } from '@/stores'
 import { reactiveComputed } from '@vueuse/core'
- const useMainPageLevelComicShows = () => {
+const useMainPageLevelComicShows = () => {
   const app = useAppStore()
   const comicBoard = reactiveComputed(() => app.levelBoard.comics)
   return reactiveComputed(() => uniqBy(flatten(comicBoard.map(v => v.filter((_v, i) => i <= 2).map(comic => ({
@@ -63,15 +63,15 @@ const topComics = useMainPageLevelComicShows()
     <div :style="{ height: `${height}px` }" class="w-full mt-1 flex justify-center *:w-[98%]">
       <div v-if="index == 0" class="h-full">
         <div
-          class="bg-[--van-background-2] h-[--swipe] flex items-center text-xl font-bold text-[--p-color] rounded-t-lg">
+          class="bg-(--van-background-2] h-[--swipe] flex items-center text-xl font-bold text-[--p-color) rounded-t-lg">
           &nbsp;今日排行榜</div>
-        <van-swipe lazy-render class="!rounded-b-lg bg-[--van-background-2]" :style="{ height: `${height - swipe}px` }"
+        <van-swipe lazy-render class="!rounded-b-lg bg-(--van-background-2)" :style="{ height: `${height - swipe}px` }"
           autoplay="3000">
-          <van-swipe-item v-for="{ comic, level } of topComics" class="!rounded-lg h-auto bg-[--van-background-2]"
+          <van-swipe-item v-for="{ comic, level } of topComics" class="!rounded-lg h-auto bg-(--van-background-2)"
             :style="{ height: `${height - swipe}px` }">
             <ComicCard v-if="comic" :comic :height="height - swipe" type="big" class="!rounded-b-lg">
               <div
-                class="absolute bottom-[-2%] right-[-3%] flex *:border-r *:border-[0px] *:bg-[--p-color] *:text-white *:text-xs *:px-1 *:opacity-70 *:border-white *:border-solid">
+                class="absolute bottom-[-2%] right-[-3%] flex *:border-r *:border-[0px] *:bg-(--p-color) *:text-white *:text-xs *:px-1 *:opacity-70 *:border-white *:border-solid">
                 <div v-if="level[0] + 1" class="levelTag">
                   日榜第{{ level[0] + 1 }}
                 </div>

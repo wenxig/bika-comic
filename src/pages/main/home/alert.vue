@@ -24,7 +24,7 @@ const nextLoad = async (ok?: VoidFunction) => {
 <template>
   <Popup v-model:show="show" position="right" class="w-full h-full overflow-x-hidden van-hairline--bottom shadow-sm"
     closeable>
-    <div class="w-full h-[10%] text-[--p-color] text-lg font-bold flex items-center pl-3">公告</div>
+    <div class="w-full h-[10%] text-(--p-color) text-lg font-bold flex items-center pl-3">公告</div>
     <List :item-height="160" :data="app.announcements().docs.value" class="h-[90%]" @next="nextLoad"
       :is-err="app.announcements().isErr.value" :err-cause="app.announcements().errCause.value" retriable
       @retry="app.announcements().retry()" :end="app.announcements().done.value"
@@ -35,17 +35,17 @@ const nextLoad = async (ok?: VoidFunction) => {
       }">
         <Image :src="announcement.thumb" class="ml-[2%] w-[30%] h-full" fit="contain" />
         <div class="w-[62%] min-h-[98%] *:text-sm flex absolute right-[2%] flex-col *:text-justify">
-          <span class="font-bold van-ellipsis text-[--van-text-color]">{{ announcement.title }}</span>
+          <span class="font-bold van-ellipsis text-(--van-text-color)">{{ announcement.title }}</span>
           <Text :text="announcement.content" :ellipsis="6" />
         </div>
       </div>
     </List>
   </Popup>
   <Popup v-model:show="showAlertPops" position="center" closeable noBorder
-    class="w-4/5 h-[90%] bg-[--van-background-2] rounded-md overflow-hidden overflow-y-auto flex flex-col">
+    class="w-4/5 h-[90%] bg-(--van-background-2) rounded-md overflow-hidden overflow-y-auto flex flex-col">
     <div ref="overlay" @click.stop class="w-full">
       <Image :src="alertData?.thumb ?? ''" previewable />
-      <div class="text-[--p-color] text-center w-full text-lg font-bold">{{ alertData?.title }}</div>
+      <div class="text-(--p-color) text-center w-full text-lg font-bold">{{ alertData?.title }}</div>
       <Text :text="alertData?.content" class="m-1 w-[calc(100%-8px)]" />
     </div>
   </Popup>

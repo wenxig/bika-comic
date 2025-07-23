@@ -71,13 +71,13 @@ const leftBar = ref<InstanceType<typeof Popup>>()
     </Transition>
     <VanCellGroup class="mt-4">
       <VanCell @click="$router.force.push('/user/history')" isLink title="历史记录" icon="clock-o" />
-      <VanCell @click="$router.force.push('/user/favourt')" isLink title="我的收藏" icon="star-o" />
+      <VanCell @click="$router.force.push('/user/favourite')" isLink title="我的收藏" icon="star-o" />
       <VanCell @click="$router.force.push('/user/image')" isLink title="图片收藏" icon="photo-o" />
       <VanCell @click="$router.force.push('/user/comment')" isLink title="我的评论" icon="chat-o" />
       <VanCell @click="$router.force.push('/brush-comic')" isLink title="刷漫画" class="relative">
         <template #icon>
-          <div class="size-[--van-cell-icon-size] mr-[--van-padding-base]"></div>
-          <svg class="size-[--van-cell-icon-size] absolute top-1/2 -translate-y-1/2" viewBox="0 0 48 48"
+          <div class="size-(--van-cell-icon-size] mr-[--van-padding-base)"></div>
+          <svg class="size-(--van-cell-icon-size) absolute top-1/2 -translate-y-1/2" viewBox="0 0 48 48"
             xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
             <g id="Icon/Social/tiktok-black" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
               <path
@@ -90,7 +90,7 @@ const leftBar = ref<InstanceType<typeof Popup>>()
     </VanCellGroup>
   </Popup>
   <header :class="[isShowNavBar ? 'translate-y-0' : '-translate-y-full']"
-    class="h-[54px] duration-200 transition-transform w-full bg-[--van-background-2] flex items-center relative overflow-hidden *:overflow-hidden">
+    class="h-[54px] duration-200 transition-transform w-full bg-(--van-background-2) flex items-center relative overflow-hidden *:overflow-hidden">
     <div class="!w-[41px] !h-[41px] ml-1" ref="avatorComp">
       <Teleport to="#popups">
         <Image :src="app.user()?.data.avatar" round v-if="!isSearching" @click="isShowLeftBar = true"
@@ -152,7 +152,7 @@ const leftBar = ref<InstanceType<typeof Popup>>()
   <div class="w-full duration-200 transition-[height,transform]"
     :class="[isShowNavBar ? 'h-[calc(100%-98px)] translate-y-0' : '!h-[calc(100%-44px)] -translate-y-[54px]']">
     <RouterView v-slot="{ Component, route }">
-        <component :is="Component" />
+      <component :is="Component" />
     </RouterView>
   </div>
   <Alert v-model="showAlert" />

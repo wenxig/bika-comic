@@ -11,41 +11,41 @@ const app = useAppStore()
 
 const list = shallowRef<GenericComponentExports<typeof List>>()
 onMounted(() => {
-  list.value?.listInstanse?.scrollTo({ top: userPageScroll.favourt })
+  list.value?.listInstanse?.scrollTo({ top: userPageScroll.favourite })
 })
 onBeforeRouteLeave(() => {
-  if (list.value?.scrollTop) userPageScroll.favourt = list.value?.scrollTop
+  if (list.value?.scrollTop) userPageScroll.favourite = list.value?.scrollTop
 })
 
-class BatchRemoveFavourt {
+class BatchRemoveFavourite {
   public static isSetecting = shallowRef(false)
   public static list = shallowReactive<boolean[]>([])
   public static isDeleting = shallowRef(false)
   public static remove = async () => {
     const loading = createLoadingMessage('删除中')
-    BatchRemoveFavourt.isDeleting.value = true
-    BatchRemoveFavourt.isSetecting.value = false
+    BatchRemoveFavourite.isDeleting.value = true
+    BatchRemoveFavourite.isSetecting.value = false
     try {
-      await Promise.all(BatchRemoveFavourt.list.map((v, index) => {
-        const favourtComicList = app.user()?.favourite.docs.value
-        console.log('batch remove:', v, index, favourtComicList?.[index])
-        if (v) return (favourtComicList ?? [])[index].favourt({}, false)
+      await Promise.all(BatchRemoveFavourite.list.map((v, index) => {
+        const favouriteComicList = app.user()?.favourite.docs.value
+        console.log('batch remove:', v, index, favouriteComicList?.[index])
+        if (v) return (favouriteComicList ?? [])[index].favourite({}, false)
       }))
       await app.$reload.me()
-      BatchRemoveFavourt.list.splice(0, Infinity)
+      BatchRemoveFavourite.list.splice(0, Infinity)
       loading.success()
     } catch {
       loading.fail()
     }
-    BatchRemoveFavourt.isDeleting.value = false
+    BatchRemoveFavourite.isDeleting.value = false
   }
   public static cancel = () => {
-    BatchRemoveFavourt.isSetecting.value = false
-    BatchRemoveFavourt.isDeleting.value = false
-    BatchRemoveFavourt.list.splice(0, Infinity)
+    BatchRemoveFavourite.isSetecting.value = false
+    BatchRemoveFavourite.isDeleting.value = false
+    BatchRemoveFavourite.list.splice(0, Infinity)
   }
-  public static selectAll = () => times(app.user()?.favourite.total.value ?? 0, index => BatchRemoveFavourt.list[index] = true)
-  public static selectTog = () => times(app.user()?.favourite.total.value ?? 0, index => BatchRemoveFavourt.list[index] = !BatchRemoveFavourt.list[index])
+  public static selectAll = () => times(app.user()?.favourite.total.value ?? 0, index => BatchRemoveFavourite.list[index] = true)
+  public static selectTog = () => times(app.user()?.favourite.total.value ?? 0, index => BatchRemoveFavourite.list[index] = !BatchRemoveFavourite.list[index])
 }
 
 
@@ -58,25 +58,25 @@ const loadNext = async () => {
 <template>
   <VanNavBar title="我的收藏" left-text="返回" left-arrow @click-left="$router.back()">
     <template #right>
-      <template v-if="BatchRemoveFavourt.isSetecting.value">
-        <NButton :disabled="BatchRemoveFavourt.isDeleting.value" text type="primary" class="mr-2"
-          @click="BatchRemoveFavourt.remove">确定
+      <template v-if="BatchRemoveFavourite.isSetecting.value">
+        <NButton :disabled="BatchRemoveFavourite.isDeleting.value" text type="primary" class="mr-2"
+          @click="BatchRemoveFavourite.remove">确定
         </NButton>
-        <NButton :disabled="BatchRemoveFavourt.isDeleting.value" text type="primary" class="mr-2"
-          @click="BatchRemoveFavourt.cancel">取消
+        <NButton :disabled="BatchRemoveFavourite.isDeleting.value" text type="primary" class="mr-2"
+          @click="BatchRemoveFavourite.cancel">取消
         </NButton>
-        <NButton :disabled="BatchRemoveFavourt.isDeleting.value" text type="primary" class="mr-2"
-          @click="BatchRemoveFavourt.selectTog">反转</NButton>
-        <NButton :disabled="BatchRemoveFavourt.isDeleting.value" text type="primary"
-          @click="BatchRemoveFavourt.selectAll">
+        <NButton :disabled="BatchRemoveFavourite.isDeleting.value" text type="primary" class="mr-2"
+          @click="BatchRemoveFavourite.selectTog">反转</NButton>
+        <NButton :disabled="BatchRemoveFavourite.isDeleting.value" text type="primary"
+          @click="BatchRemoveFavourite.selectAll">
           全选</NButton>
       </template>
-      <NButton :disabled="BatchRemoveFavourt.isDeleting.value" text type="primary" v-else
-        @click="BatchRemoveFavourt.isSetecting.value = true">删除
+      <NButton :disabled="BatchRemoveFavourite.isDeleting.value" text type="primary" v-else
+        @click="BatchRemoveFavourite.isSetecting.value = true">删除
       </NButton>
     </template>
   </VanNavBar>
-  <List :item-height="160" :reloadable="!BatchRemoveFavourt.isSetecting.value"
+  <List :item-height="160" :reloadable="!BatchRemoveFavourite.isSetecting.value"
     @reload="then => { app.user()?.favourite.reload(); app.user()?.favourite.next().then(then) }"
     class="h-[calc(100%-46px)] w-full" :data="app.user()?.favourite.docs.value ?? []" ref="list"
     :is-requesting="isEmpty(app.user()) || !!app.user()?.favourite.isRequesting.value"
@@ -84,16 +84,16 @@ const loadNext = async () => {
     :end="isEmpty(app.user()) ? false : (app.user()!.favourite.done.value)">
     <van-swipe-cell class="w-full relative" style="--van-checkbox-duration: 0s;" :style="{ height: `${height}px` }">
       <ComicCard :comic :height
-        :disabled="BatchRemoveFavourt.isDeleting.value || BatchRemoveFavourt.isSetecting.value" />
+        :disabled="BatchRemoveFavourite.isDeleting.value || BatchRemoveFavourite.isSetecting.value" />
       <div
-        @click="BatchRemoveFavourt.isSetecting.value && (BatchRemoveFavourt.list[index] = !BatchRemoveFavourt.list[index])"
-        v-if="BatchRemoveFavourt.isDeleting.value || BatchRemoveFavourt.isSetecting.value"
-        class="w-full h-full absolute top-0 left-0" :class="[!BatchRemoveFavourt.isSetecting.value && 'hidden']">
-        <VanCheckbox :model-value="BatchRemoveFavourt.list[index]" class="absolute bottom-1 right-1"
-          v-if="BatchRemoveFavourt.isSetecting.value" />
+        @click="BatchRemoveFavourite.isSetecting.value && (BatchRemoveFavourite.list[index] = !BatchRemoveFavourite.list[index])"
+        v-if="BatchRemoveFavourite.isDeleting.value || BatchRemoveFavourite.isSetecting.value"
+        class="w-full h-full absolute top-0 left-0" :class="[!BatchRemoveFavourite.isSetecting.value && 'hidden']">
+        <VanCheckbox :model-value="BatchRemoveFavourite.list[index]" class="absolute bottom-1 right-1"
+          v-if="BatchRemoveFavourite.isSetecting.value" />
       </div>
       <template #right>
-        <van-button square text="删除" type="danger" class="h-full" @click="comic.favourt()" />
+        <van-button square text="删除" type="danger" class="h-full" @click="comic.favourite()" />
       </template>
     </van-swipe-cell>
   </List>

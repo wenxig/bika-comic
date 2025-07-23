@@ -6,3 +6,24 @@
 * {
   user-select: none;
 }
+.van-floating-panel__header-bar {
+  pointer-events: none;
+}
+
+.v-binder-follower-container {
+  z-index: 1000000 !important;
+}
+
+#messages {
+  position: fixed;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+  top: 0px;
+  left: 0px;
+  z-index: 2147483647;
+
+  * {
+    pointer-events: all;
+  }
+}

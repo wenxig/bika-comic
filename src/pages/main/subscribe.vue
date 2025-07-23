@@ -52,23 +52,23 @@ const reload = () => {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full overflow-hidden text-[--van-text-color]">
+  <div class="flex flex-col w-full h-full overflow-hidden text-(--van-text-color)">
     <div
-      class="w-full pt-1 h-[90px] scroller overflow-x-auto overflow-y-hidden whitespace-nowrap flex items-center bg-[--van-background-2]">
+      class="w-full pt-1 h-[90px] scroller overflow-x-auto overflow-y-hidden whitespace-nowrap flex items-center bg-(--van-background-2)">
       <div @click="select = undefined"
         class="h-full w-[60px] mx-1 inline-flex flex-col text-center rounded-xl p-1 justify-center"
-        :class="[{ 'bg-opacity-50 transition-colors': !select, }, !select && (isDark ? 'bg-[--van-background-3]' : 'bg-gray-300')]">
+        :class="[{ 'bg-opacity-50 transition-colors': !select, }, !select && (isDark ? 'bg-(--van-background-3]' : 'bg-gray-300'))">
         <VanIcon name="bell" class="h-[60px] w-[60px] rounded-full bg-gray-300" size="50px" color="var(--van-white)" />
         昨日更新
       </div>
       <div v-for="subscribes of Subscribe.store.subscribes" @click="select = subscribes"
         class="h-full min-w-auto mx-1 inline-flex flex-col text-center rounded-xl p-1 justify-center items-center"
-        :class="[{ 'bg-opacity-50 transition-colors': select == subscribes }, select == subscribes && (isDark ? 'bg-[--van-background-3]' : 'bg-gray-300')]">
+        :class="[{ 'bg-opacity-50 transition-colors': select == subscribes }, select == subscribes && (isDark ? 'bg-(--van-background-3]' : 'bg-gray-300'))">
         <Image :src="subscribes.src ?? userIcon" round class="h-[60px] w-[60px]" />
         <span>{{ subscribes.name }}</span>
       </div>
     </div>
-    <div class="w-full h-10 van-hairline--top-bottom flex items-center pl-4 font-bold text-lg bg-[--van-background-2]">
+    <div class="w-full h-10 van-hairline--top-bottom flex items-center pl-4 font-bold text-lg bg-(--van-background-2)">
       {{ select ? '最近更新' : '昨日更新' }}
     </div>
     <List :item-height="200" :data="getComics() ?? []" v-if="!select" class="w-full van-hairline--top"

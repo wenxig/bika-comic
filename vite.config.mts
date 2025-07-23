@@ -8,6 +8,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import { browserslistToTargets } from 'lightningcss'
 import browserslist from 'browserslist'
+import { VantResolver } from '@vant/auto-import-resolver'
 
 export default defineConfig({
   plugins: [
@@ -16,6 +17,7 @@ export default defineConfig({
     Components({
       dts: true,
       resolvers: [
+        VantResolver(),
         NaiveUiResolver()
       ],
     }),
