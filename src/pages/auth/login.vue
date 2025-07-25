@@ -1,11 +1,11 @@
 <script setup lang='ts'>
-import { ShallowReactive, shallowReactive, shallowRef } from 'vue'
+import { shallowReactive, shallowRef } from 'vue'
 import loginImage from '@/assets/images/login-bg.webp'
 import { createLoadingMessage } from '@/utils/message'
 import { isAxiosError } from 'axios'
 import { login, LoginData } from '@/api/bika/api/auth'
-import { PromiseContent } from '@/utils/data'
-import { Response } from '@/api/bika'
+import type { SPromiseContent } from '@/utils/data'
+import type { Response } from '@/api/bika'
 import { useAppStore } from '@/stores'
 import { useMessage } from 'naive-ui'
 const appStore = useAppStore()
@@ -14,7 +14,7 @@ const formValue = shallowReactive<LoginData>({
   password: ''
 })
 const $message = useMessage()
-const loginIns = shallowRef<undefined | ShallowReactive<PromiseContent<Response<{ token: string }>>>>()
+const loginIns = shallowRef<undefined | SPromiseContent<Response<{ token: string }>>>()
 const submit = async () => {
   if (loginIns.value?.isLoading) return
   loginIns.value = login(appStore.loginData.value = formValue)

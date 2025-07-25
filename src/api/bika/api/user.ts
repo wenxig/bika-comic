@@ -23,7 +23,7 @@ export const editAvatar = PromiseContent.fromAsyncFunction((imageDataUrl: string
 export const getFavouriteComic = PromiseContent.fromAsyncFunction((page: number, sort: SortType, signal?: AbortSignal) => createClassFromResponse(picapiRest.get<{ comics: RawStream<RawLessComic> }>(`/users/favourite?s=${sort}&page=${page}`, { signal }), LessComic))
 
 export const createFavouriteComicStream = (sort: SortType) => {
-  new Stream<LessComic>(async function* (signal, that) {
+  Stream.create<LessComic>(async function* (signal, that) {
     const getComic = async () => {
       const result = await getFavouriteComic(that.page.value, sort, signal)
       that.pages.value = result.pages

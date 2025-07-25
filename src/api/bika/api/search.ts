@@ -8,8 +8,8 @@ export const getHotTags = PromiseContent.fromAsyncFunction(async (signal?: Abort
 
 export const getRandomComic = PromiseContent.fromAsyncFunction(async (signal?: AbortSignal) => (await picapiRest.get<{ comics: RawCommonComic[] }>(`/comics/random`, { signal })).data.comics.map(v => new CommonComic(v)))
 
-export const createRandomComicStream = () => {
-  new Stream<CommonComic>(async function* (signal, that) {
+export const createRandomComicStream = () =>
+  Stream.create<CommonComic>(async function* (signal, that) {
     const getComic = async () => {
       const result = await getRandomComic(signal)
       that.pages.value = Infinity
@@ -24,7 +24,7 @@ export const createRandomComicStream = () => {
     }
     return await getComic()
   })
-}
+
 
 
 export const getCollections = PromiseContent.fromAsyncFunction(async (signal?: AbortSignal) => (await picapiRest.get<{ collections: RawCollection[] }>("/collections", { signal })).data.collections.map(v => new Collection(v)))

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router"
+import { createRouter, createWebHistory, isNavigationFailure, NavigationFailureType, type RouteLocationRaw } from "vue-router"
 import { isEmpty } from "lodash-es"
 import symbol from "@/symbol"
 export const router = createRouter({
@@ -7,14 +7,23 @@ export const router = createRouter({
     {
       path: "/",
       redirect: isEmpty(localStorage.getItem(symbol.loginToken)) ? '/auth/login' : '/main/home'
-    },
-    {
-      path: "/main/home",
-      component: () => import('@/pages/index.vue')
-    },
-    {
+    },{
       path: "/auth/login",
       component: () => import('@/pages/auth/login.vue')
+    },
+    {
+      path: '/main',
+      component: () => import('@/pages/main/index.vue'),
+      redirect: '/main/home',
+      children: [{
+        path: 'home',
+        component: () => import('@/pages/main/home/index.vue'),
+        redirect: '/main/home/random',
+        children: [{
+          path: 'random',
+          component: () => import('@/pages/main/home/random.vue'),
+        }]
+      }]
     }
   ]
 })
@@ -36,3 +45,9 @@ const stopSetupWatch = router.afterEach(() => {
   el.remove()
   return promise
 })
+
+const $routerForceDo = async (mode: keyof typeof router.force, to: RouteLocationRaw) => { do var r = await router[mode](to); while (isNavigationFailure(r, NavigationFailureType.aborted)); return r }
+router.force = {
+  push: to => $routerForceDo('push', to),
+  replace: to => $routerForceDo('replace', to),
+}

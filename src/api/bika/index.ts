@@ -130,17 +130,15 @@ recommend.interceptors.request.use(async requestConfig => {
 recommend.interceptors.response.use(undefined, requestErrorInterceptors.isClientError)
 recommend.interceptors.response.use(undefined, requestErrorInterceptors.createAutoRetry(recommend, 3))
 
-
-import { PromiseContent } from "@/utils/data"
 import type { AxiosRequestConfig } from "axios"
 export namespace picapiRest {
-  export const get = <T>(url: string, config: AxiosRequestConfig = {}) => PromiseContent.fromAsyncFunction((async () => (await picapi.get<Response<T>>(url, config)).data))()
-  export const post = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromAsyncFunction((async () => (await picapi.post<Response<T>>(url, data, config)).data))()
-  export const put = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromAsyncFunction((async () => (await picapi.put<Response<T>>(url, data, config)).data))()
+  export const get = async <T>(url: string, config: AxiosRequestConfig = {}) => (await picapi.get<Response<T>>(url, config)).data
+  export const post = async <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => (await picapi.post<Response<T>>(url, data, config)).data
+  export const put = async <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => (await picapi.put<Response<T>>(url, data, config)).data
 
 }
 export namespace recommendRest {
-  export const get = <T>(url: string, config: AxiosRequestConfig = {}) => PromiseContent.fromPromise((async () => (await recommend.get<T>(url, config)).data)())
-  export const post = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromPromise((async () => (await recommend.post<T>(url, data, config)).data)())
-  export const put = <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => PromiseContent.fromPromise((async () => (await recommend.put<T>(url, data, config)).data)())
+  export const get = async <T>(url: string, config: AxiosRequestConfig = {}) => (await recommend.get<T>(url, config)).data
+  export const post = async <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => (await recommend.post<T>(url, data, config)).data
+  export const put = async <T>(url: string, data?: any, config: AxiosRequestConfig = {}) => (await recommend.put<T>(url, data, config)).data
 }

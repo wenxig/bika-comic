@@ -1,6 +1,6 @@
 import { until } from "@vueuse/core"
 import { isEmpty, isError, last } from "lodash-es"
-import { ref, shallowReactive, shallowRef, type Ref, type ShallowReactive } from "vue"
+import { computed, markRaw, ref, shallowReactive, shallowRef, type Raw, type Ref, type ShallowReactive } from "vue"
 import { SmartAbortController } from "./request"
 import type { Response, RawStream, SortType } from "@/api/bika"
 import type { BaseComic } from "@/api/bika/comic"
@@ -40,27 +40,35 @@ export class PromiseContent<T> implements Promise<T> {
     return shallowReactive(v)
   }
   public static fromAsyncFunction<T extends (...args: any[]) => Promise<any>>(asyncFunction: T, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
-    return (...args: Parameters<T>): ShallowReactive<PromiseContent<Awaited<ReturnType<T>>>> => this.fromPromise((() => {
+    return (...args: Parameters<T>): SPromiseContent<Awaited<ReturnType<T>>> => this.fromPromise((() => {
       console.log('called', asyncFunction)
       return asyncFunction(...args)
     })())
   }
 }
+
+export type SPromiseContent<T> = ShallowReactive<PromiseContent<T>>
+
+export type RStream<T> = Raw<Stream<T>>
 export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
   private abortController = new SmartAbortController()
   constructor(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], T[], Stream<T>> | AsyncIterableIterator<T[], T[], Stream<T>>)) {
     this.generator = generator(this.abortController.signal, this)
   }
+  public static create<T>(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], T[], Stream<T>> | AsyncIterableIterator<T[], T[], Stream<T>>)) {
+    const stream = new this<T>(generator)
+    return markRaw(stream)
+  }
   private generator
   public async next(): Promise<IteratorResult<T[], T[]>> {
     try {
-      await until(this.isLoading).toBe(false)
-      this.isLoading.value = true
-      if (this._isDone) return { done: true, value: [last(this.data.value)!] }
+      await until(this.isRequesting).toBe(false)
+      this.isRequesting.value = true
+      if (this._isDone) return { done: true, value: [last(this._data)!] }
       const { value, done } = await this.generator.next(this)
       this.isDone.value = done ?? false
       this.data.value.push(...value)
-      this.isLoading.value = false
+      this.isRequesting.value = false
       return { value, done }
     } catch (error) {
       if (isError(error)) this.error.value = error
@@ -72,7 +80,7 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
     return await this.generator.return?.(val) ?? { value: val ?? [], done: this._isDone }
   }
   public async throw(e?: any): Promise<IteratorResult<T[], T[]>> {
-    return await this.generator.throw?.(e) ?? { value: [last(this.data.value)!], done: this._isDone }
+    return await this.generator.throw?.(e) ?? { value: [last(this._data)!], done: this._isDone }
   }
   public reset() {
     this.total.value = NaN
@@ -86,50 +94,68 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
   }
   public stop() {
     this.abortController.abort()
-    this.isLoading.value = false
+    this.isRequesting.value = false
   }
   public [Symbol.asyncIterator]() {
     return this
   }
   public error = shallowRef<void | Error>()
+
   public data = ref<T[]>([]) as Ref<T[]>
+  public get _data() {
+    return this.data.value
+  }
   /** 当前页 */
   public page = shallowRef(0)
+  /** 当前页 */
   public get _page() {
     return this.page.value
   }
   /** 总页数 */
   public pages = shallowRef(0)
+  /** 总页数 */
   public get _pages() {
     return this.pages.value
   }
   /** 总条目数 */
   public total = shallowRef(NaN)
+  /** 总条目数 */
   public get _total() {
     return this.total.value
   }
   /** 单页条目数 */
   public pageSize = shallowRef(NaN)
+  /** 单页条目数 */
   public get _pageSize() {
     return this.pageSize.value
   }
-  public isLoading = shallowRef(false)
+  /** 数据当前总数 */
+  public length = computed(() => this.data.value.length)
+  /** 数据当前总数 */
+  public get _length() {
+    return this.data.value.length
+  }
+  public isRequesting = shallowRef(false)
   public get _isRequesting() {
-    return this.isLoading.value
+    return this.isRequesting.value
   }
   public isDone = shallowRef(false)
   public get _isDone() {
     return this.isDone.value
   }
+  public isEmpty = computed(() => this.isDone.value && this.length.value == 0)
+  public get _isEmpty() {
+    return this.isEmpty.value
+  }
 }
-export const createClassFromResponse = async <T extends RawStream<any>, C>(v: ShallowReactive<PromiseContent<Response<{ comics: T }>>>, box: new (data: T['docs'][number]) => C): Promise<RawStream<C>> => {
+export const createClassFromResponse = async<T extends RawStream<any>, C>(v: Promise<Response<{ comics: T }>>, box: new (data: T['docs'][number]) => C): Promise<RawStream<C>> => {
   const { data: { comics } } = await v
   comics.docs = comics.docs.map(v => new box(v))
   return comics
 }
 
-export const createComicStream = <T extends BaseComic>(keyword: string, sort: SortType, fn: (keyword: string, page: number, sort: SortType, signal: AbortSignal) => ShallowReactive<PromiseContent<RawStream<T>>>) =>
-  new Stream(async function* (signal, that) {
+export const createComicStream = <T extends BaseComic>(keyword: string, sort: SortType, fn: (keyword: string, page: number, sort: SortType, signal: AbortSignal) => SPromiseContent<RawStream<T>>) =>
+  Stream.create(async function* (signal, that) {
     const getComic = async () => {
       const result = await fn(keyword, that.page.value, sort, signal)
       that.pages.value = result.pages
