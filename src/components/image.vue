@@ -1,10 +1,10 @@
 <script setup lang='ts'>
 import { ImgHTMLAttributes, StyleValue, computed, nextTick, shallowRef, watch } from 'vue'
 import { ImageProps, NImage } from 'naive-ui'
-import { useImagesStore } from '@/stores/images'
 import { Image, Image_ } from '@/api/bika/image'
 import { isString } from 'lodash-es'
 import { showImagePreview } from '@/utils/image'
+import { image } from '@/stores/temp'
 const $props = withDefaults(defineProps<{
   src?: Image_
   alt?: string
@@ -44,7 +44,7 @@ const reload = async () => {
   await nextTick()
   show.value = true
 }
-const images = $props.useList ?? useImagesStore()
+const images = $props.useList ?? image
 const show = shallowRef(true)
 const beginReload = () => {
   reloadTime = 0

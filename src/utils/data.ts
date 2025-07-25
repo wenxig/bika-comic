@@ -65,7 +65,8 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
       await until(this.isRequesting).toBe(false)
       this.isRequesting.value = true
       if (this._isDone) return { done: true, value: [last(this._data)!] }
-      const { value, done } = await this.generator.next(this)
+      const { value, done, ...v } = await this.generator.next(this)
+      console.log('stream load done', value, done, v)
       this.isDone.value = done ?? false
       this.data.value.push(...value)
       this.isRequesting.value = false
@@ -112,7 +113,7 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
     return this.page.value
   }
   /** 总页数 */
-  public pages = shallowRef(0)
+  public pages = shallowRef(NaN)
   /** 总页数 */
   public get _pages() {
     return this.pages.value

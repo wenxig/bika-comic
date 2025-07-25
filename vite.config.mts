@@ -44,4 +44,13 @@ export default defineConfig({
     }
   },
   base: "/",
+  server:{
+    proxy:{
+      '/api': {
+        target: 'https://api.go2778.com',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, ''),
+      }
+    }
+  }
 })

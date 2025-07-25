@@ -69,31 +69,33 @@ const getBikaApiHeaders = (pathname: string, method: string) => {
 export const picapi = axios.create({
   baseURL: '',
   adapter: ["fetch", "xhr", "http"],
-  timeout: 5000
+  timeout: 10000
 })
 picapi.interceptors.request.use(async requestConfig => {
-  console.log('begin request')
+  // console.log('begin request')
   if (values(requestConfig.data).includes(undefined)) return requestErrorResult('networkError_request', 'some values is undefined')
-  console.log('2 request')
+  // console.log('2 request')
   const config = useConfig()
-  console.log(allProxy.interface, config)
+  // console.log(allProxy.interface, config)
   const baseInterface = allProxy.interface.find(v => config["bika.proxy.interfaceId"] == v.id)
   if (!baseInterface) return requestErrorResult('networkError_request', `Interface is empty (id=${config["bika.proxy.interfaceId"]})`)
-  console.log('3 request')
-  requestConfig.baseURL = `https://${baseInterface.basePart}.${baseInterface.url}`
+  // console.log('3 request')
+  requestConfig.baseURL = import.meta.env.DEV ? '/api' : `https://${baseInterface.basePart}.${baseInterface.url}`
   await until(useOnline()).toBe(true)
   for (const value of getBikaApiHeaders(requestConfig.url ?? '/', requestConfig.method!.toUpperCase())) requestConfig.headers.set(...value)
   requestConfig.headers.set('use-interface', requestConfig.baseURL)
   return requestConfig
 })
 picapi.interceptors.response.use(async (v: AxiosResponse<RawResponse>) => {
+  console.log('recicve', v.data)
   if (v.data.error || v.data.data) return v
   if (!v.config.allowEmpty) return v
   return requestErrorResult('networkError_emptyData', v.data)
 }, err => {
-  if (!isAxiosError(err)) return err
+  console.log('recicve', err)
+  if (!isAxiosError(err)) return Promise.reject(err)
   if (err.response) return requestErrorResult('networkError_response', err)
-  return err
+  return Promise.reject(err)
 })
 picapi.interceptors.response.use(undefined, requestErrorInterceptors.createCheckIsUnauth(picapi, async () => {
   const appStore = useAppStore()

@@ -12,8 +12,8 @@ export const createRandomComicStream = () =>
   Stream.create<CommonComic>(async function* (signal, that) {
     const getComic = async () => {
       const result = await getRandomComic(signal)
-      that.pages.value = Infinity
-      that.total.value = Infinity
+      that.pages.value = NaN
+      that.total.value = NaN
       that.pageSize.value = 20
       that.page.value++
       return result
