@@ -74,11 +74,12 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
       const { value, done, ...v } = await this.generator.next(this)
       console.log('stream load done', value, done, v)
       this.isDone.value = done ?? false
-      this.data.value.push(...value)
       this.isRequesting.value = false
+      this.data.value.push(...value)
       return { value, done }
     } catch (error) {
-      if (isError(error)) this.error.value = error
+      this.isRequesting.value = false
+      this.error.value = error as Error
       throw error
     }
   }
@@ -181,3 +182,8 @@ export const createComicStream = <T extends BaseComic>(keyword: string, sort: So
     }
     return await getComic()
   })
+export const callbackToPromise = <T = void>(fn: (resolve: (result: T | PromiseLike<T>) => void) => any) => {
+  const { resolve, promise } = Promise.withResolvers<T>()
+  fn(resolve)
+  return promise
+}

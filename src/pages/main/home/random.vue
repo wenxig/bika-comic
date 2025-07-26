@@ -7,7 +7,6 @@ import { useRouter } from 'vue-router'
 import symbol from '@/symbol'
 import { ComponentExposed } from 'vue-component-type-helpers'
 import { createRandomComicStream } from '@/api/bika/api/search'
-import ListStream from '@/components/listStream.vue'
 const list = shallowRef<ComponentExposed<typeof List>>()
 const $router = useRouter()
 const stream = random.stream ??= createRandomComicStream()
@@ -32,7 +31,7 @@ const stop = $router.beforeEach(() => {
 </script>
 
 <template>
-  <ListStream class="h-full w-full" :data-processor="v => chunk(v, 2)" :item-height="260" :stream
+  <List class="h-full w-full" :data-processor="v => chunk(v, 2)" :source="stream" :item-height="260"
     v-slot="{ data: { item: comics }, height }">
     <div :style="{ height: `${height}px` }" class="w-full mt-1 flex justify-center *:w-[98%]">
       <div class="flex justify-between h-full">
@@ -40,5 +39,5 @@ const stop = $router.beforeEach(() => {
         </div>
       </div>
     </div>
-  </ListStream>
+  </List>
 </template>

@@ -9,6 +9,7 @@ import legacyPlugin from '@vitejs/plugin-legacy'
 import { browserslistToTargets } from 'lightningcss'
 import browserslist from 'browserslist'
 import { VantResolver } from '@vant/auto-import-resolver'
+import MotionResolver from 'motion-v/resolver'
 
 export default defineConfig({
   plugins: [
@@ -18,6 +19,7 @@ export default defineConfig({
       dts: true,
       resolvers: [
         VantResolver(),
+        MotionResolver(),
         NaiveUiResolver()
       ],
     }),

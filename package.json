@@ -21,6 +21,7 @@
     "localforage": "^1.10.0",
     "lodash-es": "^4.17.21",
     "mitt": "^3.0.1",
+    "motion-v": "^1.6.1",
     "naive-ui": "^2.41.0",
     "opencc-js": "^1.0.5",
     "pinia": "^3.0.2",
