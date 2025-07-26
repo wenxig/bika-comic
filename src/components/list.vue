@@ -3,15 +3,18 @@ import { type NVirtualList, VirtualListProps } from 'naive-ui'
 import { ceil, debounce, isEmpty } from 'lodash-es'
 import { StyleValue, shallowRef, watch } from 'vue'
 import { useScroll } from '@vueuse/core'
-import CPromiseContent from '@/components/promiseContent.vue'
-import { SPromiseContent } from '@/utils/data'
-const $props = withDefaults(defineProps<{
-  itemHeight: number
+import { SPromiseContent, Stream } from '@/utils/data'
+import Content from './content.vue'
+type Source = {
   data: SPromiseContent<T[]>
   isEnd?: boolean
   itemResizable?: boolean
   retriable?: boolean
   resetable?: boolean
+} | Stream<T>
+const $props = withDefaults(defineProps<{
+  source: Source
+  itemHeight: number
   listProp?: Partial<VirtualListProps>
   goBottom?: boolean
 
@@ -67,13 +70,14 @@ watch([() => $props.data, isReq], ([data]) => {
   <VanPullRefresh v-model="isRefreshing" :class="[$props.class]" @refresh="refreshing"
     :disabled="!resetable || data.isError || data.isLoading || (!data.isLoading && !isPullRefreshHold)"
     @change="({ distance }) => isPullRefreshHold = !!distance" :style>
-    <CPromiseContent :promise-content="data" class-loading="mt-2 !h-[24px]" class-empty="!h-full" class-error="!h-full"
+    <Content :promise-content="data" class-loading="mt-2 !h-[24px]" class-empty="!h-full" class-error="!h-full"
       :retriable @retry="$emit('retry')">
       <NVirtualList :="listProp" :item-resizable :item-size="itemHeight" @scroll="handleScroll"
-        class="overflow-x-hidden h-full" :items="data" v-if="!isEmpty(data)" v-slot="item: { item: T, index: number }"
-        ref="vList" :class="[isPullRefreshHold ? 'overflow-y-hidden' : 'overflow-y-auto']">
+        class="overflow-x-hidden h-full" :items="data.data" v-if="data.data && !isEmpty(data.data)"
+        v-slot="item: { item: T, index: number }" ref="vList"
+        :class="[isPullRefreshHold ? 'overflow-y-hidden' : 'overflow-y-auto']">
         <slot :height="itemHeight" :data="{ item: item.item, index: data.data?.indexOf(item.item) ?? -1 }"></slot>
       </NVirtualList>
-    </CPromiseContent>
+    </Content>
   </VanPullRefresh>
 </template>

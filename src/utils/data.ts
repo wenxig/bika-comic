@@ -54,6 +54,12 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
   private abortController = new SmartAbortController()
   constructor(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], T[], Stream<T>> | AsyncIterableIterator<T[], T[], Stream<T>>)) {
     this.generator = generator(this.abortController.signal, this)
+    this[Stream.isStreamKey] = true
+  }
+  [x: symbol]: any
+  private static isStreamKey = Symbol('stream')
+  public static isStream(stream: any): stream is Stream<any> {
+    return !!stream[this.isStreamKey]
   }
   public static create<T>(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], T[], Stream<T>> | AsyncIterableIterator<T[], T[], Stream<T>>)) {
     const stream = new this<T>(generator)
@@ -144,7 +150,11 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
   public get _isDone() {
     return this.isDone.value
   }
-  public isEmpty = computed(() => this.isDone.value && this.length.value == 0)
+  public isNoData = computed(() => this.isDone.value && this.isEmpty.value)
+  public get _isNoData() {
+    return this.isNoData.value
+  }
+  public isEmpty = computed(() => this.length.value == 0)
   public get _isEmpty() {
     return this.isEmpty.value
   }

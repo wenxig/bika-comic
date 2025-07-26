@@ -16,21 +16,18 @@ onMounted(async () => {
     await nextTick()
     list.value?.listInstance?.scrollTo({ top: random.scroll })
   }
-  if (isEmpty(stream._data)) {
-    stream.next()
-  }
 })
 const stop = $router.beforeEach(() => {
   stop()
   random.scroll = list.value?.scrollTop!
 })
 
-const showNavBar = inject(symbol.showNavBar)!
-watch(() => list.value?.scrollTop, async (scrollTop, old) => {
-  if (!scrollTop || !old) return
-  if (scrollTop - old > 0) showNavBar.value = false
-  else showNavBar.value = true
-}, { immediate: true })
+// const showNavBar = inject(symbol.showNavBar)!
+// watch(() => list.value?.scrollTop, async (scrollTop, old) => {
+//   if (!scrollTop || !old) return
+//   if (scrollTop - old > 0) showNavBar.value = false
+//   else showNavBar.value = true
+// }, { immediate: true })
 
 </script>
 

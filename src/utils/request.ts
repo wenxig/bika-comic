@@ -1,8 +1,8 @@
 import { type AxiosInstance, isCancel, isAxiosError, type AxiosError } from "axios"
 import mitt from "mitt"
 import eventBus, { type EventBus } from "./eventBus"
-import type { bika } from "@/api/bika"
 import { delay } from "./delay"
+import type { RawResponse } from "@/api/bika"
 
 export class SmartAbortController implements AbortController {
   private _controller = new AbortController()
@@ -45,10 +45,11 @@ export namespace requestType {
 export namespace requestErrorHandleInterceptors {
   export const checkIsAxiosError = <T extends object>(err: any): err is AxiosError<T, any> => {
     if ('__isAxiosError' in err) return <boolean>err.__isAxiosError
-    return err.__isAxiosError = !isCancel(err) && isAxiosError<bika.RawResponse>(err)
+    return err.__isAxiosError = !isCancel(err) && isAxiosError<RawResponse>(err)
   }
   export const createAutoRetry = (api: AxiosInstance, times = 3) => async (err: any) => {
-    if (!checkIsAxiosError(err)) return Promise.reject(err)
+    console.log('check retry')
+    // if (!checkIsAxiosError(err)) return Promise.reject(err)
     if (!err.config || err.config.disretry || (err.config.__retryCount ?? 0) >= times) return requestErrorResult('networkError_response', err)
     err.config.__retryCount = (err.config.__retryCount ?? 0) + 1
     await delay(500 * err.config.__retryCount)
@@ -64,12 +65,12 @@ export namespace requestErrorHandleInterceptors {
         }
         else if (!location.pathname.includes('auth')) return requestErrorResult('networkError_unauth', err)
       }
-      return err.config
+      return Promise.reject(err)
     }
   }
   export const isClientError = (err: any) => {
     if (!checkIsAxiosError(err)) return Promise.reject(err)
     if (err?.response?.status.toString().startsWith('4')) return requestErrorResult('networkError_response', err)
-    return err.config
+    return Promise.reject(err)
   }
 }

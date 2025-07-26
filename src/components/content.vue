@@ -1,6 +1,6 @@
-<script setup lang='ts' generic="T">
-import { PromiseContent } from '@/utils/data'
-import { StyleValue } from 'vue'
+<script setup lang='ts' generic="T extends PromiseContent<any> | Stream<any>">
+import { PromiseContent, Stream } from '@/utils/data'
+import { StyleValue, computed } from 'vue'
 interface StateCss {
   class?: any
   classError?: any
@@ -11,30 +11,44 @@ interface StateCss {
   styleEmpty?: StyleValue
   styleLoading?: StyleValue
 }
-defineProps<{
+const $props = defineProps<{
   retriable?: boolean
-  promiseContent: PromiseContent<T>
+  source: T
 } & StateCss>()
 defineSlots<{
-  default(data?: T): any
+  default(data: { data?: T extends Stream<T> ? T['_data'] : T['data'] }): any
 }>()
 defineEmits<{
   retry: []
 }>()
-
+const unionSource = computed(() => Stream.isStream($props.source) ? {
+  isLoading: $props.source.isRequesting.value,
+  isError: $props.source.error.value,
+  errorCause: $props.source.error.value,
+  isEmpty: $props.source.isEmpty.value,
+  data: <T extends Stream<T> ? T['_data'] : T['data']>$props.source.data.value,
+  isNoResult: $props.source.isNoData.value
+} : {
+  isLoading: $props.source.isLoading,
+  isError: $props.source.isError,
+  errorCause: $props.source.errorCause,
+  isEmpty: $props.source.isEmpty,
+    data: <T extends Stream<T> ? T['_data'] : T['data']>$props.source.data,
+  isNoResult: $props.source.isEmpty
+})
 </script>
 
 <template>
   <!-- loading -->
-  <div class="w-full flex justify-center items-center" v-if="promiseContent.isLoading"
+  <div class="w-full flex justify-center items-center" v-if="unionSource.isLoading && unionSource.isEmpty"
     :class="[$props.class, classLoading]" :style="[style, styleLoading]">
     <VanLoading size="24px">加载中...</VanLoading>
   </div>
 
   <!-- retry -->
-  <NResult v-else-if="promiseContent.isError" class="!items-center !justify-center flex flex-col" status="error"
+  <NResult v-else-if="unionSource.isError" class="!items-center !justify-center flex flex-col" status="error"
     title="网络错误" :class="[$props.class, classError]" :style="[style, styleError]"
-    :description="promiseContent.errorCause ?? '未知原因'">
+    :description="unionSource.errorCause ?? '未知原因'">
     <template #footer>
       <NButton v-if="retriable" @click="$emit('retry')" type="primary">重试</NButton>
     </template>
@@ -54,9 +68,9 @@ defineEmits<{
   </NResult>
 
   <!-- empty -->
-  <NEmpty v-else-if="promiseContent.isEmpty" description="无结果" class="w-full !justify-center"
+  <NEmpty v-else-if="unionSource.isNoResult" description="无结果" class="w-full !justify-center"
     :class="[$props.class, classEmpty]" :style="[style, styleEmpty]" />
 
   <!-- content -->
-  <slot v-else :data="promiseContent.data" />
+  <slot v-else :data="unionSource.data" />
 </template>

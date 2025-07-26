@@ -3,9 +3,9 @@ import { type NVirtualList, VirtualListProps } from 'naive-ui'
 import { ceil, debounce, isEmpty } from 'lodash-es'
 import { StyleValue, shallowRef, watch } from 'vue'
 import { IfAny, useScroll } from '@vueuse/core'
-import StreamContent from '@/components/streamContent.vue'
 import { Stream } from '@/utils/data'
 import Var from './var.vue'
+import Content from './content.vue'
 const $props = withDefaults(defineProps<{
   itemHeight: number
   stream: Stream<T>
@@ -29,10 +29,14 @@ const handleScroll: VirtualListProps['onScroll'] = debounce(async () => {
   if (!list) return
   const { itemHeight, stream } = $props
   // 不能用, 待修复
-  console.log('list scrolled', (itemHeight * (stream._length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight / itemHeight) * itemHeight))
-  if ((itemHeight * (stream._length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight / itemHeight) * itemHeight) && !stream._isDone && !stream._isRequesting) {
-    if (stream.error) stream.retry()
-    else stream.next()
+  const length = ($props.dataProcessor?.(stream._data) ?? stream._data).length
+  if ((itemHeight * (length - 2)) < (listScrollTop.value + (list?.children?.length ?? window.innerHeight / itemHeight) * itemHeight) && !stream._isDone && !stream._isRequesting) {
+    console.log('<list> bottom')
+    if (stream.error.value) stream.retry()
+    else {
+      console.log('<list> next')
+      stream.next()
+    }
   }
 }, 200)
 defineExpose({
@@ -67,7 +71,7 @@ const dataProcessor = (v: T[]) => $props.dataProcessor?.(v) ?? v
   <VanPullRefresh v-model="isRefreshing" :class="[$props.class]" @refresh="refreshing"
     :disabled="!stream.error.value || stream.isRequesting.value || (!stream.isRequesting.value && !isPullRefreshHold)"
     @change="({ distance }) => isPullRefreshHold = !!distance" :style>
-    <StreamContent :stream class-loading="mt-2 !h-[24px]" class-empty="!h-full" class-error="!h-full">
+    <Content :source="stream" class-loading="mt-2 !h-[24px]" class-empty="!h-full" class-error="!h-full">
       <Var :value="dataProcessor(stream.data.value)" v-slot="{ value }">
         <NVirtualList :="listProp" :item-resizable :item-size="itemHeight" @scroll="handleScroll"
           class="overflow-x-hidden h-full" :items="value" v-if="!isEmpty(value)"
@@ -77,7 +81,6 @@ const dataProcessor = (v: T[]) => $props.dataProcessor?.(v) ?? v
           </slot>
         </NVirtualList>
       </Var>
-    </StreamContent>
-
+    </Content>
   </VanPullRefresh>
 </template>
