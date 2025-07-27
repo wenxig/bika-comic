@@ -27,8 +27,6 @@ coverage
 *.sln
 *.sw?
 
-package-lock.json
-pnpm-lock.yaml
 ./script/old_package.json
 components.d.ts
 .vercel
