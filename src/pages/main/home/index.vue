@@ -47,7 +47,7 @@ provide(symbol.showNavBar, isShowNavBar)
       <VanIcon name="bullhorn-o" color="rgb(156 163 175)" size="1.8rem" />
     </div>
   </header>
-  <div class="h-[44px] relative duration-200 transition-transform"
+  <div class="h-[44px] static duration-200 transition-transform"
     :class="[isShowNavBar ? 'translate-y-0' : '-translate-y-[54px]']">
     <RouterTab router-base="/main/home" :items="[{
       title: '推荐',
