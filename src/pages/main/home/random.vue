@@ -21,22 +21,22 @@ const stop = $router.beforeEach(() => {
   random.scroll = list.value?.scrollTop!
 })
 
-// const showNavBar = inject(symbol.showNavBar)!
-// watch(() => list.value?.scrollTop, async (scrollTop, old) => {
-//   if (!scrollTop || !old) return
-//   if (scrollTop - old > 0) showNavBar.value = false
-//   else showNavBar.value = true
-// }, { immediate: true })
+const showNavBar = inject(symbol.showNavBar)!
+watch(() => list.value?.scrollTop, async (scrollTop, old) => {
+  if (!scrollTop || !old) return
+  if (scrollTop - old > 0) showNavBar.value = false
+  else showNavBar.value = true
+}, { immediate: true })
 
 </script>
 
 <template>
+
   <List class="h-full w-full" :data-processor="v => chunk(v, 2)" :source="stream" :item-height="260"
-    v-slot="{ data: { item: comics }, height }">
+    v-slot="{ data: { item: comics }, height }" ref="list">
     <div :style="{ height: `${height}px` }" class="w-full mt-1 flex justify-center *:w-[98%]">
       <div class="flex justify-between h-full">
-        <div :style="{ height: `${height}px` }" class="!w-[calc(50%-2px)]" v-for="comic of comics">{{ comic.title }}
-        </div>
+        <ComicCard type="small" :height v-for="comic of comics" :comic />
       </div>
     </div>
   </List>

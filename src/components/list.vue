@@ -1,5 +1,5 @@
 <script setup lang='ts' generic="T extends NonNullable<VirtualListProps['items']>[number],PF extends ((d: T[])=>any[])">
-import { type NVirtualList, VirtualListProps } from 'naive-ui'
+import { NVirtualList, VirtualListProps } from 'naive-ui'
 import { ceil, debounce, isEmpty } from 'lodash-es'
 import { StyleValue, shallowRef, watch } from 'vue'
 import { IfAny, useScroll } from '@vueuse/core'
@@ -41,14 +41,16 @@ const unionSource = computed(() => ({
     isRequesting: $props.source.isRequesting.value,
     isError: !!$props.source.error.value,
     length: dataProcessor($props.source.data.value).length,
-    isEmpty: $props.source.isEmpty.value
+    isEmpty: $props.source.isEmpty.value,
+    source: $props.source
   } : {
     data: $props.source.data.data,
     isDone: $props.source.isEnd,
     isRequesting: $props.source.data.isLoading,
     isError: $props.source.data.isError,
     length: dataProcessor($props.source.data.data ?? []).length,
-    isEmpty: $props.source.data.isEmpty
+    isEmpty: $props.source.data.isEmpty,
+    source: $props.source.data
   },
   next: () => Stream.isStream($props.source) ? $props.source.next() : callbackToPromise(r => $emit('next', r)),
   retry: () => Stream.isStream($props.source) ? $props.source.retry() : callbackToPromise(r => $emit('retry', r)),
@@ -83,7 +85,7 @@ const refreshing = async () => {
 
 watch(() => unionSource.value.data, () => {
   if ($props.goBottom) vList.value?.scrollTo({ position: 'bottom', behavior: 'instant' })
-}, { flush: 'post', deep: true })
+}, { flush: 'post', deep: true, immediate: true })
 watch(unionSource, unionSource => {
   if (!unionSource.isRequesting) if (((ceil(window.innerHeight / $props.itemHeight) + 2) > unionSource.length) && !unionSource.isDone) {
     if (unionSource.isError) unionSource.retry()
@@ -113,8 +115,8 @@ watch(unionSource, unionSource => {
       <motion.div v-if="unionSource.isRequesting && !isPullRefreshHold && !unionSource.isEmpty"
         :initial="{ opacity: 0, translateY: '100%', scale: 0.8 }" :animate="{ opacity: .5, translateY: 0, scale: 1 }"
         :exit="{ opacity: 0, translateY: '100%', scale: 0.8 }"
-        class="rounded-lg w-fit h-fit p-2.5 **:!text-white shadow-2xl flex justify-center items-center absolute bottom-2 left-1 bg-(--nui-primary-color) whitespace-nowrap ">
-        <VanLoading size="18px">加载中...</VanLoading>
+        class="rounded-full w-fit h-fit py-0.5 px-2 shadow-2xl flex justify-center items-center absolute bottom-2 left-1 bg-(--nui-primary-color) whitespace-nowrap ">
+        <Loading size="10px" color="white">加载中</Loading>
       </motion.div>
     </AnimatePresence>
   </VanPullRefresh>

@@ -68,6 +68,9 @@ export class LessComic extends BaseComic implements RawLessComic {
     this.pagesCount = v.pagesCount
     this.epsCount = v.epsCount
   }
+  public static is(v: unknown): v is LessComic {
+    return v instanceof LessComic
+  }
 };
 
 export interface RawCommonComic extends RawBaseComic {
@@ -99,6 +102,9 @@ export class CommonComic extends BaseComic implements RawCommonComic {
     this.chineseTeam = v.chineseTeam
     this.created_at = v.created_at
     this.tags = v.tags
+  }
+  public static is(v: unknown): v is CommonComic {
+    return v instanceof CommonComic
   }
 }
 
@@ -145,5 +151,8 @@ export class FullComic extends CommonComic implements RawFullComic {
     this.commentsCount = v.commentsCount
     this.isFavourite = v.isFavourite
     this.isLiked = v.isLiked
+  }
+  public static override is(v: unknown): v is FullComic {
+    return v instanceof FullComic
   }
 }
