@@ -1,5 +1,5 @@
 import { until } from "@vueuse/core"
-import { isEmpty, isError, last } from "lodash-es"
+import { isEmpty, last } from "lodash-es"
 import { computed, markRaw, ref, shallowReactive, shallowRef, type Raw, type Ref, type ShallowReactive } from "vue"
 import { SmartAbortController } from "./request"
 import type { Response, RawStream, SortType } from "@/api/bika"
@@ -71,8 +71,7 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
       await until(this.isRequesting).toBe(false)
       this.isRequesting.value = true
       if (this._isDone) return { done: true, value: [last(this._data)!] }
-      const { value, done, ...v } = await this.generator.next(this)
-      console.log('stream load done', value, done, v)
+      const { value, done } = await this.generator.next(this)
       this.isDone.value = done ?? false
       this.isRequesting.value = false
       this.data.value.push(...value)
@@ -96,8 +95,6 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
     this.data.value = []
   }
   public async retry() {
-    if (!this.error.value) return
-    this.page.value--
     return this.next()
   }
   public stop() {

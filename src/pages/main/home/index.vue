@@ -25,7 +25,7 @@ provide(symbol.showNavBar, isShowNavBar)
           leave-to-class="translate-x-[30%] opacity-0" enter-from-class="translate-x-[30%] opacity-0"
           enter-active-class="translate-x-[0%] opacity-100" enter-to-class="translate-x-[0%] opacity-100">
           <VanIcon name="cross"
-            class="z-10 absolute h-full right-2 flex items-center top-0 font-bold transition-[transform,opacity]"
+            class="z-10 absolute h-full right-2 flex items-center top-0 font-bold transition-all"
             color="#9ca3af"></VanIcon>
         </Transition>
       </form>
@@ -59,10 +59,10 @@ provide(symbol.showNavBar, isShowNavBar)
       title: '分区',
       name: 'find'
     }]" />
-    <VanIcon name="search" class="absolute top-1/2 duration-200 transition-transform right-0 -translate-y-1/2"
+    <VanIcon name="search" class="!absolute top-1/2 duration-200 transition-transform right-0 -translate-y-1/2"
       :class="[isShowNavBar ? 'translate-x-full' : '-translate-x-2']" size="25px" color="var(--van-text-color-2)" />
   </div>
-  <div class="w-full duration-200 transition-[height,transform]"
+  <div class="w-full duration-200 transition-all  "
     :class="[isShowNavBar ? 'h-[calc(100%-98px)] translate-y-0' : '!h-[calc(100%-44px)] -translate-y-[54px]']">
     <RouterView v-slot="{ Component }">
       <component :is="Component" />

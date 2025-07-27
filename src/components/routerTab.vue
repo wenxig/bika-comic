@@ -2,6 +2,7 @@
   name: string,
   title: string
 }">
+import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
 const $props = defineProps<{
   items: T[],
@@ -9,13 +10,13 @@ const $props = defineProps<{
 }>()
 const $route = useRoute()
 const defaultRouter = $route.path.replaceAll($props.routerBase, '').replace(/^\//, '')
-const select = defineModel<T['name']>()
+const select = ref(defaultRouter)
 defineSlots<{
   default(arg: { itemName: T }): any
 }>()
 const $router = useRouter()
-const beforeChange = async () => {
-  await $router.force.replace(`${$props.routerBase}/${select.value}`)
+const beforeChange = async (aim: string) => {
+  await $router.force.replace(`${$props.routerBase}/${aim}`)
   return true
 }
 </script>

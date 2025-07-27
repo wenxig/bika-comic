@@ -36,7 +36,6 @@ const app = createApp(
         <NLoadingBarProvider container-class="z-[200000]">
           <NDialogProvider to="#popups">
             <VanConfigProvider themeVars={{
-              ...themeOverrides.common,
 
               blue: themeColor,
               green: themeOverrides.common?.successColor,
