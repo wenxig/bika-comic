@@ -85,14 +85,14 @@ const picid = asyncComputed(() => $props.comic?.picId)
             @click="$router.force[mode]({ path: `/search`, query: { keyword: encodeURIComponent(c.toString()), mode: 'categories' }, replace: true })">{{ toCn(c.toString()) }}</span>
         </VanSkeleton>
       </div>
-      <VanSkeleton row="1" :loading="!picid" class="!px-0 !pb-1">
+      <!-- <VanSkeleton row="1" :loading="!picid" class="!px-0 !pb-1">
         <div v-if="picid" class="flex *:block items-center"
           @click="clipboard.copy(`${searchModeMap.pid}${picid}`).then(() => $window.$message.success('成功(Pica)！'))">
           <VanIcon name="records-o"></VanIcon>
           <span class="font-medium mr-1">PicaId:</span>
           <span>{{ picid }}</span>
         </div>
-      </VanSkeleton>
+      </VanSkeleton> -->
       <div class="text-[--van-text-color-2] my-1 text-nowrap">
         <VanSkeleton row="1" :loading="!comic?._id" class="!px-0 !pb-1">
           <div v-if="comic?._id" class="flex *:block items-center"

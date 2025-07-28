@@ -194,7 +194,7 @@ export abstract class Comic {
     else return undefined
   }
   constructor(public _id: string) {
-    this.picId = getComicPicId(_id)
+    this.picId = Promise.resolve(NaN) //getComicPicId(_id)
   }
 }
 export interface RawProComic {
