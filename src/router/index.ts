@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory, isNavigationFailure, NavigationFailureType, type RouteLocationRaw } from "vue-router"
 import { isEmpty } from "lodash-es"
 import symbol from "@/symbol"
+import { useComicStore } from "@/stores/comic"
+import { SmartAbortController } from "@/utils/request"
+import { isCancel } from "axios"
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -10,8 +13,10 @@ export const router = createRouter({
     },{
       path: "/auth/login",
       component: () => import('@/pages/auth/login.vue')
-    },
-    {
+    },{
+      path: '/comic/:id',
+      component: () => import('@/pages/comic/index.vue')
+    },{
       path: '/main',
       component: () => import('@/pages/main/index.vue'),
       redirect: '/main/home',
@@ -51,3 +56,19 @@ router.force = {
   push: to => $routerForceDo('push', to),
   replace: to => $routerForceDo('replace', to),
 }
+
+const comicAbort = new SmartAbortController()
+router.beforeEach(async to => {
+  comicAbort.abort()
+  if (!(to.path.startsWith('/comic') && !isEmpty(to.params.id))) return true
+  try {
+    const comicStore = useComicStore()
+    const id = to.params.id.toString()
+    console.log('router matched, load detail')
+    comicStore.$load(id)
+  } catch (error) {
+    console.error(error)
+    if (!isCancel(error)) throw error
+  }
+  return true
+})

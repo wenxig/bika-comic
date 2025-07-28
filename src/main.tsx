@@ -33,7 +33,7 @@ const app = createApp(
     const fontBold = useCssVar('--nui-font-weight')
     return () => (
       <NConfigProvider locale={zhCN} abstract themeOverrides={themeOverrides}>
-        <NLoadingBarProvider container-class="z-[200000]">
+        <NLoadingBarProvider container-class="z-200000">
           <NDialogProvider to="#popups">
             <VanConfigProvider themeVars={{
 

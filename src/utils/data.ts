@@ -1,26 +1,34 @@
 import { until } from "@vueuse/core"
-import { isEmpty, last } from "lodash-es"
-import { computed, markRaw, ref, shallowReactive, shallowRef, type Raw, type Ref, type ShallowReactive } from "vue"
+import {  isEmpty } from "lodash-es"
+import { computed, isReactive, markRaw,  ref, shallowReactive, shallowRef,  type Raw, type Ref, type ShallowReactive } from "vue"
 import { SmartAbortController } from "./request"
-import type { Response, RawStream, SortType } from "@/api/bika"
-import type { BaseComic } from "@/api/bika/comic"
+import type { Response, RawStream } from "@/api/bika"
 
-export class PromiseContent<T> implements Promise<T> {
-  constructor(private promise: Promise<T>, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
-    this[Symbol.toStringTag] = promise[Symbol.toStringTag]
+export class PromiseContent<T> implements PromiseLike<T> {
+  constructor(private promise: Promise<T>, private _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
+    this.loadPromise(promise)
+  }
+  public loadPromise(promise: Promise<T>) {
+    this.data = undefined
+    this.isLoading = true
+    this.isError = false
+    this.errorCause = undefined
+    this.isEmpty = false
+    console.log(isReactive(this))
+
     promise.then(async val => {
       const v = await val
       this.data = v
       this.isLoading = false
       this.isError = false
-      this.isEmpty = _isEmpty(v)
+      this.isEmpty = this._isEmpty(v)
+      console.log('promise content done', v)
     })
     promise.catch(err => {
       this.data = undefined
       this.errorCause = err
     })
   }
-  [Symbol.toStringTag] = ''
   public catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined): Promise<T | TResult> {
     return this.promise.catch<TResult>(onrejected)
   }
@@ -33,7 +41,7 @@ export class PromiseContent<T> implements Promise<T> {
   public data?: T
   public isLoading = true
   public isError = false
-  public errorCause: any
+  public errorCause: any = undefined
   public isEmpty = false
   public static fromPromise<T>(promise: Promise<T>, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
     const v = new this<T>(promise, _isEmpty)
@@ -41,53 +49,88 @@ export class PromiseContent<T> implements Promise<T> {
   }
   public static fromAsyncFunction<T extends (...args: any[]) => Promise<any>>(asyncFunction: T, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
     return (...args: Parameters<T>): SPromiseContent<Awaited<ReturnType<T>>> => this.fromPromise((() => {
-      console.log('called', asyncFunction)
       return asyncFunction(...args)
     })())
+  }
+  public static withResolvers<T>() {
+    let withResolvers = Promise.withResolvers<T>()
+    const content = ref(this.fromPromise<T>(withResolvers.promise))
+
+    return {
+      content,
+      reject: (reason?: any) => {
+        withResolvers.reject(reason)
+      },
+      resolve: (value: T | PromiseLike<T>) => {
+        withResolvers.resolve(value)
+      },
+      reset() {
+        withResolvers = Promise.withResolvers<T>()
+        content.value.loadPromise(withResolvers.promise)
+      }
+    }
   }
 }
 
 export type SPromiseContent<T> = ShallowReactive<PromiseContent<T>>
 
 export type RStream<T> = Raw<Stream<T>>
-export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
-  private abortController = new SmartAbortController()
-  constructor(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], T[], Stream<T>> | AsyncIterableIterator<T[], T[], Stream<T>>)) {
+export class Stream<T> implements AsyncIterableIterator<T[], void> {
+  constructor(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], void, Stream<T>> | AsyncIterableIterator<T[], void, Stream<T>>)) {
     this.generator = generator(this.abortController.signal, this)
     this[Stream.isStreamKey] = true
   }
-  [x: symbol]: any
   private static isStreamKey = Symbol('stream')
   public static isStream(stream: any): stream is Stream<any> {
     return !!stream[this.isStreamKey]
   }
-  public static create<T>(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], T[], Stream<T>> | AsyncIterableIterator<T[], T[], Stream<T>>)) {
+  public static create<T>(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], void, Stream<T>> | AsyncIterableIterator<T[], void, Stream<T>>)) {
     const stream = new this<T>(generator)
     return markRaw(stream)
   }
+  public static apiPackager<T>(api: (page: number, signal: AbortSignal) => Promise<RawStream<T>>) {
+    return Stream.create<T>(async function* (signal, that) {
+      while (true) {
+        if (that.pages.value <= that.page.value) return
+        that.page.value++
+        const result = await api(that.page.value, signal)
+        that.pages.value = result.pages
+        that.total.value = result.total
+        that.pageSize.value = result.limit
+        that.page.value = Number(result.page)
+        yield result.docs
+      }
+    })
+  }
+  [x: symbol]: any
+  private abortController = new SmartAbortController()
   private generator
-  public async next(): Promise<IteratorResult<T[], T[]>> {
+  public async next(igRequesting = false): Promise<IteratorResult<T[], void>> {
     try {
-      await until(this.isRequesting).toBe(false)
-      this.isRequesting.value = true
-      if (this._isDone) return { done: true, value: [last(this._data)!] }
+      if (!igRequesting) await until(this.isRequesting).toBe(false)
+      if (!igRequesting) this.isRequesting.value = true
+      if (this._isDone) return { done: true, value: undefined }
+      const rangeBegin = this._page
       const { value, done } = await this.generator.next(this)
       this.isDone.value = done ?? false
-      this.isRequesting.value = false
-      this.data.value.push(...value)
+      if (!igRequesting) this.isRequesting.value = false
+      if (done) return { done: true, value: undefined }
+      for (let index = 0; index < value.length; index++) {
+        const element = value[index]
+        this.data.value[rangeBegin + index] = element
+      }
       return { value, done }
     } catch (error) {
-      this.isRequesting.value = false
+      if (!igRequesting) this.isRequesting.value = false
       this.error.value = error as Error
       throw error
     }
   }
-  public async return(value?: T[] | PromiseLike<T[]>): Promise<IteratorResult<T[], T[]>> {
-    const val = await value
-    return await this.generator.return?.(val) ?? { value: val ?? [], done: this._isDone }
+  public async return(): Promise<IteratorResult<T[], void>> {
+    return await this.generator.return?.() ?? { value: undefined, done: true }
   }
-  public async throw(e?: any): Promise<IteratorResult<T[], T[]>> {
-    return await this.generator.throw?.(e) ?? { value: [last(this._data)!], done: this._isDone }
+  public async throw(e?: any): Promise<IteratorResult<T[], void>> {
+    return await this.generator.throw?.(e) ?? { value: undefined, done: true }
   }
   public reset() {
     this.total.value = NaN
@@ -96,6 +139,14 @@ export class Stream<T> implements AsyncIterableIterator<T[], T[]> {
   }
   public async retry() {
     return this.next()
+  }
+  public async nextToDone() {
+    if (isNaN(this._pages)) await this.next()
+    const promises = []
+    // e.g. p:1 ps:20 2->20
+    for (let index = this._page + 1; index < this._pages; index++)  promises.push(this.next())
+    await Promise.all(promises)
+    return this._data
   }
   public stop() {
     this.abortController.abort()
@@ -163,22 +214,6 @@ export const createClassFromResponse = async<T extends RawStream<any>, C>(v: Pro
   return comics
 }
 
-export const createComicStream = <T extends BaseComic>(keyword: string, sort: SortType, fn: (keyword: string, page: number, sort: SortType, signal: AbortSignal) => SPromiseContent<RawStream<T>>) =>
-  Stream.create(async function* (signal, that) {
-    const getComic = async () => {
-      const result = await fn(keyword, that.page.value, sort, signal)
-      that.pages.value = result.pages
-      that.total.value = result.total
-      that.pageSize.value = result.limit
-      that.page.value = Number(result.page)
-      return result.docs
-    }
-    while (true) {
-      if (that.pages.value == that.page.value) break
-      yield await getComic()
-    }
-    return await getComic()
-  })
 export const callbackToPromise = <T = void>(fn: (resolve: (result: T | PromiseLike<T>) => void) => any) => {
   const { resolve, promise } = Promise.withResolvers<T>()
   fn(resolve)

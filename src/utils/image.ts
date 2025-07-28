@@ -10,8 +10,8 @@ export const showImagePreview = (images: string[], config: Omit<ImagePreviewOpti
   const previewInstance = _showImagePreview({
     images,
     ...config,
-    overlayClass: '!z-[2147483646]',
-    className: '!z-[2147483646]',
+    overlayClass: '!z-2147483646',
+    className: '!z-2147483646',
     onClose() {
       isShowing.value = false
     },

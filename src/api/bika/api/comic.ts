@@ -1,7 +1,7 @@
 import type { AxiosRequestConfig } from "axios"
-import {  PromiseContent } from "@/utils/data"
-import { picapiRest, recommendRest } from ".."
-import { FullComic, type RawFullComic } from "../comic"
+import { PromiseContent, Stream } from "@/utils/data"
+import { picapiRest, recommendRest, type RawStream } from ".."
+import { ComicEp, FullComic, LessComic, type RawComicEp, type RawFullComic, type RawLessComic } from "../comic"
 
 export type ResultActionData<T extends string> = { action: T }
 export const likeComic = PromiseContent.fromAsyncFunction(async (id: string, config: AxiosRequestConfig = {}) => picapiRest.post<ResultActionData<'like' | 'unlike'>>(`/comics/${id}/like`, {}, config))
@@ -25,3 +25,11 @@ export const getComicPicId = PromiseContent.fromAsyncFunction(async (id: string,
   return picId
 })
 
+export const getRecommendComics = PromiseContent.fromAsyncFunction(async (id: string, signal?: AbortSignal) => (await picapiRest.get<{ comics: RawLessComic[] }>(`/comics/${id}/recommendation`, { signal })).data.comics.map(v => new LessComic(v)))
+
+
+export const getComicEps = PromiseContent.fromAsyncFunction((async (id: string): Promise<ComicEp[]> => {
+  const stream = Stream.apiPackager(async (page, signal) => (await picapiRest.get<{ eps: RawStream<RawComicEp> }>(`/comics/${id}/eps?page=${page}`, { signal })).data.eps)
+  const eps = await stream.nextToDone()
+  return eps.map(ep => new ComicEp(ep))
+}))

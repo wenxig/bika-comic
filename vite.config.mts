@@ -46,12 +46,17 @@ export default defineConfig({
     }
   },
   base: "/",
-  server:{
-    proxy:{
-      '/api': {
-        target: 'https://api.go2778.com',
+  server: {
+    proxy: {
+      '/$api': {
+        target: 'https://picaapi.go2778.com',
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, ''),
+        rewrite: path => path.replace(/^\/\$api/, ''),
+      },
+      '/$recommend': {
+        target: 'https://recommend.go2778.com',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/\$recommend/, ''),
       }
     }
   }

@@ -27,3 +27,9 @@
     pointer-events: all;
   }
 }
+* {
+  --van-tab-active-text-color: var(--van-tabs-bottom-bar-color) !important;
+}
+.van-tab{
+  @apply mr-5;
+}

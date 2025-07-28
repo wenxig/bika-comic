@@ -24,7 +24,7 @@ export interface RawCategories {
   active: boolean
   link?: string
 }
-export class Categories {
+export class Categories implements RawCategories {
   public title: string
   public thumb: RawImage
   public get $thumb() {

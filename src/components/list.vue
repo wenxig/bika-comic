@@ -113,7 +113,7 @@ watch(unionSource, unionSource => {
     </Content>
     <AnimatePresence>
       <motion.div v-if="unionSource.isRequesting && !isPullRefreshHold && !unionSource.isEmpty"
-        :initial="{ opacity: 0, translateY: '100%', scale: 0.8 }" :animate="{ opacity: .5, translateY: 0, scale: 1 }"
+        :initial="{ opacity: 0, translateY: '100%', scale: 0.8 }" :animate="{ opacity: .7, translateY: 0, scale: 1 }"
         :exit="{ opacity: 0, translateY: '100%', scale: 0.8 }"
         class="rounded-full w-fit h-fit py-0.5 px-2 shadow-2xl flex justify-center items-center absolute bottom-2 left-1 bg-(--nui-primary-color) whitespace-nowrap ">
         <Loading size="10px" color="white">加载中</Loading>

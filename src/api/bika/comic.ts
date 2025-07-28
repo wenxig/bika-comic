@@ -156,3 +156,29 @@ export class FullComic extends CommonComic implements RawFullComic {
     return v instanceof FullComic
   }
 }
+
+
+export interface RawComicEp {
+  _id: string
+  title: string
+  order: number
+  updated_at: number
+  id: string
+}
+export class ComicEp implements RawComicEp {
+  public _id: string
+  public title: string
+  public order: number
+  public updated_at: number
+  public get $updated_at() {
+    return dayjs(this.updated_at)
+  }
+  public id!: string
+  constructor(v: RawComicEp) {
+    this._id = v._id
+    this.title = v.title
+    this.order = v.order
+    this.updated_at = v.updated_at
+    this.id = v.id
+  }
+}
