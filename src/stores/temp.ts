@@ -1,5 +1,6 @@
 import type { CommonComic } from "@/api/bika/comic"
-import type { RStream } from "@/utils/data"
+import type { ChildComment, Comment } from "@/api/bika/comment"
+import type { RStream, Stream } from "@/utils/data"
 import { reactive, shallowRef } from "vue"
 
 export const random = {
@@ -24,3 +25,8 @@ export const image = reactive({
   loaded: new Set<string>(),
   error: new Set<string>()
 })
+
+export const comments = new Map<string, Stream<Comment>>()
+export const commentsScroll = new Map<string, number>()
+export const childrenComments = new Map<string, Stream<ChildComment>>()
+export const childrenCommentsScroll = new Map<string, number>()

@@ -49,8 +49,8 @@ const handleClick = () => {
     @click="handleClick" :disabled v-if="comic">
     <Image :src="comic.$thumb" v-if="type == 'big' && !$slots.cover" class="blur-lg absolute top-0 left-0 w-full h-full"
       fit="cover" />
-    <Image :src="comic.$thumb" v-if="type != 'small' && !$slots.cover" class="ml-[5%] !rounded-lg !w-auto h-[90%] z-2"
-      fit="contain" />
+    <Image :src="comic.$thumb" v-if="type != 'small' && !$slots.cover"
+      class="ml-[5%] !rounded-lg !min-w-[10%] h-[90%] z-2" fit="contain" />
     <slot name="cover" :src="comic.$thumb.getUrl()" v-else-if="$slots.cover" class="ml-[2%] w-[30%] h-full" />
     <div class="w-full h-[80%] flex items-center relative" v-else>
       <Image v-if="!$slots.cover" :src="comic.$thumb" class="rounded-t-lg h-full w-full" fit="cover" />
@@ -80,23 +80,28 @@ const handleClick = () => {
           class="ml-0.5 text-xs van-ellipsis max-w-2/3 text-(--van-text-color-2)">{{ comic.$author.join(',') }}</span>
       </div>
     </div>
-    <div class="w-[62%] min-h-[98%] *:text-sm flex absolute right-[2%] flex-col *:text-justify" ref="info" v-else>
-      <span class="mt-[3%] font-[500]" :class="[resizable || 'van-ellipsis']">{{ comic.title }}</span>
-      <div class="text-(--van-text-color-2) !text-xs flex flex-wrap *:text-nowrap" :class="[resizable || 'van-ellipsis']">
-        <span v-for="author of comic.$author" class="mr-2 van-haptics-feedback"
-          @click.stop="$router.force[mode](`/search?keyword=${author}&mode=author`)">{{ author }}</span>
-      </div>
-      <div class="w-full flex" v-if="!hideViewNumber">
-        <span class="flex items-center mr-2 " v-if="comic.totalViews">
-          <VanIcon name="eye-o" size="16px" />
-          <span class="ml-1 text-[13px]">{{ comic.totalViews }}</span>
-        </span>
-        <span class="flex items-center" v-if="comic.likesCount">
-          <VanIcon name="like-o" size="16px" />
-          <span class="ml-1 text-[13px]">{{ comic.likesCount }}</span>
-        </span>
-      </div>
+    <div class="w-[62%] min-h-[98%] flex absolute right-[2%] flex-col *:text-justify" ref="info" v-else>
+      <span class="mt-[3%] font-[450] text-[1rem]" :class="[resizable || 'van-ellipsis']">{{ comic.title }}</span>
       <slot />
+      <div class="absolute bottom-2 text-(--van-text-color-2) text-sm">
+        <div class=" flex flex-wrap items-center *:text-nowrap" :class="[resizable || 'van-ellipsis']">
+          <NIcon color="var(--van-text-color-2)" size="14px">
+            <DrawOutlined />
+          </NIcon>
+          <span v-for="author of comic.$author" class="mr-2 van-haptics-feedback"
+            @click.stop="$router.force[mode](`/search?keyword=${author}&mode=author`)">{{ author }}</span>
+        </div>
+        <div class="w-full flex -mt-1 text-sm" v-if="!hideViewNumber">
+          <span class="flex items-center mr-2 " v-if="comic.totalViews">
+            <VanIcon color="var(--van-text-color-2)" name="eye-o" size="14px" />
+            <span class="ml-0.5">{{ comic.totalViews }}</span>
+          </span>
+          <span class="flex items-center" v-if="comic.likesCount">
+            <VanIcon color="var(--van-text-color-2)" name="like-o" size="14px" />
+            <span class="ml-0.5">{{ comic.likesCount }}</span>
+          </span>
+        </div>
+      </div>
     </div>
   </button>
 </template>

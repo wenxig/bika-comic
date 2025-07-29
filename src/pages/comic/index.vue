@@ -2,18 +2,19 @@
 import { useComicStore } from '@/stores/comic'
 import { DriveFolderUploadOutlined, GTranslateOutlined, KeyboardArrowDownRound, PlusRound, ReportGmailerrorredRound, ShareSharp, StarFilled } from '@vicons/material'
 import { motion } from 'motion-v'
-import { computed, shallowRef } from 'vue'
-import { createReusableTemplate } from '@vueuse/core'
+import { computed, onMounted, shallowRef, watch } from 'vue'
+import { createReusableTemplate, until } from '@vueuse/core'
 import { DislikeFilled, LikeFilled } from '@vicons/antd'
 import { favouriteComic, likeComic } from '@/api/bika/api/comic'
-import { useMessage } from 'naive-ui'
+import { useDialog, useMessage } from 'naive-ui'
 import { toCn } from '@/utils/translator'
+import { useRouter } from 'vue-router'
 const comic = useComicStore()
 const detail = computed(() => comic.now?.detail.content.value.data)
 const preload = computed(() => comic.now?.preload.value)
 const pid = computed(() => comic.now?.pid.content.value.data)
 const showTitleFull = shallowRef(false)
-
+const $router = useRouter()
 const [TitleTemp, TitleComp] = createReusableTemplate()
 const shareComic = () => {
   if (!pid.value || !preload.value) return
@@ -24,6 +25,22 @@ const shareComic = () => {
   })
 }
 const $message = useMessage()
+const $dialog = useDialog()
+onMounted(async () => {
+  await until(() => comic.now).toBeTruthy()
+  if (!comic.now) throw 'error'
+  watch(comic.now.veiled, veiled => {
+    if (!veiled) $dialog.error({
+      title: '错误',
+      content: "漫画待审核",
+      positiveText: '返回',
+      onPositiveClick() {
+        $router.back()
+      },
+
+    })
+  })
+})
 </script>
 
 <template>
@@ -32,7 +49,7 @@ const $message = useMessage()
       <Image class="h-full" :src="detail?.$thumb" />
     </div>
     <Content :source="comic.now.detail.content.value">
-      <VanTabs shrink swipeable>
+      <VanTabs shrink swipeable sticky>
         <VanTab class="min-h-full van-hairline--top pt-3" title="简介">
           <div class="flex items-center relative">
             <Image class="size-8.5 shrink-0 mx-3" :src="detail?.$_creator.$avatar" round />
@@ -71,9 +88,9 @@ const $message = useMessage()
             <div class="flex relative h-fit">
               <div class="text-[17px] font-[460] w-[90%] relative">
                 <TitleTemp>
-                  <div class="text-xs mt-1 font-light w-full flex text-(--van-text-color-2) *:flex *:items-center">
+                  <div class="text-xs mt-1 font-light flex text-(--van-text-color-2) *:flex *:items-center">
                     <span class="mr-1">
-                      <VanIcon class="mr-0.5" name="eye-o" size="14px" />
+                      <VanIcon class="mr-0.5 " name="eye-o" size="14px" />
                       <span>{{ preload?.totalViews }}</span>
                     </span>
                     <span class="mx-1">
@@ -83,15 +100,15 @@ const $message = useMessage()
                 </TitleTemp>
                 <AnimatePresence>
                   <motion.div :initial="{ opacity: 0 }" :exit="{ opacity: 0 }" key="info" :animate="{ opacity: 1 }"
-                    v-if="!showTitleFull" class="van-ellipsis flex flex-col absolute top-0">
+                    v-if="!showTitleFull" class="flex flex-col absolute top-0 van-ellipsis w-full">
                     <span @click="showTitleFull = !showTitleFull">{{ preload?.title }}</span>
                     <TitleComp />
                   </motion.div>
                 </AnimatePresence>
-                <NCollapseTransition :show="showTitleFull" class="">
-                  <span @click="showTitleFull = !showTitleFull">{{ preload?.title }}</span>
+                <NCollapseTransition :show="showTitleFull" class="!w-[calc(100%+2rem)]">
+                  <span @click="showTitleFull = !showTitleFull" class="w-[calc(100%-2rem)]">{{ preload?.title }}</span>
                   <TitleComp />
-                  <div class="flex font-light text-(--van-text-color-2) justify-start text-xs mt-0.5">
+                  <div class="flex  font-light text-(--van-text-color-2) justify-start text-xs mt-0.5">
                     <div class="mr-2">
                       PICA{{ pid }}
                     </div>
@@ -99,21 +116,24 @@ const $message = useMessage()
                       ###{{ preload?._id }}
                     </div>
                   </div>
-                  <Text class="font-[350] mt-1 text-(--van-text-color-2) justify-start text-xs">
+                  <Text class="font-[350]  mt-1 text-(--van-text-color-2) justify-start text-xs">
                     {{ detail?.description }}
                   </Text>
-                  <div class="w-full *:!mr-2 mt-5 flex flex-wrap *:!mt-1 *:!px-2.5 **:!text-xs">
-                    <NButton tertiary round v-for="category of detail?.categories" type="primary" size="small">
+                  <div class=" mt-6 flex flex-wrap gap-2.5 *:!px-3 **:!text-xs">
+                    <NButton tertiary round
+                      v-for="category of detail?.categories.toSorted((a, b) => b.length - a.length)" type="primary"
+                      size="small">
                       {{ toCn(category) }}
                     </NButton>
-                    <NButton tertiary round v-for="tag of detail?.tags" size="small">
+                    <NButton tertiary round v-for="tag of detail?.tags.toSorted((a, b) => b.length - a.length)"
+                      class="!text-(--van-text-color-2)" size="small">
                       {{ toCn(tag) }}
                     </NButton>
                   </div>
                 </NCollapseTransition>
               </div>
-              <NIcon size="2rem" color="var(--van-text-color-3)" class="absolute -top-0.5 -right-1"
-                @click="showTitleFull = !showTitleFull">
+              <NIcon size="2rem" color="var(--van-text-color-3)" class="absolute -top-0.5 -right-1 transition-transform"
+                :class="[showTitleFull && '!rotate-180']" @click="showTitleFull = !showTitleFull">
                 <KeyboardArrowDownRound />
               </NIcon>
             </div>

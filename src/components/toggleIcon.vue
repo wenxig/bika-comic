@@ -20,7 +20,7 @@ const handleClick = () => {
 
 <template>
   <div class="flex flex-col items-center justify-center **:!transition-colors" @click="handleClick">
-    <NIcon :size :color="mode ? 'var(--nui-primary-color)' : 'var(--van-gray-6)'">
+    <NIcon :size :color="mode ? 'var(--nui-primary-color)' : 'var(--van-gray-7)'">
       <icon />
     </NIcon>
     <span class="text-xs mt-1 text-(--van-text-color-2)">

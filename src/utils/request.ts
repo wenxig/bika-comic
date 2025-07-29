@@ -69,8 +69,7 @@ export namespace requestErrorHandleInterceptors {
     }
   }
   export const isClientError = (err: any) => {
-    if (!checkIsAxiosError(err)) return Promise.reject(err)
-    if (err?.response?.status.toString().startsWith('4')) return requestErrorResult('networkError_response', err)
+    if (err?.response?.status?.toString().startsWith('4')) return requestErrorResult('networkError_response', err)
     return Promise.reject(err)
   }
 }

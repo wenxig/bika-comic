@@ -29,7 +29,6 @@ coverage
 *.sln
 *.sw?
 
-components.d.ts
 .vercel
 
 .wrangler

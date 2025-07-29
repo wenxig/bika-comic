@@ -8,7 +8,7 @@
     },
     {
       "url": "picacomic.com",
-      "basePart": "api",
+      "basePart": "picaapi",
       "recommendPart": "recommend",
       "id": "pic"
     },
@@ -22,7 +22,7 @@
       "url": "pic2024a2.top",
       "basePart": "picaapi",
       "recommendPart": "recommend",
-      "id": "2024"
+      "id": "2025"
     }
   ],
   "image": [

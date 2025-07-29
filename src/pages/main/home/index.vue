@@ -25,16 +25,15 @@ provide(symbol.showNavBar, isShowNavBar)
         <Transition leave-from-class="translate-x-[0%] opacity-100" leave-active-class="translate-x-[30%] opacity-0"
           leave-to-class="translate-x-[30%] opacity-0" enter-from-class="translate-x-[30%] opacity-0"
           enter-active-class="translate-x-[0%] opacity-100" enter-to-class="translate-x-[0%] opacity-100">
-          <VanIcon name="cross"
-            class="z-10 absolute h-full right-2 flex items-center top-0 font-bold transition-all"
+          <VanIcon name="cross" class="z-10 absolute h-full right-2 flex items-center top-0 font-bold transition-all"
             color="#9ca3af"></VanIcon>
         </Transition>
       </form>
     </div>
     <div class="flex justify-evenly w-[calc(50%-63px)]" v-if="!false">
-      <VanIcon color="rgb(156 163 175)" @click="$router.force.push('/game')">
+      <NIcon color="rgb(156 163 175)" @click="$router.force.push('/game')" size="1.8rem">
         <VideogameAssetFilled />
-      </VanIcon>
+      </NIcon>
       <VanIcon name="bullhorn-o" color="rgb(156 163 175)" size="1.8rem" />
     </div>
   </header>

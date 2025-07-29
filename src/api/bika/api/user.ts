@@ -1,5 +1,5 @@
 import { useAppStore } from "@/stores"
-import { createClassFromResponse, PromiseContent, Stream } from "@/utils/data"
+import { createClassFromResponseStream, PromiseContent, Stream } from "@/utils/data"
 import { UserProfile, type RawUserProfile } from "../user"
 import { picapiRest, type RawStream, type SortType } from ".."
 import { RawLessComic, LessComic } from "../comic"
@@ -20,7 +20,7 @@ export const editAvatar = PromiseContent.fromAsyncFunction((imageDataUrl: string
   avatar: imageDataUrl
 }, { signal }))
 
-export const getFavouriteComic = PromiseContent.fromAsyncFunction((page: number, sort: SortType, signal?: AbortSignal) => createClassFromResponse(picapiRest.get<{ comics: RawStream<RawLessComic> }>(`/users/favourite?s=${sort}&page=${page}`, { signal }), LessComic))
+export const getFavouriteComic = PromiseContent.fromAsyncFunction((page: number, sort: SortType, signal?: AbortSignal) => createClassFromResponseStream(picapiRest.get<{ comics: RawStream<RawLessComic> }>(`/users/favourite?s=${sort}&page=${page}`, { signal }), LessComic))
 
 export const createFavouriteComicStream = (sort: SortType) =>
   Stream.apiPackager<LessComic>((page, signal) => getFavouriteComic(page, sort, signal))

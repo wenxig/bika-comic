@@ -1,4 +1,4 @@
-import { createClassFromResponse, PromiseContent, Stream } from "@/utils/data"
+import { createClassFromResponse, createClassFromResponseStream, PromiseContent, Stream } from "@/utils/data"
 import { picapiRest, type RawStream, type SortType } from ".."
 import { CommonComic, LessComic, spiltUsers, type BaseComic, type RawBaseComic, type RawCommonComic, type RawLessComic } from "../comic"
 import { type RawCollection, Collection, type RawCategories, Categories } from "../search"
@@ -23,9 +23,9 @@ export const createRandomComicStream = () =>
 
 
 
-export const getCollections = PromiseContent.fromAsyncFunction(async (signal?: AbortSignal) => (await picapiRest.get<{ collections: RawCollection[] }>("/collections", { signal })).data.collections.map(v => new Collection(v)))
+export const getCollections = PromiseContent.fromAsyncFunction((signal?: AbortSignal) => createClassFromResponse(picapiRest.get<{ collections: RawCollection[] }>("/collections", { signal }), Collection, 'collections'))
 
-export const getCategories = PromiseContent.fromAsyncFunction(async (signal?: AbortSignal) => (await picapiRest.get<{ categories: RawCategories[] }>("/categories", { signal })).data.categories.map(v => new Categories(v)))
+export const getCategories = PromiseContent.fromAsyncFunction((signal?: AbortSignal) => createClassFromResponse(picapiRest.get<{ categories: RawCategories[] }>("/categories", { signal }), Categories, 'categories'))
 
 export namespace search {
   export type SearchResult<T extends RawBaseComic = CommonComic> = RawStream<T>
@@ -64,13 +64,13 @@ export namespace search {
   })
   export const createTranslatorStream = (translator: string, sort: SortType) => createSearchComicStream(translator, sort, getComicsByTranslator)
 
-  export const getComicsByUploader = PromiseContent.fromAsyncFunction(async (id: string, page = 1, sort: SortType = 'dd', signal?: AbortSignal) => createClassFromResponse(picapiRest.get<{ comics: SearchResult<RawLessComic> }>(`/comics?page=${page}&ca=${id}&s=${sort}`, { signal }), LessComic))
+  export const getComicsByUploader = PromiseContent.fromAsyncFunction((id: string, page = 1, sort: SortType = 'dd', signal?: AbortSignal) => createClassFromResponseStream(picapiRest.get<{ comics: SearchResult<RawLessComic> }>(`/comics?page=${page}&ca=${id}&s=${sort}`, { signal }), LessComic))
   export const createUploaderStream = (uploader: string, sort: SortType) => createSearchComicStream(uploader, sort, getComicsByUploader)
 
-  export const getComicsByCategories = PromiseContent.fromAsyncFunction(async (category: string, page = 1, sort: SortType = 'dd', signal?: AbortSignal) => createClassFromResponse(picapiRest.get<{ comics: SearchResult<RawLessComic> }>(`/comics?page=${page}&c=${encodeURIComponent(category)}&s=${sort}`, { signal }), LessComic))
+  export const getComicsByCategories = PromiseContent.fromAsyncFunction((category: string, page = 1, sort: SortType = 'dd', signal?: AbortSignal) => createClassFromResponseStream(picapiRest.get<{ comics: SearchResult<RawLessComic> }>(`/comics?page=${page}&c=${encodeURIComponent(category)}&s=${sort}`, { signal }), LessComic))
   export const createCategoryStream = (category: string, sort: SortType) => createSearchComicStream(category, sort, getComicsByCategories)
 
-  export const getComicsByTag = PromiseContent.fromAsyncFunction(async (tag: string, page = 1, sort: SortType = 'dd', signal?: AbortSignal) => createClassFromResponse(picapiRest.get<{ comics: SearchResult<RawLessComic> }>(`/comics?page=${page}&t=${encodeURIComponent(tag)}&s=${sort}`, { signal }), LessComic))
+  export const getComicsByTag = PromiseContent.fromAsyncFunction((tag: string, page = 1, sort: SortType = 'dd', signal?: AbortSignal) => createClassFromResponseStream(picapiRest.get<{ comics: SearchResult<RawLessComic> }>(`/comics?page=${page}&t=${encodeURIComponent(tag)}&s=${sort}`, { signal }), LessComic))
   export const createTagStream = (tag: string, sort: SortType) => createSearchComicStream(tag, sort, getComicsByTag)
 
 }

@@ -107,6 +107,10 @@ picapi.interceptors.response.use(undefined, requestErrorInterceptors.createCheck
   }
   return true
 }))
+picapi.interceptors.response.use(undefined, err => {
+  if (err?.response && err.response.data.error == '1014') return Promise.resolve((<AxiosResponse>{ data: false, config: err.config, headers: err.response?.headers, status: 200, statusText: '200', request: err.request })) // only /comic/:id
+  return Promise.reject(err)
+})
 picapi.interceptors.response.use(undefined, requestErrorInterceptors.isClientError)
 picapi.interceptors.response.use(undefined, requestErrorInterceptors.createAutoRetry(picapi, 10))
 

@@ -17,6 +17,9 @@ export interface RawBaseComic {
   likesCount: number
 }
 export abstract class BaseComic implements RawBaseComic {
+  public static isComic(v: unknown): v is BaseComic {
+    return v instanceof BaseComic
+  }
   public _id
   public title
   public author
