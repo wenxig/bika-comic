@@ -18,6 +18,7 @@ const $props = withDefaults(defineProps<{
   class?: any
   streamMode?: 'comics' | 'games'
   noVirtual?: boolean
+  uploader?: string
 }>(), {
   streamMode: 'comics'
 })
@@ -54,12 +55,12 @@ const isActive = useTabStatus()
 
 <template>
   <div class="w-full bg-(--van-background) pb-[40px]" :class>
-    <List :no-virtual :source="commentStream" ref="list" :item-height="140" v-slot="{ data: { item }, height }"
-      :class="$props.listClass">
-      <CommentRow :comment="item" :height show-children-comment @click="() => {
+    <List item-resizable :no-virtual :source="commentStream" ref="list" :item-height="140"
+      v-slot="{ data: { item }, height }" :class="$props.listClass" class="h-full">
+      <CommentRow :comment="item" :isHighlight="item.$_user._id == uploader" :height show-children-comment @click="() => {
         _father = item
         childrenComments?.show(item._id)
-      }" @show-user="previewUser?.show" :ellipsis="3">
+      }" @show-user="previewUser?.show" :ellipsis="2">
         <slot />
       </CommentRow>
     </List>
@@ -69,6 +70,6 @@ const isActive = useTabStatus()
       <CommentSender ref="commentSender" @afterSend="handleReloadCommit()" :aim-id="$props.id" mode="comics" />
     </VanSticky>
   </Teleport>
-  <ChildrenComments ref="childrenComments" anchors="low" :_father @show-user="previewUser?.show" />
+  <ChildrenComments ref="childrenComments" anchors="low" :uploader :_father @show-user="previewUser?.show" />
   <PreviewUser ref="previewUser" />
 </template>

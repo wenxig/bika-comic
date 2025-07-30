@@ -108,7 +108,7 @@ defineExpose({
       class-empty="!h-full" class-error="!h-full" @retry="unionSource.retry()"
       :hide-loading="isPullRefreshHold && unionSource.isRequesting">
       <Var :value="dataProcessor(unionSource.data ?? [])" v-slot="{ value }">
-        <NInfiniteScroll :="listProp" @load="unionSource.next()" v-if="noVirtual">
+        <NInfiniteScroll :="listProp" @load="unionSource.next()" v-if="noVirtual" :distance="40">
           <slot v-for="item of value" :height="itemHeight" :data="{ item, index: value.indexOf(item) }" />
         </NInfiniteScroll>
         <NVirtualList :="listProp" :item-resizable :item-size="itemHeight" @scroll="handleScroll" v-else

@@ -13,12 +13,13 @@ const floatPopup = shallowRef<InstanceType<typeof FloatPopup>>()
 const $emit = defineEmits<{
   comment: [c: Comment]
   close: []
-  showUser: [user: UserProfile],
+  showUser: [user: UserProfile]
 }>()
 defineProps<{
   _father?: Comment
   closeRouter?: string
   anchors?: 'high' | 'low'
+  uploader?: string
 }>()
 const ITEM_HEIGHT = 120
 const _id = shallowRef('')
@@ -54,13 +55,15 @@ const showComment = shallowRef(false)
 <template>
   <FloatPopup ref="floatPopup" :anchors lock-scroll>
     <div ref="topCommentEl">
-      <CommentRow v-if="_father" :comment="_father" :height="ITEM_HEIGHT" show-children-comment
-        @comment="$emit('comment', _father!)" class="!border-none" @show-user="$emit('showUser', _father.$_user)" />
+      <CommentRow v-if="_father" :comment="_father" :is-highlight="uploader == _father.$_user._id" :height="ITEM_HEIGHT"
+        show-children-comment @comment="$emit('comment', _father!)" class="!border-none"
+        @show-user="$emit('showUser', _father.$_user)" />
     </div>
     <List :style="`height:calc(100% - ${topCommentElHeight}px - 40px);background-color:var(--van-background);`"
       :source="commitStream" :item-height="ITEM_HEIGHT" v-slot="{ height, data }">
       <CommentRow :comment="data.item" @show-user="$emit('showUser', data.item.$_user)" class="!border-none" :height
-        :ellipsis="3" @click="showComment = !!(fullComment = data.item)" />
+        :ellipsis="3" @click="showComment = !!(fullComment = data.item)"
+        :is-highlight="uploader == data.item.$_user._id" />
     </List>
     <CommentSender :aim-id="_father?._id" mode="comment" @afterSend="reload()" />
   </FloatPopup>

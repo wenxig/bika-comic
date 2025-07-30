@@ -1,18 +1,14 @@
 <script setup lang='ts'>
 import { useComicStore } from '@/stores/comic'
-import { DriveFolderUploadOutlined, GTranslateOutlined, KeyboardArrowDownRound, PlusRound, ReportGmailerrorredRound, ShareSharp, StarFilled } from '@vicons/material'
+import { ArrowBackRound, DrawOutlined, DriveFolderUploadOutlined, GTranslateOutlined, HomeOutlined, KeyboardArrowDownRound, PlusRound, ReportGmailerrorredRound, ShareSharp, StarFilled } from '@vicons/material'
 import { motion } from 'motion-v'
 import { computed, onMounted, shallowRef, watch } from 'vue'
-import { createReusableTemplate, until, useScroll, watchDebounced } from '@vueuse/core'
+import { createReusableTemplate, until } from '@vueuse/core'
 import { DislikeFilled, LikeFilled } from '@vicons/antd'
 import { favouriteComic, likeComic } from '@/api/bika/api/comic'
 import { useDialog, useMessage } from 'naive-ui'
 import { createDateString, toCn } from '@/utils/translator'
 import { useRoute, useRouter } from 'vue-router'
-import ChildrenComments from '@/components/comment/children.vue'
-import PreviewUser from '@/components/user/previewUser.vue'
-import { Comment } from '@/api/bika/comment'
-import { createCommentsStream } from '@/api/bika/api/comment'
 const $route = useRoute()
 const _id = $route.params.id.toString()
 const comic = useComicStore()
@@ -48,44 +44,49 @@ onMounted(async () => {
   })
 })
 
-const previewUser = shallowRef<InstanceType<typeof PreviewUser>>()
-const _father = shallowRef<Comment>()
-const childrenComments = shallowRef<InstanceType<typeof ChildrenComments>>()
-// const commentsStream = createCommentsStream(_id)
-const appEl = document.getElementById('app')!
-// const appScroll = useScroll(appEl)
-const tabOn = shallowRef<'info' | 'comment'>('info')
-// watchDebounced([tabOn, appScroll.y], ([tabOn, y]) => {
-//   if (tabOn != 'comment') return
-//   if (appEl.getBoundingClientRect().height - y <= 20) {
-//     commentsStream.next()
-//   }
-// }, {
-//   debounce: 200
-// })
-
 </script>
 
 <template>
   <div class="*:w-full" v-if="comic.now">
-    <div class="bg-black text-white h-[30vh] flex justify-center">
+    <div class="bg-black text-white h-[30vh] relative flex justify-center">
+      <div
+        class="absolute bg-[linear-gradient(rgba(0,0,0,0.9),transparent)] pointer-events-none *:pointer-events-auto top-0 w-full flex h-1/4 items-center">
+        <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.back()">
+          <ArrowBackRound />
+        </NIcon>
+        <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.force.push('/')">
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M19 8.71l-5.333-4.148a2.666 2.666 0 0 0-3.274 0L5.059 8.71a2.665 2.665 0 0 0-1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.2c0-.823-.38-1.6-1.03-2.105">
+              </path>
+              <path d="M16 15c-2.21 1.333-5.792 1.333-8 0"></path>
+            </g>
+          </svg>
+        </NIcon>
+      </div>
       <Image class="h-full" :src="detail?.$thumb" />
     </div>
     <Content :source="comic.now.detail.content.value">
-      <VanTabs shrink swipeable sticky v-model:active="tabOn">
+      <VanTabs shrink swipeable sticky>
         <VanTab class="min-h-full van-hairline--top pt-3" title="简介" name="info">
           <div class="flex items-center relative">
             <Image class="size-8.5 shrink-0 mx-3" :src="detail?.$_creator.$avatar" round />
             <div class="flex flex-col w-full text-nowrap">
               <div class="text-(--nui-primary-color) flex items-center">
-                <span v-for="author of preload?.$author" class="mr-0.5">{{ author }}</span>
+                <span class="flex items-center">
+                  <NIcon size="1rem" class="mr-0.5">
+                    <DriveFolderUploadOutlined />
+                  </NIcon>
+                  {{ detail?.$_creator.name }}
+                </span>
               </div>
               <div class="-mt-0.5 van-ellipsis max-w-2/3 text-(--van-text-color-2) text-[11px] flex items-center">
-                <NIcon class="mr-0.5">
-                  <DriveFolderUploadOutlined />
-                </NIcon>
-                <span>
-                  {{ detail?.$_creator.name }}
+
+                <span v-for="author of preload?.$author" class="mr-0.5">
+                  <NIcon class="mr-0.5 not-first:ml-1">
+                    <DrawOutlined />
+                  </NIcon>{{ author }}
                 </span>
                 <template v-if="detail?.chineseTeam">
                   <NIcon class="ml-2 mr-0.5">
@@ -190,16 +191,17 @@ const tabOn = shallowRef<'info' | 'comment'>('info')
         <VanTab class="min-h-full van-hairline--top" title="评论" name="comment">
           <template #title>
             <span>评论</span>
-            <span class="!text-xs ml-0.5 font-light">{{ detail?.totalComments ?? '' }}</span>
+            <span class="!text-xs ml-0.5 font-light"
+              v-if="detail?.allowComment ?? true">{{ detail?.totalComments ?? '' }}</span>
           </template>
-          <CommentView no-virtual :id="_id" list-class="min-h-[calc(70vh-var(--van-tabs-line-height))]"
-            class="min-h-[calc(70vh-var(--van-tabs-line-height))]" />
+          <CommentView no-virtual :id="_id" :uploader="detail?.$_creator._id"
+            class="h-[calc(70vh-var(--van-tabs-line-height))]" v-if="detail?.allowComment ?? true" />
+          <div v-else class="w-full h-[calc(70vh-var(--van-tabs-line-height))] text-center text-(--van-text-color-2)">
+            评论区已关闭</div>
         </VanTab>
       </VanTabs>
     </Content>
   </div>
-  <ChildrenComments ref="childrenComments" anchors="low" :_father @show-user="previewUser?.show" />
-  <PreviewUser ref="previewUser" />
 </template>
 <style scoped lang='scss'>
 :global(#app) {
