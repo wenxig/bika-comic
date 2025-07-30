@@ -62,7 +62,7 @@ const showComment = shallowRef(false)
       <CommentRow :comment="data.item" @show-user="$emit('showUser', data.item.$_user)" class="!border-none" :height
         :ellipsis="3" @click="showComment = !!(fullComment = data.item)" />
     </List>
-    <CommentSender :aim="_father" @afterSend="reload()" />
+    <CommentSender :aim-id="_father?._id" mode="comment" @afterSend="reload()" />
   </FloatPopup>
   <Popup class="overflow-hidden" v-model:show="showComment" position="bottom" round closeable
     @closed="fullComment = undefined">

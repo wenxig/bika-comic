@@ -7,7 +7,6 @@ import axios, { isAxiosError, type AxiosResponse } from "axios"
 import { enc, HmacSHA256 } from "crypto-js"
 import { isEmpty, values } from "lodash-es"
 import allProxy from '../bika_proxy.json'
-
 export type ImageQuality = 'low' | 'medium' | 'high' | 'original'
 export type SortType = 'dd' | 'da' | 'ld' | 'vd'
 export type SearchMode = "id" | "pid" | "uploader" | "translator" | "author" | "keyword" | 'categories' | 'tag'
@@ -82,19 +81,19 @@ picapi.interceptors.request.use(async requestConfig => {
   requestConfig.headers.set('use-interface', requestConfig.baseURL)
   return requestConfig
 })
+picapi.interceptors.response.use(undefined, requestErrorInterceptors.passCorsError)
 picapi.interceptors.response.use(async (v: AxiosResponse<RawResponse>) => {
-  console.log('recicve', v.data)
   if (v.data.error || v.data.data) return v
   if (!v.config.allowEmpty) return v
   return requestErrorResult('networkError_emptyData', v.data)
 }, err => {
-  console.log('recicve', err)
   if (!isAxiosError(err)) return Promise.reject(err)
   if (err.response) return requestErrorResult('networkError_response', err)
   return Promise.reject(err)
 })
 picapi.interceptors.response.use(undefined, requestErrorInterceptors.createCheckIsUnauth(picapi, async () => {
   const appStore = useAppStore()
+  console.log(appStore.loginData, isEmpty(appStore.loginData.email), isEmpty(appStore.loginData.email))
   if (isEmpty(appStore.loginData.email) || isEmpty(appStore.loginData.email)) return false
   try {
     const bikaApiAuth = await import('./api/auth')
@@ -130,6 +129,7 @@ recommend.interceptors.request.use(async requestConfig => {
   return requestConfig
 })
 recommend.interceptors.response.use(undefined, requestErrorInterceptors.isClientError)
+recommend.interceptors.response.use(undefined, requestErrorInterceptors.passCorsError)
 recommend.interceptors.response.use(undefined, requestErrorInterceptors.createAutoRetry(recommend, 3))
 
 import type { AxiosRequestConfig } from "axios"

@@ -11,12 +11,11 @@ import { BaseComic } from '@/api/bika/comic'
 const config = useConfig()
 
 const show = shallowRef(false)
-type SentTo = Comment | BaseComic
-const sendTo = shallowRef<SentTo>()
 
 const input = shallowRef('')
 const $props = withDefaults(defineProps<{
-  aim?: SentTo
+  aimId?: string
+  mode: 'comics' | 'comment'
   childCommentSender?(id: string, content: string): PromiseContent<any>
   commentSender?(id: string, content: string): PromiseContent<any>
 }>(), {
@@ -32,13 +31,12 @@ async function submit() {
   if (input.value == '') return window.$message.info('评论内容不能为空')
   isSubmitting.value = true
   const loading = createLoadingMessage('发送中')
-  const aim = sendTo.value ?? $props.aim
   try {
-    if (!aim) throw false
-    if (Comment.isComment(aim)) {
-      await $props.childCommentSender(aim._id, input.value)
-    } else if (BaseComic.isComic(aim)) {
-      await $props.commentSender(aim._id, input.value)
+    if (!$props.aimId) throw false
+    if ($props.mode == 'comment') {
+      await $props.childCommentSender($props.aimId, input.value)
+    } else {
+      await $props.commentSender($props.aimId, input.value)
       // app.user()?.comments.reload()
     }
     $emit('afterSend')
@@ -46,16 +44,14 @@ async function submit() {
     show.value = false
     input.value = ''
   } catch (err) {
-    console.error(err, aim)
+    console.error(err, $props.aimId, $props.mode)
     loading.fail()
   }
   isSubmitting.value = false
 }
 const inputEl = shallowRef<FieldInstance>()
 defineExpose({
-  force() {
-    inputEl.value?.focus()
-  }
+  inputEl
 })
 </script>
 

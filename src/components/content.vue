@@ -1,6 +1,6 @@
 <script setup lang='ts' generic="T extends PromiseContent<any> | Stream<any>">
 import { PromiseContent, Stream } from '@/utils/data'
-import { ErrorRound } from '@vicons/material';
+import { ErrorRound, WifiTetheringErrorRound } from '@vicons/material';
 import { StyleValue, computed } from 'vue'
 interface StateCss {
   class?: any
@@ -58,7 +58,9 @@ const unionSource = computed(() => Stream.isStream($props.source) ? {
       <NButton v-if="retriable" @click="$emit('retry')" type="primary">重试</NButton>
     </template>
     <template #icon>
-      <ErrorRound />
+      <NIcon size="10rem" color="var(--nui-error-color)">
+        <WifiTetheringErrorRound />
+      </NIcon>
     </template>
   </NResult>
 

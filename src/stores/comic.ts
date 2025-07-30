@@ -124,10 +124,10 @@ export class ComicPage {
   public loadAll() {
     if (!this.veiled.value) return
     return Promise.any<boolean | void>([
-      !this.detail.content.value.data && this.loadDetailFromNet(),
-      !this.eps.content.value.data && this.loadEps(),
-      !this.recommendComics.content.value.data && this.loadRecommendComics(),
-      !this.pid.content.value.data && this.loadPid()
+      !this.detail.content.value.data && !this.detail.content.value.isLoading && this.loadDetailFromNet(),
+      !this.eps.content.value.data && !this.eps.content.value.isLoading && this.loadEps(),
+      !this.recommendComics.content.value.data && !this.recommendComics.content.value.isLoading && this.loadRecommendComics(),
+      !this.pid.content.value.data && !this.pid.content.value.isLoading && this.loadPid()
     ])
   }
   public reloadAll() {

@@ -3,12 +3,18 @@ import { useComicStore } from '@/stores/comic'
 import { DriveFolderUploadOutlined, GTranslateOutlined, KeyboardArrowDownRound, PlusRound, ReportGmailerrorredRound, ShareSharp, StarFilled } from '@vicons/material'
 import { motion } from 'motion-v'
 import { computed, onMounted, shallowRef, watch } from 'vue'
-import { createReusableTemplate, until } from '@vueuse/core'
+import { createReusableTemplate, until, useScroll, watchDebounced } from '@vueuse/core'
 import { DislikeFilled, LikeFilled } from '@vicons/antd'
 import { favouriteComic, likeComic } from '@/api/bika/api/comic'
 import { useDialog, useMessage } from 'naive-ui'
-import { toCn } from '@/utils/translator'
-import { useRouter } from 'vue-router'
+import { createDateString, toCn } from '@/utils/translator'
+import { useRoute, useRouter } from 'vue-router'
+import ChildrenComments from '@/components/comment/children.vue'
+import PreviewUser from '@/components/user/previewUser.vue'
+import { Comment } from '@/api/bika/comment'
+import { createCommentsStream } from '@/api/bika/api/comment'
+const $route = useRoute()
+const _id = $route.params.id.toString()
 const comic = useComicStore()
 const detail = computed(() => comic.now?.detail.content.value.data)
 const preload = computed(() => comic.now?.preload.value)
@@ -41,6 +47,23 @@ onMounted(async () => {
     })
   })
 })
+
+const previewUser = shallowRef<InstanceType<typeof PreviewUser>>()
+const _father = shallowRef<Comment>()
+const childrenComments = shallowRef<InstanceType<typeof ChildrenComments>>()
+// const commentsStream = createCommentsStream(_id)
+const appEl = document.getElementById('app')!
+// const appScroll = useScroll(appEl)
+const tabOn = shallowRef<'info' | 'comment'>('info')
+// watchDebounced([tabOn, appScroll.y], ([tabOn, y]) => {
+//   if (tabOn != 'comment') return
+//   if (appEl.getBoundingClientRect().height - y <= 20) {
+//     commentsStream.next()
+//   }
+// }, {
+//   debounce: 200
+// })
+
 </script>
 
 <template>
@@ -49,8 +72,8 @@ onMounted(async () => {
       <Image class="h-full" :src="detail?.$thumb" />
     </div>
     <Content :source="comic.now.detail.content.value">
-      <VanTabs shrink swipeable sticky>
-        <VanTab class="min-h-full van-hairline--top pt-3" title="简介">
+      <VanTabs shrink swipeable sticky v-model:active="tabOn">
+        <VanTab class="min-h-full van-hairline--top pt-3" title="简介" name="info">
           <div class="flex items-center relative">
             <Image class="size-8.5 shrink-0 mx-3" :src="detail?.$_creator.$avatar" round />
             <div class="flex flex-col w-full text-nowrap">
@@ -58,20 +81,20 @@ onMounted(async () => {
                 <span v-for="author of preload?.$author" class="mr-0.5">{{ author }}</span>
               </div>
               <div class="-mt-0.5 van-ellipsis max-w-2/3 text-(--van-text-color-2) text-[11px] flex items-center">
+                <NIcon class="mr-0.5">
+                  <DriveFolderUploadOutlined />
+                </NIcon>
+                <span>
+                  {{ detail?.$_creator.name }}
+                </span>
                 <template v-if="detail?.chineseTeam">
-                  <NIcon class="mr-1">
+                  <NIcon class="ml-2 mr-0.5">
                     <GTranslateOutlined />
                   </NIcon>
                   <span v-for="chineseTeam of detail?.$chineseTeam">
                     {{ chineseTeam }}
                   </span>
                 </template>
-                <NIcon class="mx-0.5">
-                  <DriveFolderUploadOutlined />
-                </NIcon>
-                <span>
-                  {{ detail?.$_creator.title }}
-                </span>
               </div>
             </div>
             <NButton round type="primary" class="!absolute right-3" size="small">
@@ -94,7 +117,7 @@ onMounted(async () => {
                       <span>{{ preload?.totalViews }}</span>
                     </span>
                     <span class="mx-1">
-                      <span>{{ detail?.$created_at.format('YYYY年M月D日 HH:mm') }}</span>
+                      <span>{{ createDateString(detail?.$created_at) }}</span>
                     </span>
                   </div>
                 </TitleTemp>
@@ -140,7 +163,7 @@ onMounted(async () => {
             <div class="mt-8 mb-4 flex justify-around" v-if="preload">
               <ToggleIcon size="30px" @update:model-value="v => detail && (detail.isLiked = v)"
                 :model-value="detail?.isLiked ?? false" @change="likeComic(preload._id)" :icon="LikeFilled">
-                {{ detail?.likesCount }}
+                {{ detail?.likesCount ?? '喜欢' }}
               </ToggleIcon>
               <ToggleIcon size="30px" :icon="DislikeFilled" @click="$message.info('个性化功能设计中')" dis-changed>
                 不喜欢
@@ -164,16 +187,19 @@ onMounted(async () => {
           </Content>
         </VanTab>
 
-        <VanTab class="min-h-full van-hairline--top" title="评论">
+        <VanTab class="min-h-full van-hairline--top" title="评论" name="comment">
           <template #title>
             <span>评论</span>
             <span class="!text-xs ml-0.5 font-light">{{ detail?.totalComments ?? '' }}</span>
           </template>
-          456
+          <CommentView no-virtual :id="_id" list-class="min-h-[calc(70vh-var(--van-tabs-line-height))]"
+            class="min-h-[calc(70vh-var(--van-tabs-line-height))]" />
         </VanTab>
       </VanTabs>
     </Content>
   </div>
+  <ChildrenComments ref="childrenComments" anchors="low" :_father @show-user="previewUser?.show" />
+  <PreviewUser ref="previewUser" />
 </template>
 <style scoped lang='scss'>
 :global(#app) {

@@ -4,6 +4,7 @@ import symbol from "@/symbol"
 import { useComicStore } from "@/stores/comic"
 import { SmartAbortController } from "@/utils/request"
 import { isCancel } from "axios"
+import eventBus from "@/utils/eventBus"
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -71,4 +72,11 @@ router.beforeEach(async to => {
     if (!isCancel(error)) throw error
   }
   return true
+})
+
+
+eventBus.on('networkError_unauth', () => {
+  console.log('unlogin')
+  router.force.replace('/auth/login')
+
 })

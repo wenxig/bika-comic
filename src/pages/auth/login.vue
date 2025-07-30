@@ -17,7 +17,7 @@ const $message = useMessage()
 const loginIns = shallowRef<undefined | SPromiseContent<Response<{ token: string }>>>()
 const submit = async () => {
   if (loginIns.value?.isLoading) return
-  loginIns.value = login(appStore.loginData.value = formValue)
+  loginIns.value = login(appStore.loginData = formValue)
   try {
     const { data: { token } } = await createLoadingMessage('登陆中').bind(loginIns.value)
     appStore.loginToken = token

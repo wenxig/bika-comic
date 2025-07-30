@@ -21,7 +21,7 @@ const texts = computed(() => $props.text.replace(/(http(s?):\/\/)?([\w-]+\.)+(\.
   <div :class="[isNumber(ellipsis) && 'overflow-ellipsis overflow-hidden']"
     :style="[isNumber(ellipsis) && `line-break: anywhere;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: ${ellipsis};`]"
     class="whitespace-pre-wrap  text-[--van-text-color]">
-    <slot/>
+    <slot />
     <template v-for="token of texts">
       <a class="text-[--p-color] van-haptics-feedback underline" @click.stop
         :href="/http(s?):\/\/.+/.test(token.value) ? token.value : `https://${token.value}`" v-if="token.mode == 'link'"

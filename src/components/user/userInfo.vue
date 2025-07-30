@@ -12,23 +12,23 @@ const $props = defineProps<{
 const exp = computed(() => $props.user?.exp ?? 0)
 const needExp = computed(() => {
   const level = $props.user?.level ?? 1
-  return (((level + 1) * 2 - 1) ** 2 - 1) * 25 // 要知道我翻了20分钟bkapp(2.3)源码
+  return (((level + 1) * 2 - 1) ** 2 - 1) * 25 // 要知道我翻了20分钟bk app(2.4)的源码
 })
 const avatar = computed(() => {
-  if ($props.user?.avatar) return $props.user.$avatar.getUrl()
+  if ($props.user?.avatar) return $props.user.$avatar.toString()
   return userIcon
 })
 </script>
 
 <template>
-  <NThing :class class="bg-[--van-background-2] overflow-hidden relative w-full">
+  <NThing :class class="bg-(--van-background-2) overflow-hidden relative w-full">
     <template #avatar v-if="!small">
       <Image :src="avatar" fit="cover" class="w-[4rem] h-[4rem] mt-1 ml-1" round previewable />
     </template>
     <template #header>
       <div class="mt-2 -mb-2 flex items-center">
         {{ user?.name }}
-        <div class="flex mx-1 items-center text-[--p-color]" v-if="user?.gender == 'm'">
+        <div class="flex mx-1 items-center text-(--nui-primary-color)" v-if="user?.gender == 'm'">
           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="w-4"
             viewBox="0 0 1024 1024">
             <path
@@ -36,7 +36,7 @@ const avatar = computed(() => {
               fill="currentColor"></path>
           </svg>
         </div>
-        <div class="flex mx-1 items-center text-[--p-color]" v-else-if="user?.gender == 'f'">
+        <div class="flex mx-1 items-center text-(--nui-primary-color)" v-else-if="user?.gender == 'f'">
           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="w-4"
             viewBox="0 0 1024 1024">
             <path
@@ -44,7 +44,7 @@ const avatar = computed(() => {
               fill="currentColor"></path>
           </svg>
         </div>
-        <div class="flex mx-1 items-center text-[--p-color]" v-else>
+        <div class="flex mx-1 items-center text-(--nui-primary-color)" v-else>
           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="w-4"
             viewBox="0 0 640 512">
             <path
@@ -52,7 +52,7 @@ const avatar = computed(() => {
               fill="currentColor"></path>
           </svg>
         </div>
-        <span class="mr-1 text-xs text-[--p-color] font-normal">Lv{{ user?.level }}</span>
+        <span class="mr-1 text-xs text-(--nui-primary-color) font-normal">Lv{{ user?.level }}</span>
       </div>
     </template>
     <template #description>
@@ -65,13 +65,13 @@ const avatar = computed(() => {
         </VanTag>
       </div>
       <div class="flex !w-[60%] items-center">
-        <span class="mr-1 no-color-change-transition text-xs text-[--van-text-color-2]">{{ exp }}/{{ needExp }}</span>
-        <n-progress color="var(--p-color)" type="line" status="info" :percentage="(exp / needExp) * 100"
+        <span class="mr-1 no-color-change-transition text-xs text-(--van-text-color-2)">{{ exp }}/{{ needExp }}</span>
+        <n-progress color="var(--nui-primary-color)" type="line" status="info" :percentage="(exp / needExp) * 100"
           :show-indicator="false" />
       </div>
     </template>
     <Text :text="user?.slogan" v-if="!hideSlogan && !small"
-      class="!text-[--van-text-color-2] !text-xs w-[calc(100%-8px*2)] p-2" />
+      class="!text-(--van-text-color-2) !text-xs w-[calc(100%-8px*2)] p-2" />
     <slot />
   </NThing>
 </template>

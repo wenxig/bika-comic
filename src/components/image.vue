@@ -26,7 +26,16 @@ const $props = withDefaults(defineProps<{
 }>(), {
   fetchpriority: 'auto'
 })
-const src = computed(() => isString($props.src) ? $props.src : $props.src ? $props.src.getUrl ? $props.src.getUrl() : new Image($props.src).getUrl() : '')
+const src = computed(() => {
+  try {
+    if (!$props.src) return ''
+    if (isString($props.src)) return $props.src
+    return $props.src.getUrl()
+  } catch (error) {
+    console.error(error)
+  }
+  return ''
+})
 
 const $emit = defineEmits<{
   load: any[]

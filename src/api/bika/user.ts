@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import { Image, type RawImage } from './image'
+import userIcon from '@/assets/images/userIcon.webp?url'
 export type Gender = 'f' | 'm' | 'bot'
 export interface RawUser {
   _id: string
@@ -12,12 +13,12 @@ export interface RawUser {
   role?: string
   title: string
   slogan: string
-  avatar: RawImage
+  avatar?: RawImage
 }
 export class User implements RawUser {
-  public avatar: RawImage
+  public avatar?: RawImage
   public get $avatar() {
-    return new Image(this.avatar)
+    return this.avatar ? new Image(this.avatar) : userIcon
   }
   public _id: string
   public gender: Gender

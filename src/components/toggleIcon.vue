@@ -5,6 +5,7 @@ const $props = defineProps<{
   icon: Component
   size?: string | number
   disChanged?: boolean
+  rowMode?: boolean
 }>()
 const $emit = defineEmits<{
   change: [mode: boolean]
@@ -19,11 +20,12 @@ const handleClick = () => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center **:!transition-colors" @click="handleClick">
-    <NIcon :size :color="mode ? 'var(--nui-primary-color)' : 'var(--van-gray-7)'">
+  <div class="flex items-center justify-center **:!transition-colors" :class="[rowMode || 'flex-col']"
+    @click.stop="handleClick">
+    <NIcon :size :color="mode ? 'var(--nui-primary-color)' : ( 'var(--van-gray-7)')">
       <icon />
     </NIcon>
-    <span class="text-xs mt-1 text-(--van-text-color-2)">
+    <span class="mt-1 text-(--van-text-color-2)" :style="{ fontSize: `calc(${size} * 1px - 4px)` }">
       <slot />
     </span>
   </div>

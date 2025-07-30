@@ -48,9 +48,8 @@ export namespace requestErrorHandleInterceptors {
     return err.__isAxiosError = !isCancel(err) && isAxiosError<RawResponse>(err)
   }
   export const createAutoRetry = (api: AxiosInstance, times = 3) => async (err: any) => {
-    console.log('check retry')
-    // if (!checkIsAxiosError(err)) return Promise.reject(err)
-    if (!err.config || err.config.disretry || (err.config.__retryCount ?? 0) >= times) return requestErrorResult('networkError_response', err)
+    if (!checkIsAxiosError(err)) return Promise.reject(err)
+    if (!err.config || err.config.disretry || (err.config.__retryCount ?? 0) >= times) throw requestErrorResult('networkError_response', err)
     err.config.__retryCount = (err.config.__retryCount ?? 0) + 1
     await delay(500 * err.config.__retryCount)
     return api(err.config)
@@ -60,16 +59,21 @@ export namespace requestErrorHandleInterceptors {
       if (!checkIsAxiosError(err)) return Promise.reject(err)
       if (err?.response?.status == 401) {
         if (relogin) {
-          if (!await relogin()) return requestErrorResult('networkError_unauth', err)
+          if (!await relogin()) throw requestErrorResult('networkError_unauth', err)
           return api(err.config ?? {})
         }
-        else if (!location.pathname.includes('auth')) return requestErrorResult('networkError_unauth', err)
+        else if (!location.pathname.includes('auth')) throw requestErrorResult('networkError_unauth', err)
       }
       return Promise.reject(err)
     }
   }
   export const isClientError = (err: any) => {
-    if (err?.response?.status?.toString().startsWith('4')) return requestErrorResult('networkError_response', err)
+    if (err?.response?.status?.toString().startsWith('4')) throw requestErrorResult('networkError_response', err)
+    return Promise.reject(err)
+  }
+  export const passCorsError = (err: any) => {
+    if (!checkIsAxiosError(err)) return Promise.reject(err)
+    if (err.code == "ERR_NETWORK" && !err.response) throw requestErrorResult('networkError_request', err)
     return Promise.reject(err)
   }
 }

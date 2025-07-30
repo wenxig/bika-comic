@@ -16,9 +16,9 @@ export const createLoadingMessage = (text: MaybeRefOrGetter<string> = '加载中
     loading.content = text
   })
   let isDestroy = false
-  async function bind<T extends Promise<any>>(promise?: T, throwError?: false, successText?: string, failText?: string): Promise<Awaited<T>>
-  async function bind<T extends Promise<any>>(promise?: T, throwError?: true, successText?: string, failText?: string): Promise<Awaited<T> | undefined>
-  async function bind<T extends Promise<any>>(promise?: T, throwError = true, successText?: string, failText?: string): Promise<Awaited<T> | undefined> {
+  async function bind<T extends PromiseLike<any>>(promise?: T, throwError?: false, successText?: string, failText?: string): Promise<Awaited<T>>
+  async function bind<T extends PromiseLike<any>>(promise?: T, throwError?: true, successText?: string, failText?: string): Promise<Awaited<T> | undefined>
+  async function bind<T extends PromiseLike<any>>(promise?: T, throwError = true, successText?: string, failText?: string): Promise<Awaited<T> | undefined> {
     try {
       const res = await promise
       ctx.success(successText)

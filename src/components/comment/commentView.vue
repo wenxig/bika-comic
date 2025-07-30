@@ -10,32 +10,29 @@ import List from '@/components/list.vue'
 import { ComponentExposed } from 'vue-component-type-helpers'
 import { createCommentsStream } from '@/api/bika/api/comment'
 import { Comment } from '@/api/bika/comment'
+import { useTabStatus } from 'vant'
 const list = shallowRef<ComponentExposed<typeof List>>()
 const $props = withDefaults(defineProps<{
   id: string
-  listClass?: string
+  listClass?: any
+  class?: any
   streamMode?: 'comics' | 'games'
+  noVirtual?: boolean
 }>(), {
   streamMode: 'comics'
 })
-const commentHeight = defineModel<number>('height')
-const commitStream = comments.has($props.id) ? comments.get($props.id)! : (() => {
-  const c = createCommentsStream($props.id, $props.streamMode)
-  comments.set($props.id, c)
-  return c
-})()
+const commentStream = createCommentsStream($props.id, $props.streamMode)
+console.log(commentStream)
 const _father = shallowRef<Comment>()
-const isShowComments = shallowRef(false)
 const previewUser = shallowRef<InstanceType<typeof PreviewUser>>()
-watch(commentHeight, commentHeight => (commentHeight! <= 0) && (isShowComments.value = false))
 const childrenComments = shallowRef<InstanceType<typeof ChildrenComments>>()
 onMounted(() => {
   // if (isEmpty(commitStream.docs.value)) commitStream.next()
   if (commentsScroll.has($props.id)) list.value?.listInstance?.scrollTo({ top: commentsScroll.get($props.id) })
 })
 const handleReloadCommit = () => {
-  commitStream.reset()
-  return commitStream.next()
+  commentStream.reset()
+  return commentStream.next()
 }
 onBeforeRouteLeave(() => {
   commentsScroll.set($props.id, list.value?.scrollTop ?? 0)
@@ -46,16 +43,19 @@ defineSlots<{
 
 const commentSender = shallowRef<InstanceType<typeof CommentSender>>()
 defineExpose({
-  forceInput() {
-    commentSender.value?.force()
-  }
+  focusInput() {
+    commentSender.value?.inputEl?.focus()
+  },
+  list
 })
+
+const isActive = useTabStatus()
 </script>
 
 <template>
-  <div class="w-full h-full overflow-hidden bg-(--van-background)" :style="`--father-height: ${commentHeight}px;`">
-    <List :source="commitStream" ref="list" :item-height="120" v-slot="{ data: { item }, height }"
-      :class="[commentHeight && 'h-[calc(var(--father-height)-var(--van-floating-panel-header-height)-40px)]', $props.listClass]">
+  <div class="w-full bg-(--van-background) pb-[40px]" :class>
+    <List :no-virtual :source="commentStream" ref="list" :item-height="140" v-slot="{ data: { item }, height }"
+      :class="$props.listClass">
       <CommentRow :comment="item" :height show-children-comment @click="() => {
         _father = item
         childrenComments?.show(item._id)
@@ -63,8 +63,12 @@ defineExpose({
         <slot />
       </CommentRow>
     </List>
-    <CommentSender ref="commentSender" @afterSend="handleReloadCommit()" :defSendAddress="$props.id" isComic />
   </div>
+  <Teleport to="#cover" :disabled="!isActive">
+    <VanSticky position="bottom" class="w-full">
+      <CommentSender ref="commentSender" @afterSend="handleReloadCommit()" :aim-id="$props.id" mode="comics" />
+    </VanSticky>
+  </Teleport>
   <ChildrenComments ref="childrenComments" anchors="low" :_father @show-user="previewUser?.show" />
   <PreviewUser ref="previewUser" />
 </template>

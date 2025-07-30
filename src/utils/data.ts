@@ -14,7 +14,6 @@ export class PromiseContent<T> implements PromiseLike<T> {
     this.isError = false
     this.errorCause = undefined
     this.isEmpty = false
-    console.log(isReactive(this))
 
     promise.then(async val => {
       const v = await val
@@ -22,7 +21,6 @@ export class PromiseContent<T> implements PromiseLike<T> {
       this.isLoading = false
       this.isError = false
       this.isEmpty = this._isEmpty(v)
-      console.log('promise content done', v)
     })
     promise.catch(err => {
       this.data = undefined
@@ -55,7 +53,7 @@ export class PromiseContent<T> implements PromiseLike<T> {
   public static withResolvers<T>() {
     let withResolvers = Promise.withResolvers<T>()
     const content = ref(this.fromPromise<T>(withResolvers.promise))
-
+    content.value.isLoading = false
     return {
       content,
       reject: (reason?: any) => {
@@ -79,6 +77,7 @@ export class Stream<T> implements AsyncIterableIterator<T[], void> {
   constructor(generator: (abortSignal: AbortSignal, that: Stream<T>) => (IterableIterator<T[], void, Stream<T>> | AsyncIterableIterator<T[], void, Stream<T>>)) {
     this.generator = generator(this.abortController.signal, this)
     this[Stream.isStreamKey] = true
+    // console.trace('stream new', this)
   }
   private static isStreamKey = Symbol('stream')
   public static isStream(stream: any): stream is Stream<any> {
@@ -110,11 +109,14 @@ export class Stream<T> implements AsyncIterableIterator<T[], void> {
       if (!igRequesting) await until(this.isRequesting).toBe(false)
       if (!igRequesting) this.isRequesting.value = true
       if (this._isDone) return { done: true, value: undefined }
+      // console.log('stream next request')
       const { value, done } = await this.generator.next(this)
       this.isDone.value = done ?? false
+      // console.log('stream next value', value, 'isDone', this.isDone.value)
       if (!igRequesting) this.isRequesting.value = false
       if (done) return { done: true, value: undefined }
       this.data.value.push(...value)
+      // console.trace('stream next push', this, this._data)
       return { value, done }
     } catch (error) {
       if (!igRequesting) this.isRequesting.value = false
@@ -140,7 +142,7 @@ export class Stream<T> implements AsyncIterableIterator<T[], void> {
     if (isNaN(this._pages)) await this.next()
     const promises = []
     // e.g. p:1 ps:20 2->20
-    for (let index = this._page + 1; index < this._pages; index++)  promises.push(this.next())
+    for (let index = this._page + 1; index < this._pages; index++)  promises.push(this.next(true))
     await Promise.all(promises)
     return this._data
   }

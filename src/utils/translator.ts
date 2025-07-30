@@ -1,4 +1,6 @@
 import type { SearchMode, SortType } from '@/api/bika'
+import type { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import { Converter } from 'opencc-js'
 import { computed, toRef, type MaybeRefOrGetter } from 'vue'
 export const toCn = Converter({ from: 'tw', to: 'cn' })
@@ -65,3 +67,19 @@ const translateMap: Record<string, string> = {
   reviewer: '评论家'
 }
 export const userCharactersTranslator = (character: string) => Object.hasOwn(translateMap, character) ? translateMap[character] : character
+export const createDateString = (date: Dayjs = dayjs()) => {
+  const today = dayjs()
+  const isThisYear = date.isSame(today, 'year')
+  const isInSameMonth = isThisYear && date.isSame(today, 'month')
+  const isToday = isInSameMonth && date.daysInMonth() == today.daysInMonth()
+  const isLastDay = isInSameMonth && date.daysInMonth() == today.daysInMonth() - 1
+  const isLastLastDay = isInSameMonth && date.daysInMonth() == today.daysInMonth() - 2
+  let format = ''
+  if (!isThisYear) format += 'YYYY年 '
+  if (isToday) format += '今天 '
+  else if (isLastDay) format += '昨天 '
+  else if (isLastLastDay) format += '前天 '
+  else format += 'M月D日 '
+  format += 'HH:mm'
+  return date.format(format)
+}

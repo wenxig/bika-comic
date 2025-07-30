@@ -23,7 +23,6 @@ const app = createApp(
     const themeColorDark = Color(themeColor).darken(0.2).hex()
     const themeOverrides = reactiveComputed<GlobalThemeOverrides>(() => ({
       common: {
-        ...(config.isDark ? darkTheme.common : lightTheme.common),
         primaryColor: themeColor,
         primaryColorHover: themeColorLight,
         primaryColorPressed: themeColorDark,

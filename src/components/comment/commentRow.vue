@@ -1,11 +1,12 @@
 <script setup lang='ts'>
 import Image from '@/components/image.vue'
 import { RowProps } from 'vant'
-import userIcon from '@/assets/images/userIcon.webp?url'
 import { Comment } from '@/api/bika/comment'
 import { UserProfile } from '@/api/bika/user'
 import { likeComment, reportComment } from '@/api/bika/api/comment'
 import { isNumber } from 'lodash-es'
+import { createDateString } from '@/utils/translator'
+import { LikeFilled, LikeOutlined } from '@vicons/antd'
 const $props = defineProps<{
   comment: Comment
   height: number
@@ -26,16 +27,16 @@ defineSlots<{
     :style="`min-height:${height - 24}px;`" @click="$emit('click', comment)">
     <VanCol span="4" class="!flex justify-center items-start">
       <div @click.stop="$emit('showUser', comment.$_user)">
-        <Image :src="comment.$_user.$avatar || userIcon" class="h-[3.5rem] mt-2 w-[3.5rem]" round fit="cover" />
+        <Image :src="comment.$_user.$avatar" class="mt-2 size-10" round fit="cover" />
       </div>
     </VanCol>
-    <VanCol class="!flex flex-col ml-1" span="19">
-      <div class="flex flex-col">
+    <VanCol class="!flex flex-col ml-1 relative" span="19">
+      <div class="mt-2 flex flex-col">
         <div class="text-(--van-text-color)">{{ comment.$_user.name }}
-          <span class="mr-1 text-xs text-(--p-color) font-normal">Lv{{ comment.$_user.level }}</span>
+          <span class="mr-1 text-xs text-(--nui-primary-color) font-normal">Lv{{ comment.$_user.level }}</span>
         </div>
         <span class="text-xs -mt-1 text-(--van-text-color-2)">
-          <NTime :time="new Date(comment.created_at)"></NTime>
+          {{ createDateString(comment.$created_at) }}
         </span>
       </div>
       <template v-if="comment.hide">
@@ -47,19 +48,18 @@ defineSlots<{
         </Text>
       </template>
     </VanCol>
-    <div class="absolute bottom-1 right-1 flex">
-      <span class="flex items-center mr-2 " @click.stop="reportComment(comment._id)">
-        <VanIcon name="fail" size="16px" />
-      </span>
-      <span class="flex items-center mr-2 " @click.stop="likeComment(comment._id)">
-        <VanIcon name="like-o" color="var(--van-primary-color)" size="16px" v-if="comment.isLiked" />
-        <VanIcon name="like-o" size="16px" v-else />
-        <span class="ml-1 text-[13px]" v-if="comment.likesCount">{{ comment.likesCount }}</span>
-      </span>
+    <div class="absolute bottom-3 -translate-x-4 left-4/19 flex">
+      <ToggleIcon :icon="LikeOutlined" row-mode v-model="comment.isLiked" @change="likeComment(comment._id)"
+        size="22px">
+        {{ comment.likesCount || '' }}
+      </ToggleIcon>
       <button v-if="showChildrenComment" class="flex items-center bg-transparent border-none">
         <VanIcon name="chat-o" size="16px" />
         <span class="ml-1 text-[13px]" v-if="comment.commentsCount">{{ comment.commentsCount }}</span>
       </button>
+      <span class="flex items-center mr-2 " @click.stop="reportComment(comment._id)">
+        <VanIcon name="fail" size="16px" />
+      </span>
       <slot />
     </div>
   </VanRow>
