@@ -15,7 +15,7 @@ export const router = createRouter({
       path: "/auth/login",
       component: () => import('@/pages/auth/login.vue')
     }, {
-      path: '/comic/:id',
+      path: '/comic/:id/:epId?',
       component: () => import('@/pages/comic/index.vue')
     }, {
       path: '/main',

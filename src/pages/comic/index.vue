@@ -10,14 +10,23 @@ import { useDialog, useMessage } from 'naive-ui'
 import { createDateString, toCn } from '@/utils/translator'
 import { useRoute, useRouter } from 'vue-router'
 const $route = useRoute()
+const $router = useRouter()
 const _id = $route.params.id.toString()
+const eps = computed(() => comic.now?.eps.content.value.data)
+const epId = computed({
+  get() {
+    return Number($route.params.epId.toString()) || eps.value?.[0].order
+  },
+  set(epId) {
+    return $router.replace(`/comic/${_id}/${epId}`)
+  }
+})
+const selectEp = computed(() => eps.value?.find(ep => ep.order == epId.value))
 const comic = useComicStore()
 const detail = computed(() => comic.now?.detail.content.value.data)
 const preload = computed(() => comic.now?.preload.value)
 const pid = computed(() => comic.now?.pid.content.value.data)
-const eps = computed(() => comic.now?.eps.content.value.data)
 const showTitleFull = shallowRef(false)
-const $router = useRouter()
 const [TitleTemp, TitleComp] = createReusableTemplate()
 const shareComic = () => {
   if (!pid.value || !preload.value) return
@@ -45,34 +54,42 @@ onMounted(async () => {
   })
 })
 const isScrolled = shallowRef(false)
+
+
 </script>
 
 <template>
   <div class="*:w-full bg-(--van-background-2)" v-if="comic.now">
-    <div class="bg-black text-white h-[30vh] relative flex justify-center">
-      <div
-        class="absolute bg-[linear-gradient(rgba(0,0,0,0.9),transparent)] pointer-events-none *:pointer-events-auto top-0 w-full flex h-14 items-center">
-        <VanSticky>
-          <div class="h-14 transition-colors flex items-center w-[100vw]"
-            :class="[isScrolled ? ' bg-(--nui-primary-color)' : 'bg-transparent']">
-            <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.back()">
-              <ArrowBackRound />
-            </NIcon>
-            <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.force.push('/')">
-              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
-                <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path
-                    d="M19 8.71l-5.333-4.148a2.666 2.666 0 0 0-3.274 0L5.059 8.71a2.665 2.665 0 0 0-1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.2c0-.823-.38-1.6-1.03-2.105">
-                  </path>
-                  <path d="M16 15c-2.21 1.333-5.792 1.333-8 0"></path>
-                </g>
-              </svg>
-            </NIcon>
+    <VanPopover :actions="[{ text: '查看封面' }, { text: '查看内容' }]" placement="bottom-start" @select="sel => ''">
+      <template #reference>
+        <div class="bg-black text-white h-[30vh] relative flex justify-center">
+          <div
+            class="absolute bg-[linear-gradient(rgba(0,0,0,0.9),transparent)] pointer-events-none *:pointer-events-auto top-0 w-full flex h-14 items-center">
+            <VanSticky>
+              <div class="h-14 transition-colors flex items-center w-[100vw]"
+                :class="[isScrolled ? ' bg-(--nui-primary-color)' : 'bg-transparent']">
+                <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.back()">
+                  <ArrowBackRound />
+                </NIcon>
+                <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.force.push('/')">
+                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                    viewBox="0 0 24 24">
+                    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path
+                        d="M19 8.71l-5.333-4.148a2.666 2.666 0 0 0-3.274 0L5.059 8.71a2.665 2.665 0 0 0-1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.2c0-.823-.38-1.6-1.03-2.105">
+                      </path>
+                      <path d="M16 15c-2.21 1.333-5.792 1.333-8 0"></path>
+                    </g>
+                  </svg>
+                </NIcon>
+              </div>
+            </VanSticky>
           </div>
-        </VanSticky>
-      </div>
-      <Image class="h-full" :src="detail?.$thumb" />
-    </div>
+          <Image class="h-full" :src="detail?.$thumb" />
+        </div>
+      </template>
+    </VanPopover>
     <VanTabs shrink swipeable sticky :offset-top="56" @scroll="({ isFixed }) => isScrolled = isFixed">
       <VanTab class="min-h-full relative van-hairline--top pt-3" title="简介" name="info">
         <Content :source="comic.now.detail.content.value">
@@ -144,11 +161,11 @@ const isScrolled = shallowRef(false)
                   <span @click="showTitleFull = !showTitleFull" class="w-[calc(100%-2rem)]">{{ preload?.title }}</span>
                   <TitleComp />
                   <div class="flex  font-light text-(--van-text-color-2) justify-start text-xs mt-0.5">
-                    <div class="mr-2">
+                    <div class="mr-2" v-if="pid">
                       PICA{{ pid }}
                     </div>
                     <div>
-                      ###{{ preload?._id }}
+                      ###{{ _id }}
                     </div>
                   </div>
                   <Text class="font-[350]  mt-1 text-(--van-text-color-2) justify-start text-xs">
@@ -174,7 +191,7 @@ const isScrolled = shallowRef(false)
             </div>
             <div class="mt-8 mb-4 flex justify-around" v-if="preload">
               <ToggleIcon size="27px" @update:model-value="v => detail && (detail.isLiked = v)"
-                :model-value="detail?.isLiked ?? false" @change="likeComic(preload._id)" :icon="LikeFilled">
+                :model-value="detail?.isLiked ?? false" @change="likeComic(_id)" :icon="LikeFilled">
                 {{ detail?.likesCount ?? '喜欢' }}
               </ToggleIcon>
               <ToggleIcon size="27px" :icon="DislikeFilled" @click="$message.info('个性化功能设计中')" dis-changed>
@@ -184,20 +201,19 @@ const isScrolled = shallowRef(false)
                 举报
               </ToggleIcon>
               <ToggleIcon size="27px" @update:model-value="v => detail && (detail.isFavourite = v)"
-                :model-value="detail?.isFavourite ?? false" @change="favouriteComic(preload._id)" :icon="StarFilled">
+                :model-value="detail?.isFavourite ?? false" @change="favouriteComic(_id)" :icon="StarFilled">
                 收藏
               </ToggleIcon>
               <ToggleIcon size="27px" @click="shareComic()" :icon="ShareSharp" dis-changed>
                 分享
               </ToggleIcon>
             </div>
-            <div class="bg-(--van-gray-1) relative mb-4 w-full flex items-center text-[1rem] rounded pl-3 py-2"
-              v-if="eps">
+            <div class="bg-(--van-gray-1) relative mb-4 w-full flex items-center rounded pl-3 py-2" v-if="eps">
               <span>选集</span>
               <span class="mx-0.5">·</span>
-
+              <span class="max-w-1/2 van-ellipsis">{{ selectEp?.title }}</span>
               <span class="absolute right-2 text-xs text-(--van-text-color-2) flex items-center">
-                <span>/{{ eps.length }}</span>
+                <span>{{ epId }}/{{ eps.length }}</span>
                 <NIcon size="12px" class="ml-1">
                   <ArrowForwardIosOutlined />
                 </NIcon>

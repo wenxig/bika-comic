@@ -8,9 +8,11 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AnimatePresence: typeof import('motion-v')['AnimatePresence']
+    AutoPlaySetter: typeof import('./src/components/comic/autoPlaySetter.vue')['default']
     Await: typeof import('./src/components/await.vue')['default']
     Children: typeof import('./src/components/comment/children.vue')['default']
     ComicCard: typeof import('./src/components/comic/comicCard.vue')['default']
+    ComicView: typeof import('./src/components/comic/comicView.vue')['default']
     CommentRow: typeof import('./src/components/comment/commentRow.vue')['default']
     CommentSender: typeof import('./src/components/comment/commentSender.vue')['default']
     CommentView: typeof import('./src/components/comment/commentView.vue')['default']
