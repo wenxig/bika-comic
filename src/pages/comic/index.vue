@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { useComicStore } from '@/stores/comic'
-import { ArrowBackRound, DrawOutlined, DriveFolderUploadOutlined, GTranslateOutlined, HomeOutlined, KeyboardArrowDownRound, PlusRound, ReportGmailerrorredRound, ShareSharp, StarFilled } from '@vicons/material'
+import { ArrowBackRound, ArrowForwardIosOutlined, DrawOutlined, DriveFolderUploadOutlined, GTranslateOutlined, KeyboardArrowDownRound, NotInterestedRound, PlusRound, ReportGmailerrorredRound, ShareSharp, StarFilled } from '@vicons/material'
 import { motion } from 'motion-v'
 import { computed, onMounted, shallowRef, watch } from 'vue'
 import { createReusableTemplate, until } from '@vueuse/core'
@@ -15,6 +15,7 @@ const comic = useComicStore()
 const detail = computed(() => comic.now?.detail.content.value.data)
 const preload = computed(() => comic.now?.preload.value)
 const pid = computed(() => comic.now?.pid.content.value.data)
+const eps = computed(() => comic.now?.eps.content.value.data)
 const showTitleFull = shallowRef(false)
 const $router = useRouter()
 const [TitleTemp, TitleComp] = createReusableTemplate()
@@ -43,34 +44,39 @@ onMounted(async () => {
     })
   })
 })
-
+const isScrolled = shallowRef(false)
 </script>
 
 <template>
-  <div class="*:w-full" v-if="comic.now">
+  <div class="*:w-full bg-(--van-background-2)" v-if="comic.now">
     <div class="bg-black text-white h-[30vh] relative flex justify-center">
       <div
-        class="absolute bg-[linear-gradient(rgba(0,0,0,0.9),transparent)] pointer-events-none *:pointer-events-auto top-0 w-full flex h-1/4 items-center">
-        <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.back()">
-          <ArrowBackRound />
-        </NIcon>
-        <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.force.push('/')">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
-            <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path
-                d="M19 8.71l-5.333-4.148a2.666 2.666 0 0 0-3.274 0L5.059 8.71a2.665 2.665 0 0 0-1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.2c0-.823-.38-1.6-1.03-2.105">
-              </path>
-              <path d="M16 15c-2.21 1.333-5.792 1.333-8 0"></path>
-            </g>
-          </svg>
-        </NIcon>
+        class="absolute bg-[linear-gradient(rgba(0,0,0,0.9),transparent)] pointer-events-none *:pointer-events-auto top-0 w-full flex h-14 items-center">
+        <VanSticky>
+          <div class="h-14 transition-colors flex items-center w-[100vw]"
+            :class="[isScrolled ? ' bg-(--nui-primary-color)' : 'bg-transparent']">
+            <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.back()">
+              <ArrowBackRound />
+            </NIcon>
+            <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.force.push('/')">
+              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+                <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M19 8.71l-5.333-4.148a2.666 2.666 0 0 0-3.274 0L5.059 8.71a2.665 2.665 0 0 0-1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.2c0-.823-.38-1.6-1.03-2.105">
+                  </path>
+                  <path d="M16 15c-2.21 1.333-5.792 1.333-8 0"></path>
+                </g>
+              </svg>
+            </NIcon>
+          </div>
+        </VanSticky>
       </div>
       <Image class="h-full" :src="detail?.$thumb" />
     </div>
-    <Content :source="comic.now.detail.content.value">
-      <VanTabs shrink swipeable sticky>
-        <VanTab class="min-h-full van-hairline--top pt-3" title="简介" name="info">
-          <div class="flex items-center relative">
+    <VanTabs shrink swipeable sticky :offset-top="56" @scroll="({ isFixed }) => isScrolled = isFixed">
+      <VanTab class="min-h-full relative van-hairline--top pt-3" title="简介" name="info">
+        <Content :source="comic.now.detail.content.value">
+          <div class="flex items-center">
             <Image class="size-8.5 shrink-0 mx-3" :src="detail?.$_creator.$avatar" round />
             <div class="flex flex-col w-full text-nowrap">
               <div class="text-(--nui-primary-color) flex items-center">
@@ -82,7 +88,6 @@ onMounted(async () => {
                 </span>
               </div>
               <div class="-mt-0.5 van-ellipsis max-w-2/3 text-(--van-text-color-2) text-[11px] flex items-center">
-
                 <span v-for="author of preload?.$author" class="mr-0.5">
                   <NIcon class="mr-0.5 not-first:ml-1">
                     <DrawOutlined />
@@ -112,13 +117,19 @@ onMounted(async () => {
             <div class="flex relative h-fit">
               <div class="text-[17px] font-[460] w-[90%] relative">
                 <TitleTemp>
-                  <div class="text-xs mt-1 font-light flex text-(--van-text-color-2) *:flex *:items-center">
-                    <span class="mr-1">
+                  <div class="text-xs mt-1 font-light flex text-(--van-text-color-2) *:flex *:items-center gap-1">
+                    <span>
                       <VanIcon class="mr-0.5 " name="eye-o" size="14px" />
                       <span>{{ preload?.totalViews }}</span>
                     </span>
-                    <span class="mx-1">
+                    <span>
                       <span>{{ createDateString(detail?.$created_at) }}</span>
+                    </span>
+                    <span v-if="!!(detail?.allowDownload ?? true)">
+                      <NIcon size="14px" class="mr-0.5 " color="var(--nui-error-color)">
+                        <NotInterestedRound />
+                      </NIcon>
+                      未经授权禁止下载
                     </span>
                   </div>
                 </TitleTemp>
@@ -162,49 +173,55 @@ onMounted(async () => {
               </NIcon>
             </div>
             <div class="mt-8 mb-4 flex justify-around" v-if="preload">
-              <ToggleIcon size="30px" @update:model-value="v => detail && (detail.isLiked = v)"
+              <ToggleIcon size="27px" @update:model-value="v => detail && (detail.isLiked = v)"
                 :model-value="detail?.isLiked ?? false" @change="likeComic(preload._id)" :icon="LikeFilled">
                 {{ detail?.likesCount ?? '喜欢' }}
               </ToggleIcon>
-              <ToggleIcon size="30px" :icon="DislikeFilled" @click="$message.info('个性化功能设计中')" dis-changed>
+              <ToggleIcon size="27px" :icon="DislikeFilled" @click="$message.info('个性化功能设计中')" dis-changed>
                 不喜欢
               </ToggleIcon>
-              <ToggleIcon size="30px" dis-changed :icon="ReportGmailerrorredRound">
+              <ToggleIcon size="27px" dis-changed :icon="ReportGmailerrorredRound">
                 举报
               </ToggleIcon>
-              <ToggleIcon size="30px" @update:model-value="v => detail && (detail.isFavourite = v)"
+              <ToggleIcon size="27px" @update:model-value="v => detail && (detail.isFavourite = v)"
                 :model-value="detail?.isFavourite ?? false" @change="favouriteComic(preload._id)" :icon="StarFilled">
                 收藏
               </ToggleIcon>
-              <ToggleIcon size="30px" @click="shareComic()" :icon="ShareSharp" dis-changed>
+              <ToggleIcon size="27px" @click="shareComic()" :icon="ShareSharp" dis-changed>
                 分享
               </ToggleIcon>
             </div>
-          </div>
-          <Content :source="comic.now.recommendComics.content.value" v-slot="{ data }" class="van-hairline--top w-full">
-            <template v-if="data">
-              <ComicCard v-for="comic of data" :comic :height="140" />
-            </template>
-          </Content>
-        </VanTab>
+            <div class="bg-(--van-gray-1) relative mb-4 w-full flex items-center text-[1rem] rounded pl-3 py-2"
+              v-if="eps">
+              <span>选集</span>
+              <span class="mx-0.5">·</span>
 
-        <VanTab class="min-h-full van-hairline--top" title="评论" name="comment">
-          <template #title>
-            <span>评论</span>
-            <span class="!text-xs ml-0.5 font-light"
-              v-if="detail?.allowComment ?? true">{{ detail?.totalComments ?? '' }}</span>
-          </template>
-          <CommentView no-virtual :id="_id" :uploader="detail?.$_creator._id"
-            class="h-[calc(70vh-var(--van-tabs-line-height))]" v-if="detail?.allowComment ?? true" />
-          <div v-else class="w-full h-[calc(70vh-var(--van-tabs-line-height))] text-center text-(--van-text-color-2)">
-            评论区已关闭</div>
-        </VanTab>
-      </VanTabs>
-    </Content>
+              <span class="absolute right-2 text-xs text-(--van-text-color-2) flex items-center">
+                <span>/{{ eps.length }}</span>
+                <NIcon size="12px" class="ml-1">
+                  <ArrowForwardIosOutlined />
+                </NIcon>
+              </span>
+            </div>
+          </div>
+          <div class="van-hairline--top w-full" v-if="comic.now.recommendComics.content.value.data">
+            <ComicCard v-for="comic of comic.now.recommendComics.content.value.data" :comic :height="140" />
+          </div>
+        </Content>
+      </VanTab>
+
+      <VanTab class="min-h-full van-hairline--top" title="评论" name="comment">
+        <template #title>
+          <span>评论</span>
+          <span class="!text-xs ml-0.5 font-light"
+            v-if="detail?.allowComment ?? true">{{ detail?.totalComments ?? '' }}</span>
+        </template>
+        <CommentView no-virtual :id="_id" :uploader="detail?.$_creator._id"
+          class="h-[calc(70vh-var(--van-tabs-line-height))]" v-if="detail?.allowComment ?? true" />
+        <div v-else class="w-full h-[calc(70vh-var(--van-tabs-line-height))] text-center text-(--van-text-color-2)">
+          评论区已关闭
+        </div>
+      </VanTab>
+    </VanTabs>
   </div>
 </template>
-<style scoped lang='scss'>
-:global(#app) {
-  background-color: var(--van-background-2);
-}
-</style>

@@ -185,3 +185,22 @@ export class ComicEp implements RawComicEp {
     this.id = v.id
   }
 }
+
+export interface RawPage {
+  id: string
+  media: RawImage
+  _id: string
+}
+export class Page implements RawPage {
+  public id: string
+  public media: RawImage
+  public get $media() {
+    return new Image(this.media)
+  }
+  public _id: string
+  constructor(v: RawPage) {
+    this.id = v.id
+    this.media = v.media
+    this._id = v._id
+  }
+}

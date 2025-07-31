@@ -1,7 +1,9 @@
 import type { AxiosRequestConfig } from "axios"
-import { PromiseContent, Stream } from "@/utils/data"
+import { createClassFromResponseStream, PromiseContent, Stream } from "@/utils/data"
 import { picapiRest, recommendRest, type RawStream } from ".."
-import { ComicEp, FullComic, LessComic, type RawComicEp, type RawFullComic, type RawLessComic } from "../comic"
+import { ComicEp, FullComic, LessComic, Page, type RawComicEp, type RawFullComic, type RawLessComic, type RawPage } from "../comic"
+import localforage from "localforage"
+import { flatten, times, sortBy } from "lodash-es"
 
 export type ResultActionData<T extends string> = { action: T }
 export const likeComic = PromiseContent.fromAsyncFunction(async (id: string, config: AxiosRequestConfig = {}) => picapiRest.post<ResultActionData<'like' | 'unlike'>>(`/comics/${id}/like`, {}, config))
@@ -33,3 +35,33 @@ export const getComicEps = PromiseContent.fromAsyncFunction((async (id: string):
   const eps = await stream.nextToDone()
   return eps.map(ep => new ComicEp(ep))
 }))
+
+
+
+
+type Pages = RawStream<RawPage>
+export const getComicPage = (id: string, index: number, page: number, signal?: AbortSignal) => createClassFromResponseStream(picapiRest.get<{ pages: Pages }>(`/comics/${id}/order/${index}/pages?page=${page}`, { signal }), Page, 'pages')
+const comicsPagesDB = localforage.createInstance({ name: 'comic-page' })
+export const clearComicPagesTemp = () => comicsPagesDB.clear()
+const comicPageRequesting = new Map<string, Promise<Page[]>>()
+export const getComicPages = async (id: string, index: number, signal?: AbortSignal) => {
+  await comicsPagesDB.ready()
+  const key = id + '|' + index
+  const pageDB = await comicsPagesDB.getItem<Pages[]>(key)
+  if (pageDB) return flatten(pageDB.map(v => v.docs.map(v => new Page(v))))
+  if (comicPageRequesting.has(key)) return comicPageRequesting.get(key)!
+  const _pages = new Promise<Page[]>(async r => {
+    const firstPage = await getComicPage(id, index, 1, signal)
+    const otherPages = new Array<RawStream<Page>>()
+    otherPages.push(firstPage)
+    otherPages.push(...await Promise.all(times(firstPage.pages - 1, i => getComicPage(id, index, i + 2, signal))))
+    const pages = flatten(sortBy(otherPages, 'page').map(v => v.docs.map(v => new Page(v))))
+    r(pages)
+    await comicsPagesDB.setItem<Pages[]>(key, sortBy(otherPages, 'page'))
+  })
+  comicPageRequesting.set(key, _pages)
+  const pages = await _pages
+  comicPageRequesting.delete(key)
+  return pages
+}
+export const createComicEpPageStream = (comicId: string, epIndex: number) => Stream.apiPackager((page, signal) => getComicPage(comicId, epIndex, page, signal))

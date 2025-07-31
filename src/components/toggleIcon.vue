@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { Component, watch } from 'vue'
+import {  Component, watch } from 'vue'
 
 const $props = defineProps<{
   icon: Component
@@ -25,7 +25,7 @@ const handleClick = () => {
     <NIcon :size :color="mode ? 'var(--nui-primary-color)' : ( 'var(--van-gray-7)')">
       <icon />
     </NIcon>
-    <span class="mt-1 text-(--van-text-color-2)" :style="{ fontSize: `calc(${size} * 1px - 4px)` }">
+    <span class="mt-1 text-(--van-text-color-2) text-xs">
       <slot />
     </span>
   </div>

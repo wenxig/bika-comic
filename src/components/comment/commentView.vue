@@ -23,7 +23,6 @@ const $props = withDefaults(defineProps<{
   streamMode: 'comics'
 })
 const commentStream = createCommentsStream($props.id, $props.streamMode)
-console.log(commentStream)
 const _father = shallowRef<Comment>()
 const previewUser = shallowRef<InstanceType<typeof PreviewUser>>()
 const childrenComments = shallowRef<InstanceType<typeof ChildrenComments>>()

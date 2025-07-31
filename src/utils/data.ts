@@ -13,7 +13,7 @@ export class PromiseContent<T> implements PromiseLike<T> {
     this.isLoading = true
     this.isError = false
     this.errorCause = undefined
-    this.isEmpty = false
+    this.isEmpty = true
 
     promise.then(async val => {
       const v = await val
@@ -24,6 +24,7 @@ export class PromiseContent<T> implements PromiseLike<T> {
     })
     promise.catch(err => {
       this.data = undefined
+      this.isError = true
       this.errorCause = err
     })
   }
@@ -40,7 +41,7 @@ export class PromiseContent<T> implements PromiseLike<T> {
   public isLoading = true
   public isError = false
   public errorCause: any = undefined
-  public isEmpty = false
+  public isEmpty = true
   public static fromPromise<T>(promise: Promise<T>, _isEmpty: (v: Awaited<T>) => boolean = isEmpty) {
     const v = new this<T>(promise, _isEmpty)
     return shallowReactive(v)
@@ -50,10 +51,10 @@ export class PromiseContent<T> implements PromiseLike<T> {
       return asyncFunction(...args)
     })())
   }
-  public static withResolvers<T>() {
+  public static withResolvers<T>(isLoading = false) {
     let withResolvers = Promise.withResolvers<T>()
     const content = ref(this.fromPromise<T>(withResolvers.promise))
-    content.value.isLoading = false
+    content.value.isLoading = isLoading
     return {
       content,
       reject: (reason?: any) => {
@@ -106,17 +107,19 @@ export class Stream<T> implements AsyncIterableIterator<T[], void> {
   private generator
   public async next(igRequesting = false): Promise<IteratorResult<T[], void>> {
     try {
-      if (!igRequesting) await until(this.isRequesting).toBe(false)
-      if (!igRequesting) this.isRequesting.value = true
-      if (this._isDone) return { done: true, value: undefined }
-      // console.log('stream next request')
+      if (!igRequesting) {
+        await until(this.isRequesting).toBe(false)
+        this.isRequesting.value = true
+      }
+      if (this._isDone) {
+        if (!igRequesting) this.isRequesting.value = false
+        return { done: true, value: undefined }
+      }
       const { value, done } = await this.generator.next(this)
       this.isDone.value = done ?? false
-      // console.log('stream next value', value, 'isDone', this.isDone.value)
       if (!igRequesting) this.isRequesting.value = false
       if (done) return { done: true, value: undefined }
       this.data.value.push(...value)
-      // console.trace('stream next push', this, this._data)
       return { value, done }
     } catch (error) {
       if (!igRequesting) this.isRequesting.value = false
@@ -133,9 +136,14 @@ export class Stream<T> implements AsyncIterableIterator<T[], void> {
   public reset() {
     this.total.value = NaN
     this.page.value = 0
+    this.pageSize.value = NaN
     this.data.value = []
+    this.isDone.value = false
+    this.isRequesting.value = false
+
   }
   public async retry() {
+    if (!this.error.value) this.page.value--
     return this.next()
   }
   public async nextToDone() {

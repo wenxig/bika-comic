@@ -11,13 +11,13 @@ export const router = createRouter({
     {
       path: "/",
       redirect: isEmpty(localStorage.getItem(symbol.loginToken)) ? '/auth/login' : '/main/home'
-    },{
+    }, {
       path: "/auth/login",
       component: () => import('@/pages/auth/login.vue')
-    },{
+    }, {
       path: '/comic/:id',
       component: () => import('@/pages/comic/index.vue')
-    },{
+    }, {
       path: '/main',
       component: () => import('@/pages/main/index.vue'),
       redirect: '/main/home',
@@ -29,6 +29,9 @@ export const router = createRouter({
           path: 'random',
           component: () => import('@/pages/main/home/random.vue'),
         }]
+      }, {
+        path: 'user',
+        component: () => import('@/pages/main/user/index.vue')
       }]
     }
   ]

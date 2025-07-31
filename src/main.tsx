@@ -3,6 +3,7 @@ import { createPinia } from "pinia"
 import App from "./App.vue"
 import { router } from "./router"
 import "@/index.css"
+import '@vant/touch-emulator'
 import { ConfigProvider as VanConfigProvider, type ConfigProviderThemeVars } from 'vant'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NLoadingBarProvider, zhCN, type GlobalThemeOverrides, darkTheme, lightTheme } from 'naive-ui'
 import Color from "color"
