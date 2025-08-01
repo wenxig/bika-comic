@@ -1,12 +1,11 @@
 <script setup lang='ts' generic="T extends NonNullable<VirtualListProps['items']>[number],PF extends ((d: T[])=>any[])">
-import { NInfiniteScroll, NVirtualList, VirtualListProps } from 'naive-ui'
+import { NVirtualList, VirtualListProps } from 'naive-ui'
 import { ceil, debounce } from 'lodash-es'
 import { StyleValue, shallowRef, watch } from 'vue'
 import { IfAny, useScroll } from '@vueuse/core'
 import { callbackToPromise, SPromiseContent, Stream } from '@/utils/data'
 import Content from './content.vue'
 import { computed } from 'vue'
-import { motion } from 'motion-v'
 type Source = {
   data: SPromiseContent<T[]>
   isEnd?: boolean
@@ -17,7 +16,6 @@ const $props = withDefaults(defineProps<{
   listProp?: Partial<VirtualListProps>
   goBottom?: boolean
   itemResizable?: boolean
-  noVirtual?: boolean
   dataProcessor?: PF
 
   style?: StyleValue
@@ -100,22 +98,18 @@ defineExpose({
 
 <template>
   <VanPullRefresh v-model="isRefreshing" :class="['relative', $props.class]" @refresh="handleRefresh"
-    :disabled="unionSource.isError || unionSource.isRequesting || (!noVirtual && !!listScrollTop && !isPullRefreshHold && !unionSource.isRequesting)"
+    :disabled="unionSource.isError || unionSource.isRequesting || (!!listScrollTop && !isPullRefreshHold)"
     @change="({ distance }) => isPullRefreshHold = !!distance" :style>
     <Content retriable :source="Stream.isStream(source) ? source : source.data" class-loading="mt-2 !h-[24px]"
       class-empty="!h-full" class-error="!h-full" @retry="handleRefresh"
       :hide-loading="isPullRefreshHold && unionSource.isRequesting">
       <Var :value="dataProcessor(unionSource.data ?? [])" v-slot="{ value }">
-        <NInfiniteScroll :="listProp" @load="unionSource.next()" v-if="noVirtual" :distance="40">
-          <slot v-for="item of value" :height="itemHeight" :data="{ item, index: value.indexOf(item) }" />
-        </NInfiniteScroll>
-        <NVirtualList :="listProp" :item-resizable :item-size="itemHeight" @scroll="handleScroll" v-else
+        <NVirtualList :="listProp" :item-resizable :item-size="itemHeight" @scroll="handleScroll"
           class="overflow-x-hidden h-full" :items="value" v-slot="{ item }: { item: Processed }" ref="vList"
           :class="[isPullRefreshHold ? 'overflow-y-hidden' : 'overflow-y-auto']">
           <slot :height="itemHeight" :data="{ item: item, index: value.indexOf(item) }" />
         </NVirtualList>
       </Var>
     </Content>
-    
   </VanPullRefresh>
 </template>

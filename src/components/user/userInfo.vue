@@ -66,7 +66,7 @@ const avatar = computed(() => {
       </div>
       <div class="flex !w-[60%] items-center">
         <span class="mr-1 no-color-change-transition text-xs text-(--van-text-color-2)">{{ exp }}/{{ needExp }}</span>
-        <n-progress color="var(--nui-primary-color)" type="line" status="info" :percentage="(exp / needExp) * 100"
+        <NProgress color="var(--nui-primary-color)" type="line" status="info" :percentage="(exp / needExp) * 100"
           :show-indicator="false" />
       </div>
     </template>

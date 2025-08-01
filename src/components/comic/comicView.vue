@@ -22,8 +22,10 @@ const $props = withDefaults(defineProps<{
   nowEpId: string
   pages: Page[]
   startPosition?: number
+  isBlock?: boolean
 }>(), {
-  startPosition: 0
+  startPosition: 0,
+  isBlock: false,
 })
 const $message = useMessage()
 const config = useConfig()
@@ -244,7 +246,6 @@ defineExpose({
   </template>
 
   <Popup v-model:show="showAutoPlayPopup" position="bottom" round>
-    <AutoPlaySetter
-      @submit="v => { setAutoPlayConfig(v);  showAutoPlayPopup = false }" />
+    <AutoPlaySetter @submit="v => { setAutoPlayConfig(v); showAutoPlayPopup = false }" />
   </Popup>
 </template>

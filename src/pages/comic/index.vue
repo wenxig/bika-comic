@@ -59,8 +59,8 @@ const isScrolled = shallowRef(false)
 </script>
 
 <template>
-  <div class="*:w-full bg-(--van-background-2)" v-if="comic.now">
-    <VanPopover :actions="[{ text: '查看封面' }, { text: '查看内容' }]" placement="bottom-start" @select="sel => ''">
+  <div class="*:w-full bg-(--van-background-2) flex flex-col" v-if="comic.now">
+    <VanPopover :actions="[{ text: '查看封面' }, { text: '查看内容' }]" placement="bottom" @select="sel => ''">
       <template #reference>
         <div class="bg-black text-white h-[30vh] relative flex justify-center">
           <div
@@ -86,12 +86,13 @@ const isScrolled = shallowRef(false)
               </div>
             </VanSticky>
           </div>
-          <Image class="h-full" :src="detail?.$thumb" />
+          <!-- <Image class="h-full" :src="detail?.$thumb" /> -->
+          <ComicView />
         </div>
       </template>
     </VanPopover>
     <VanTabs shrink swipeable sticky :offset-top="56" @scroll="({ isFixed }) => isScrolled = isFixed">
-      <VanTab class="min-h-full relative van-hairline--top pt-3" title="简介" name="info">
+      <VanTab class="min-h-full relative van-hairline--top" title="简介" name="info">
         <Content :source="comic.now.detail.content.value">
           <div class="flex items-center">
             <Image class="size-8.5 shrink-0 mx-3" :src="detail?.$_creator.$avatar" round />
@@ -232,8 +233,8 @@ const isScrolled = shallowRef(false)
           <span class="!text-xs ml-0.5 font-light"
             v-if="detail?.allowComment ?? true">{{ detail?.totalComments ?? '' }}</span>
         </template>
-        <CommentView no-virtual :id="_id" :uploader="detail?.$_creator._id"
-          class="h-[calc(70vh-var(--van-tabs-line-height))]" v-if="detail?.allowComment ?? true" />
+        <CommentView :id="_id" :uploader="detail?.$_creator._id" class="h-[calc(70vh-var(--van-tabs-line-height))]"
+          v-if="detail?.allowComment ?? true" />
         <div v-else class="w-full h-[calc(70vh-var(--van-tabs-line-height))] text-center text-(--van-text-color-2)">
           评论区已关闭
         </div>

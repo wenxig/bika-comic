@@ -6,7 +6,7 @@ import { UserProfile } from '@/api/bika/user'
 import { likeComment, reportComment } from '@/api/bika/api/comment'
 import { isNumber } from 'lodash-es'
 import { createDateString } from '@/utils/translator'
-import {  LikeOutlined } from '@vicons/antd'
+import { LikeOutlined } from '@vicons/antd'
 import { ChatBubbleOutlineRound, NearbyErrorRound } from '@vicons/material'
 import { useMessage } from 'naive-ui'
 import { createLoadingMessage } from '@/utils/message'
@@ -24,12 +24,11 @@ const $emit = defineEmits<{
 defineSlots<{
   default(): void
 }>()
-const $message = useMessage()
 </script>
 
 <template>
   <VanRow v-bind="$props" class="van-hairline--bottom relative pb-6 bg-(--van-background-2) text-(--van-text-color)"
-    :style="`height:${height - 24}px !important;`" @click="$emit('click', comment)">
+    :style="`height:${height}px !important;`" @click="$emit('click', comment)">
     <VanCol span="4" class="!flex justify-center items-start">
       <div @click.stop="$emit('showUser', comment.$_user)">
         <Image :src="comment.$_user.$avatar" class="mt-2 size-10" round fit="cover" />
@@ -38,10 +37,11 @@ const $message = useMessage()
     <VanCol class="!flex flex-col ml-1 relative" span="19">
       <div class="mt-2 flex flex-col">
         <div class=" text-sm "
-          :class="[isHighlight ? 'text-(--nui-primary-color) font-bold':'text-(--van-text-color) font-light']">
+          :class="[isHighlight ? 'text-(--nui-primary-color) font-bold' : 'text-(--van-text-color) font-light']">
           {{ comment.$_user.name }}
           <span class="mr-1 text-[11px] text-(--nui-primary-color) font-normal">Lv{{ comment.$_user.level }}</span>
-          <span class="bg-(--nui-primary-color) rounded text-white text-[9px] px-0.5 py-0.5 -translate-y-0.5" v-if="isHighlight">UP</span>
+          <span class="bg-(--nui-primary-color) rounded text-white text-[9px] px-0.5 py-0.5 -translate-y-0.5"
+            v-if="isHighlight">UP</span>
         </div>
         <span class="text-[10px] font-light -mt-1 text-(--van-text-color-2)">
           {{ createDateString(comment.$created_at) }}

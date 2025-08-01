@@ -17,7 +17,6 @@ const $props = withDefaults(defineProps<{
   listClass?: any
   class?: any
   streamMode?: 'comics' | 'games'
-  noVirtual?: boolean
   uploader?: string
 }>(), {
   streamMode: 'comics'
@@ -54,7 +53,7 @@ const isActive = useTabStatus()
 
 <template>
   <div class="w-full bg-(--van-background) pb-[40px]" :class>
-    <List item-resizable :no-virtual :source="commentStream" ref="list" :item-height="140"
+    <List item-resizable :source="commentStream" ref="list" :item-height="140"
       v-slot="{ data: { item }, height }" :class="$props.listClass" class="h-full">
       <CommentRow :comment="item" :isHighlight="item.$_user._id == uploader" :height show-children-comment @click="() => {
         _father = item
