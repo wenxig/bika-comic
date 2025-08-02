@@ -3,9 +3,9 @@ import { useComicStore } from '@/stores/comic'
 import { ArrowBackRound, ArrowForwardIosOutlined, DrawOutlined, DriveFolderUploadOutlined, GTranslateOutlined, KeyboardArrowDownRound, NotInterestedRound, PlusRound, ReportGmailerrorredRound, ShareSharp, StarFilled } from '@vicons/material'
 import { motion } from 'motion-v'
 import { computed, onMounted, shallowRef, watch } from 'vue'
-import { createReusableTemplate, until } from '@vueuse/core'
+import { computedAsync, createReusableTemplate, until } from '@vueuse/core'
 import { DislikeFilled, LikeFilled } from '@vicons/antd'
-import { favouriteComic, likeComic } from '@/api/bika/api/comic'
+import { favouriteComic, getComicPages, likeComic } from '@/api/bika/api/comic'
 import { useDialog, useMessage } from 'naive-ui'
 import { createDateString, toCn } from '@/utils/translator'
 import { useRoute, useRouter } from 'vue-router'
@@ -15,7 +15,7 @@ const _id = $route.params.id.toString()
 const eps = computed(() => comic.now?.eps.content.value.data)
 const epId = computed({
   get() {
-    return Number($route.params.epId.toString()) || eps.value?.[0].order
+    return Number($route.params.epId.toString()) || eps.value?.[0].order || 1
   },
   set(epId) {
     return $router.replace(`/comic/${_id}/${epId}`)
@@ -55,7 +55,11 @@ onMounted(async () => {
 })
 const isScrolled = shallowRef(false)
 
-
+const epPageContent = computed(() => {
+  const signal = new AbortController()
+  const result = getComicPages(_id, epId.value, signal.signal)
+  return result
+})
 </script>
 
 <template>
@@ -86,8 +90,7 @@ const isScrolled = shallowRef(false)
               </div>
             </VanSticky>
           </div>
-          <!-- <Image class="h-full" :src="detail?.$thumb" /> -->
-          <ComicView />
+          <ComicView :comic="comic.now" :page="epPageContent" :now-ep-id="epId"  />
         </div>
       </template>
     </VanPopover>
