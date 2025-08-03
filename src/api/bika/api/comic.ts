@@ -44,7 +44,7 @@ export const getComicPage = (id: string, index: number, page: number, signal?: A
 const comicsPagesDB = localforage.createInstance({ name: 'comic-page' })
 export const clearComicPagesTemp = () => comicsPagesDB.clear()
 const comicPageRequesting = new Map<string, Promise<Page[]>>()
-export const getComicPages = PromiseContent.fromAsyncFunction(async (id: string, index: number, signal?: AbortSignal) => {
+export const getComicPages =(async (id: string, index: number, signal?: AbortSignal) => {
   await comicsPagesDB.ready()
   const key = id + '|' + index
   const pageDB = await comicsPagesDB.getItem<Pages[]>(key)

@@ -55,49 +55,44 @@ onMounted(async () => {
 })
 const isScrolled = shallowRef(false)
 
-const epPageContent = computed(() => {
+const epPageContent = computedAsync(async onCancel => {
   const signal = new AbortController()
-  const result = getComicPages(_id, epId.value, signal.signal)
+  const result = await getComicPages(_id, epId.value, signal.signal)
+  onCancel(() => signal.abort())
   return result
-})
+}, [])
 </script>
 
 <template>
-  <div class="*:w-full bg-(--van-background-2) flex flex-col" v-if="comic.now">
-    <VanPopover :actions="[{ text: '查看封面' }, { text: '查看内容' }]" placement="bottom" @select="sel => ''">
-      <template #reference>
-        <div class="bg-black text-white h-[30vh] relative flex justify-center">
-          <div
-            class="absolute bg-[linear-gradient(rgba(0,0,0,0.9),transparent)] pointer-events-none *:pointer-events-auto top-0 w-full flex h-14 items-center">
-            <VanSticky>
-              <div class="h-14 transition-colors flex items-center w-[100vw]"
-                :class="[isScrolled ? ' bg-(--nui-primary-color)' : 'bg-transparent']">
-                <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.back()">
-                  <ArrowBackRound />
-                </NIcon>
-                <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.force.push('/')">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                    viewBox="0 0 24 24">
-                    <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <path
-                        d="M19 8.71l-5.333-4.148a2.666 2.666 0 0 0-3.274 0L5.059 8.71a2.665 2.665 0 0 0-1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.2c0-.823-.38-1.6-1.03-2.105">
-                      </path>
-                      <path d="M16 15c-2.21 1.333-5.792 1.333-8 0"></path>
-                    </g>
-                  </svg>
-                </NIcon>
-              </div>
-            </VanSticky>
+  <div class="*:w-full bg-(--van-background-2)" v-if="comic.now">
+    <div class="bg-black text-white h-[30vh] relative flex justify-center">
+      <div
+        class="absolute bg-[linear-gradient(rgba(0,0,0,0.9),transparent)] pointer-events-none *:pointer-events-auto top-0 w-full flex h-14 items-center">
+        <VanSticky>
+          <div class="h-14 transition-colors flex items-center w-[100vw]"
+            :class="[isScrolled ? ' bg-(--nui-primary-color)' : 'bg-transparent']">
+            <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.back()">
+              <ArrowBackRound />
+            </NIcon>
+            <NIcon color="white" size="1.5rem" class="ml-5" @click="$router.force.push('/')">
+              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
+                <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M19 8.71l-5.333-4.148a2.666 2.666 0 0 0-3.274 0L5.059 8.71a2.665 2.665 0 0 0-1.029 2.105v7.2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.2c0-.823-.38-1.6-1.03-2.105">
+                  </path>
+                  <path d="M16 15c-2.21 1.333-5.792 1.333-8 0"></path>
+                </g>
+              </svg>
+            </NIcon>
           </div>
-          <ComicView :comic="comic.now" :page="epPageContent" :now-ep-id="epId"  />
-        </div>
-      </template>
-    </VanPopover>
+        </VanSticky>
+      </div>
+      <ComicView :comic="comic.now" :pages="epPageContent" :now-ep-id="epId" />
+    </div>
     <VanTabs shrink swipeable sticky :offset-top="56" @scroll="({ isFixed }) => isScrolled = isFixed">
       <VanTab class="min-h-full relative van-hairline--top" title="简介" name="info">
         <Content :source="comic.now.detail.content.value">
-          <div class="flex items-center">
+          <div class="flex items-center mt-3">
             <Image class="size-8.5 shrink-0 mx-3" :src="detail?.$_creator.$avatar" round />
             <div class="flex flex-col w-full text-nowrap">
               <div class="text-(--nui-primary-color) flex items-center">

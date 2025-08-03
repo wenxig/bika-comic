@@ -10,14 +10,13 @@ import { computed, shallowRef } from 'vue'
 import { useConfig } from '@/config'
 import { Page } from '@/api/bika/comic'
 import { LoadingMask } from './comicView.helper'
-import { inRange } from 'lodash-es'
+import { inRange, isEmpty } from 'lodash-es'
 import { PromiseContent } from '@/utils/data'
 const $props = withDefaults(defineProps<{
   comic: ComicPage
   nowEpId: number
-  pages: PromiseContent<Page[]>
+  pages: Page[]
   startPosition?: number
-  isBlock?: boolean
 }>(), {
   startPosition: 0,
   isBlock: false,
@@ -41,7 +40,7 @@ const onInit = async () => {
   }, 1)
 }
 
-const images = computed(() => $props.pages.data?.map(v => v.$media.getUrl()) ?? [])
+const images = computed(() => $props.pages?.map(v => v.$media.getUrl()) ?? [])
 
 const goToSlide = (offset: 1 | -1, emitEvent: () => void) => {
   const targetIndex = pageOnIndex.value + offset
@@ -68,7 +67,7 @@ defineExpose({
     <Swiper :modules="[Virtual, Zoom, HashNavigation]" @swiper="sw => swiper = sw" :initialSlide="pageOnIndex"
       :slidesPerView="config['bika.read.twoImage'] ? 2 : 1" @slideChange="sw => pageOnIndex = sw.activeIndex"
       class="w-full h-full bg-black" virtual @init="onInit" zoom :dir="config['bika.read.rtl'] ? 'rtl' : 'ltr'"
-      :direction="config['bika.read.vertical'] ? 'vertical' : 'horizontal'">
+      :direction="config['bika.read.vertical'] ? 'vertical' : 'horizontal'" v-if="!isEmpty(images)">
       <SwiperSlide v-for="(image, index) of images" :key="index" :virtualIndex="index" :data-hash="index + 1"
         class="overflow-hidden">
         <Image fetchpriority="high" infiniteRetry fit="contain" :src="image"
@@ -83,10 +82,9 @@ defineExpose({
       </SwiperSlide>
     </Swiper>
     <div
-      class="absolute top-0 left-0 w-full h-full pointer-events-none *:pointer-events-auto *:w-4 *:bg-red-100 *:absolute *:top-0 *:h-full">
+      class="absolute z-2 top-0 left-0 w-full h-full pointer-events-none *:pointer-events-auto *:w-10 *:absolute *:top-0 *:h-full">
       <div class="left-0" @click="goPrev" />
       <div class="right-0" @click="goNext" />
     </div>
   </div>
-
 </template>
