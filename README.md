@@ -1,6 +1,12 @@
 # bika-comic
 
-分流:
+## **警告**
+
+该项目已停止维护，可以使用新项目，支持更完善，界面更优秀。
+
+[![delta-comic](https://github-readme-stats.vercel.app/api/pin/?username=wenxig&repo=delta-comic)](https://github.com/wenxig/delta-comic)
+
+## 分流:
 
 1. <https://bika-comic.vercel.app>
 2. <https://bika-comic.surge.sh>
@@ -10,7 +16,7 @@
 6. <https://wenxig.github.io/bika-comic>
 7. <https://bika-comic.onrender.com>
 
-与手机端对比额外的功能:
+## 与手机端对比额外的功能:
 
 1. 额外的记录服务器(历史记录+图片收藏+设置同步+搜索记录+订阅+...)
 2. 类抖音刷漫画
